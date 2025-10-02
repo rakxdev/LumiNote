@@ -5,17 +5,19 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com/)
-[![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)](https://github.com/your-username/luminote)
+[![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)](https://github.com/rakxdev/LumiNote)
 
 </div>
 
 <p align="center">
-  <img src="https://media.giphy.com/media/3o7TKSha51ATTx9KzC/giphy.gif" alt="LumiNote Demo" width="600">
+  <strong>Transform your voice into text with cutting-edge speech recognition technology</strong><br>
+  <em>A complete voice-to-text solution for seamless hands-free typing and communication</em>
 </p>
 
 <p align="center">
-  <strong>Transform your voice into text with cutting-edge speech recognition technology</strong><br>
-  A complete voice-to-text solution for seamless hands-free typing and communication
+  <img src="https://img.shields.io/badge/Voice_to_Text-Real_Time_Transcription-brightgreen?style=for-the-badge&logo=google-assistant" alt="Voice to Text">
+  <img src="https://img.shields.io/badge/Cross_Platform-Desktop_%26_Mobile-blue?style=for-the-badge&logo=windows" alt="Cross Platform">
+  <img src="https://img.shields.io/badge/Privacy_Focused-Local_Processing-orange?style=for-the-badge&logo=shield" alt="Privacy Focused">
 </p>
 
 ## 📋 Table of Contents
@@ -161,8 +163,8 @@ luminote/
 ### Installation Steps
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/luminote.git
-   cd luminote
+   git clone https://github.com/rakxdev/LumiNote.git
+   cd LumiNote
    ```
 
 2. **Create virtual environment**:
@@ -279,8 +281,8 @@ pip3 --version
 ### Application Installation
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-username/luminote.git
-   cd luminote
+   git clone https://github.com/rakxdev/LumiNote.git
+   cd LumiNote
    ```
 
 2. **Create Virtual Environment**:
@@ -1373,7 +1375,7 @@ We welcome contributions from the community! Here are ways you can help:
    - Click "Fork" button on GitHub
    - Clone your fork locally
    ```bash
-   git clone https://github.com/your-username/luminote.git
+   git clone https://github.com/rakxdev/LumiNote.git
    ```
 
 2. **Create Feature Branch**:
@@ -1565,8 +1567,8 @@ If you need assistance with LumiNote, here are several ways to get support:
 </details>
 
 ### Contact Information
-- **Email**: support@luminote.example.com
-- **GitHub**: [Issues](https://github.com/your-username/luminote/issues)
+- **Email**: rakesh.943803@gmail.com
+- **GitHub**: [Issues](https://github.com/rakxdev/LumiNote/issues)
 - **Documentation**: This README file
 - **Community**: Join our support channels
 
