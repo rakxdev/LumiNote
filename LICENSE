@@ -19,6 +19,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+<<<<<<< HEAD
 
 ---
 
@@ -43,3 +44,5 @@ This software uses the following third-party libraries and components:
 
 All third-party licenses are included in their respective packages and are
 available at their project repositories.
+=======
+>>>>>>> 62c31b2f03fcfe1e5eb0506f5f2caa35c6533439
