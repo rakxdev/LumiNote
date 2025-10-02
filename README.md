@@ -131,20 +131,24 @@ LumiNote is a sophisticated voice-to-text transcription system that bridges the 
 
 ### File Structure
 ```
-luminote/
-├── app.py                 # Main Flask application
-├── requirements.txt       # Python dependencies
-├── README.md             # Documentation
-├── LICENSE              # License information
-├── .gitignore           # Git ignore rules
+LumiNote/
+├── app.py                    # Main Flask application with configuration integration
+├── run.py                    # Application startup script with CLI options
+├── config.py                 # Configuration management system
+├── requirements.txt          # Python dependencies with specific versions
+├── setup.py                  # Python package setup configuration
+├── README.md                 # Comprehensive project documentation
+├── API.md                    # Complete API documentation
+├── LICENSE                   # MIT License information
+├── Makefile                  # Make commands for project management
+├── Dockerfile                # Docker containerization configuration
+├── docker-compose.yml        # Docker Compose deployment configuration
+├── .gitignore               # Git ignore patterns
 ├── templates/
-│   └── index.html       # Main web interface
-├── static/
-│   ├── css/
-│   ├── js/
-│   └── images/
-└── tests/
-    └── test_app.py      # Unit tests
+│   └── index.html           # Responsive web interface with audio recording
+├── tests/
+│   └── test_app.py          # Comprehensive unit tests
+└── server.log               # Application log file (generated at runtime)
 ```
 
 </details>
@@ -180,7 +184,14 @@ luminote/
 
 4. **Run the application**:
    ```bash
+   # Method 1: Direct run
    python app.py
+   
+   # Method 2: Using run script (recommended)
+   python run.py
+   
+   # Method 3: Using Makefile
+   make run
    ```
 
 5. **Access the interface**:
@@ -192,6 +203,21 @@ luminote/
 - Note the local IP addresses shown in console
 - Access from any device on the same network
 - Start recording and enjoy hands-free typing!
+
+### Alternative Startup Methods
+```bash
+# Run with custom port
+python run.py --port 3000
+
+# Run in debug mode
+python run.py --debug
+
+# Run with specific configuration
+python run.py --config production
+
+# Run with all options
+python run.py --port 3000 --debug --config development
+```
 
 </details>
 
@@ -1057,8 +1083,8 @@ curl http://192.168.1.100:2429/
 
 1. **Clone Repository**:
    ```bash
-   git clone https://github.com/your-username/luminote.git
-   cd luminote
+   git clone https://github.com/rakxdev/LumiNote.git
+   cd LumiNote
    ```
 
 2. **Create Development Environment**:
@@ -1070,12 +1096,26 @@ curl http://192.168.1.100:2429/
 3. **Install Development Dependencies**:
    ```bash
    pip install -r requirements.txt
-   pip install pytest black flake8
+   pip install pytest black flake8 pylint mypy
    ```
 
 4. **Run in Development Mode**:
    ```bash
+   python run.py --config development
+   # or
    python app.py
+   ```
+
+5. **Alternative Development Commands**:
+   ```bash
+   # Using Makefile (if available)
+   make run
+   
+   # Run with specific port
+   python run.py --port 3000
+   
+   # Run with debug mode
+   python run.py --debug
    ```
 
 </details>
@@ -1085,22 +1125,54 @@ curl http://192.168.1.100:2429/
 <summary>Understanding the codebase</summary>
 
 #### app.py - Main Application
-- Flask routes and endpoints
-- Speech recognition logic
-- Text processing and automation
-- Error handling and validation
+- Flask routes and endpoints with configuration integration
+- Speech recognition logic with audio format conversion
+- Text processing and PyAutoGUI automation
+- Error handling, validation, and logging
+- Health check and configuration endpoints
+
+#### config.py - Configuration System
+- Centralized configuration management
+- Environment-based settings (development, production, testing)
+- Audio processing configuration
+- Security and SSL settings
+- Validation and configuration summary methods
+
+#### run.py - Application Runner
+- CLI argument parsing and configuration
+- Convenient startup with multiple options
+- Version and help information
+- Environment-specific execution
 
 #### templates/index.html - Frontend
-- Responsive web interface
-- Audio recording functionality
-- Real-time visual feedback
-- Mobile-optimized design
+- Responsive web interface with space-themed design
+- Audio recording functionality with visualizer
+- Real-time status feedback
+- Mobile-optimized layout with touch controls
 
 #### tests/test_app.py - Tests
-- Unit tests for all endpoints
-- Input validation tests
-- Error condition tests
-- Integration tests
+- Unit tests for all API endpoints
+- Input validation and error condition tests
+- Health check and configuration endpoint tests
+- Comprehensive test coverage
+
+#### Dockerfile - Containerization
+- Production-ready Docker image
+- Multi-stage build process
+- Security best practices
+- Health check implementation
+
+#### docker-compose.yml - Deployment
+- Multi-container orchestration
+- Nginx reverse proxy configuration
+- Volume and network management
+- Production deployment settings
+
+#### Makefile - Project Management
+- Convenient commands for development
+- Testing, building, and deployment shortcuts
+- Docker and virtual environment management
+- Code quality and security checks
 
 </details>
 
