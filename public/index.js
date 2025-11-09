@@ -239,12 +239,22 @@ function selectText() {
 
 // Toggle recording function
 async function toggleRecording() {
+  // Prevent rapid clicking - ignore if already processing
+  if (recordButton.disabled) return;
+  
+  recordButton.disabled = true;
+  
   if (isRecording) {
     stopRecording();
   } else {
     updateRecordingState(false, true, 'Connecting...');
     await startRecording();
   }
+  
+  // Re-enable button after a short delay
+  setTimeout(() => {
+    recordButton.disabled = false;
+  }, 500);
 }
 
 async function startRecording() {
@@ -281,6 +291,16 @@ async function startRecording() {
 
     ws.onopen = () => {
       console.log("WebSocket connected!");
+      
+      // Check if microphone still exists (might have been stopped during connection)
+      if (!microphone) {
+        console.warn('⚠️ Microphone was stopped before WebSocket opened');
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+        return;
+      }
+      
       updateRecordingState(true, true);
       microphone.startRecording((audioChunk) => {
         if (ws && ws.readyState === WebSocket.OPEN) {
