@@ -1,4 +1,4 @@
-// Cloudflare Workers function to generate AssemblyAI token
+// Cloudflare Pages Function to generate AssemblyAI token
 export async function onRequest(context) {
   // Handle CORS preflight
   if (context.request.method === 'OPTIONS') {
@@ -12,11 +12,25 @@ export async function onRequest(context) {
   }
 
   try {
-    const ASSEMBLYAI_API_KEY = context.env.ASSEMBLYAI_API_KEY;
+    // Try multiple ways to access environment variables
+    const ASSEMBLYAI_API_KEY = context.env?.ASSEMBLYAI_API_KEY ||
+                                context.env?.assemblyai_api_key;
+    
+    console.log('🔍 Debugging environment access:');
+    console.log('  context.env exists:', !!context.env);
+    console.log('  API key found:', !!ASSEMBLYAI_API_KEY);
+    console.log('  API key length:', ASSEMBLYAI_API_KEY?.length || 0);
     
     if (!ASSEMBLYAI_API_KEY) {
-      console.error('❌ ASSEMBLYAI_API_KEY not configured');
-      return new Response(JSON.stringify({ error: 'API key not configured' }), {
+      console.error('❌ ASSEMBLYAI_API_KEY not found in environment');
+      console.error('  Available env keys:', Object.keys(context.env || {}));
+      return new Response(JSON.stringify({ 
+        error: 'API key not configured',
+        debug: {
+          hasEnv: !!context.env,
+          envKeys: Object.keys(context.env || {})
+        }
+      }), {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
@@ -24,6 +38,8 @@ export async function onRequest(context) {
         }
       });
     }
+
+    console.log('✅ API key loaded, calling AssemblyAI...');
 
     // Use AssemblyAI's official token endpoint
     const tokenResponse = await fetch('https://api.assemblyai.com/v2/realtime/token', {
@@ -37,11 +53,14 @@ export async function onRequest(context) {
       })
     });
 
+    console.log('📡 AssemblyAI response status:', tokenResponse.status);
+
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       console.error('❌ AssemblyAI token generation failed:', tokenResponse.status, errorText);
       return new Response(JSON.stringify({ 
         error: 'Failed to generate token from AssemblyAI',
+        status: tokenResponse.status,
         details: errorText 
       }), {
         status: tokenResponse.status,
@@ -67,9 +86,12 @@ export async function onRequest(context) {
 
   } catch (error) {
     console.error('❌ Token generation error:', error);
+    console.error('  Error message:', error.message);
+    console.error('  Error stack:', error.stack);
     return new Response(JSON.stringify({ 
       error: 'Failed to generate token',
-      message: error.message 
+      message: error.message,
+      type: error.name 
     }), {
       status: 500,
       headers: {
