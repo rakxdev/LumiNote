@@ -1,54 +1,296 @@
-header {
-  background: #09032f;
-  color: white;
-  height: 20vh;
+/* CSS Variables for Dark Theme */
+:root {
+  --bg-primary: #121212;
+  --bg-secondary: #1E1E1E;
+  --bg-tertiary: #2C2C2C;
+  --text-primary: #E0E0E0;
+  --text-secondary: #A0A0A0;
+  --accent-primary: #BB86FC;
+  --accent-secondary: #3700B3;
+  --success: #03DAC6;
+  --error: #CF6679;
+  --border: #333333;
+  --shadow: rgba(0, 0, 0, 0.5);
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 900px;
+ margin: 0 auto;
+  padding: 0 1rem; /* Reduced padding */
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding-left: 2.5%;
-  box-shadow: 0 0 32px 0 rgb(0 0 0 / 16%);
+  height: 100vh; /* Set a fixed viewport height */
 }
 
-.header__title {
-  font-size: 35px;
-  font-weight: 400;
-  margin-bottom: 0.2em;
-}
-
-.header__sub-title {
-  font-size: 18px;
-  font-weight: 200;
-}
-
-.real-time-interface {
-  padding: 1.25% 0 0 2.5%;
-}
-
-.real-time-interface__button {
+/* Header */
+.app-header {
   display: flex;
-  padding: 0.5em;
-  border-radius: 0.5rem;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0; /* Reduced padding */
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.logo {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+.status-indicator-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: var(--bg-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+}
+
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: all 0.4s ease;
+}
+
+.status-indicator.recording {
+  background: var(--error);
+  animation: pulse 1.5s infinite;
+}
+
+.status-indicator.connected {
+  background: var(--success);
+}
+
+#statusText {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color 0.4s ease;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(207, 102, 121, 0.7); }
+  50% { box-shadow: 0 0 0 8px rgba(207, 102, 121, 0); }
+}
+
+/* Main Interface */
+.transcription-interface {
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px var(--shadow);
+  border: 1px solid var(--border);
+  flex-grow: 1; /* Allow interface to grow */
+  display: flex;
+  flex-direction: column;
+  margin: 1rem 0; /* Reduced margin */
+  overflow: hidden; /* Prevent content from spilling */
+  padding: 1.5rem; /* Reduced padding */
+  min-height: 0; /* CRITICAL FIX: Allows flex item to shrink and enables child scrolling */
+}
+
+/* The .transcription-area class has been removed from HTML */
+
+.transcription-output {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem; /* Reduced padding */
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  width: 100%;
+  flex-grow: 1; /* This will make it take up available space */
+  overflow-y: auto; /* This will make it scroll when content overflows */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary) var(--bg-secondary);
+  /* Removed margin-bottom as copy button is no longer absolutely positioned here */
+}
+
+.transcription-output::-webkit-scrollbar {
+  width: 8px;
+}
+
+.transcription-output::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.transcription-output::-webkit-scrollbar-thumb {
+  background-color: var(--accent-primary);
+  border-radius: 10px;
+  border: 2px solid var(--bg-secondary);
+}
+
+.transcription-output:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.transcription-output:empty::before {
+  content: attr(placeholder);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+/* The .transcription-controls class has been removed from HTML as the copy button is now in .controls */
+
+.control-button {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem;
   cursor: pointer;
-  background: #6b2bd6;
-  color: white;
-  width: 5%;
-  font-size: 18px;
+  transition: all 0.3s ease;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.real-time-interface__title {
-  margin-bottom: 0.5em;
-  font-size: 18px;
-  font-weight: 525;
+.control-button:hover {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
 }
 
-.real-time-interface__message {
-  text-align: left;
-  width: 95%;
-  margin-top: 0.5em;
-  font-size: 19px;
-  font-weight: 400;
-  box-shadow: 0 0 32px 0 rgb(0 0 0 / 16%);
-  padding: 1em;
-  transition: 0.5s ease-in;
+.copy-feedback {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  background: var(--success);
+  color: var(--bg-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.copy-feedback.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-shrink: 0;
+}
+
+.clear-button {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  padding: 1rem;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+}
+
+.clear-button:hover {
+  background: var(--error);
+  color: var(--bg-primary);
+}
+
+.clear-button:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.record-button {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.record-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+.record-button.recording {
+  background: var(--error);
+}
+
+.record-button .icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .app-header {
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .transcription-interface {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 1.5rem;
+  }
+
+  .record-button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .transcription-output {
+    font-size: 1rem;
+  }
+}
+
+/* Footer */
+.app-footer {
+  text-align: center;
+  padding: 1.5rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0; /* Prevent footer from shrinking */
 }
