@@ -25,7 +25,8 @@ const TokenManager = {
   
   async fetchToken() {
     try {
-      const response = await fetch("http://localhost:8000/token");
+      // Use relative URL - works on both localhost and Cloudflare
+      const response = await fetch("/api/token");
       const data = await response.json();
       
       if (data.token) {

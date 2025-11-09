@@ -1,0 +1,22 @@
+# Cloudflare Pages configuration
+name = "luminote"
+compatibility_date = "2024-01-01"
+
+# Environment variables
+# Set ASSEMBLYAI_API_KEY in Cloudflare dashboard
+
+[build]
+command = ""
+cwd = ""
+watch_dirs = []
+
+# Pages Functions configuration
+pages_build_output_dir = "public"
+
+# For local development
+[env.development]
+vars = { }
+
+# For production
+[env.production]
+vars = { }
