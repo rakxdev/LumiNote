@@ -12,24 +12,16 @@ export async function onRequest(context) {
   }
 
   try {
-    // Try multiple ways to access environment variables
-    const ASSEMBLYAI_API_KEY = context.env?.ASSEMBLYAI_API_KEY ||
-                                context.env?.assemblyai_api_key;
+    // TEMPORARY: Hardcoded API key for testing
+    const ASSEMBLYAI_API_KEY = '2100584f7fff46e5bcacdb49232dd5b3';
     
-    console.log('🔍 Debugging environment access:');
-    console.log('  context.env exists:', !!context.env);
-    console.log('  API key found:', !!ASSEMBLYAI_API_KEY);
-    console.log('  API key length:', ASSEMBLYAI_API_KEY?.length || 0);
+    console.log('🔍 Using hardcoded API key for testing');
+    console.log('  API key length:', ASSEMBLYAI_API_KEY.length);
     
     if (!ASSEMBLYAI_API_KEY) {
-      console.error('❌ ASSEMBLYAI_API_KEY not found in environment');
-      console.error('  Available env keys:', Object.keys(context.env || {}));
+      console.error('❌ ASSEMBLYAI_API_KEY not found');
       return new Response(JSON.stringify({ 
-        error: 'API key not configured',
-        debug: {
-          hasEnv: !!context.env,
-          envKeys: Object.keys(context.env || {})
-        }
+        error: 'API key not configured'
       }), {
         status: 500,
         headers: {
