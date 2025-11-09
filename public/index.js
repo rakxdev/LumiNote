@@ -283,7 +283,7 @@ async function startRecording() {
       console.log("WebSocket connected!");
       updateRecordingState(true, true);
       microphone.startRecording((audioChunk) => {
-        if (ws.readyState === WebSocket.OPEN) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(audioChunk);
         }
       });
