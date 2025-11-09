@@ -247,6 +247,20 @@ body {
   background: var(--error);
 }
 
+.record-button:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.record-button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .record-button .icon-container {
   display: flex;
   align-items: center;
