@@ -15,6 +15,7 @@ export async function onRequest(context) {
     const ASSEMBLYAI_API_KEY = context.env.ASSEMBLYAI_API_KEY;
     
     if (!ASSEMBLYAI_API_KEY) {
+      console.error('❌ ASSEMBLYAI_API_KEY not configured');
       return new Response(JSON.stringify({ error: 'API key not configured' }), {
         status: 500,
         headers: {
@@ -24,10 +25,38 @@ export async function onRequest(context) {
       });
     }
 
-    // Create token using AssemblyAI API key
-    const token = await generateToken(ASSEMBLYAI_API_KEY);
+    // Use AssemblyAI's official token endpoint
+    const tokenResponse = await fetch('https://api.assemblyai.com/v2/realtime/token', {
+      method: 'POST',
+      headers: {
+        'Authorization': ASSEMBLYAI_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        expires_in: 600 // 10 minutes
+      })
+    });
 
-    return new Response(JSON.stringify({ token }), {
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('❌ AssemblyAI token generation failed:', tokenResponse.status, errorText);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to generate token from AssemblyAI',
+        details: errorText 
+      }), {
+        status: tokenResponse.status,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
+    const data = await tokenResponse.json();
+    
+    console.log('✅ Token generated successfully from AssemblyAI');
+    
+    return new Response(JSON.stringify({ token: data.token }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -37,8 +66,11 @@ export async function onRequest(context) {
     });
 
   } catch (error) {
-    console.error('Token generation error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to generate token' }), {
+    console.error('❌ Token generation error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Failed to generate token',
+      message: error.message 
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
@@ -46,67 +78,4 @@ export async function onRequest(context) {
       }
     });
   }
-}
-
-// Generate JWT token for AssemblyAI
-async function generateToken(apiKey) {
-  // JWT header
-  const header = {
-    alg: 'HS256',
-    typ: 'JWT'
-  };
-
-  // JWT payload
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    api_key: apiKey,
-    iat: now,
-    exp: now + 600 // 10 minutes expiry
-  };
-
-  // Encode header and payload
-  const encodedHeader = base64UrlEncode(JSON.stringify(header));
-  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
-
-  // Create signature
-  const data = `${encodedHeader}.${encodedPayload}`;
-  const signature = await createSignature(data, apiKey);
-
-  // Return complete JWT
-  return `${data}.${signature}`;
-}
-
-// Base64 URL encode
-function base64UrlEncode(str) {
-  const base64 = btoa(str);
-  return base64
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
-
-// Create HMAC-SHA256 signature
-async function createSignature(data, secret) {
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(secret);
-  const messageData = encoder.encode(data);
-
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    cryptoKey,
-    messageData
-  );
-
-  // Convert signature to base64url
-  const signatureArray = Array.from(new Uint8Array(signature));
-  const signatureStr = String.fromCharCode.apply(null, signatureArray);
-  return base64UrlEncode(signatureStr);
 }

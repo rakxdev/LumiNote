@@ -15,6 +15,13 @@ module.exports = {
         sourceType: "script",
       },
     },
+    {
+      files: ["functions/**/*.js"],
+      parserOptions: {
+        sourceType: "module",
+        ecmaVersion: "latest",
+      },
+    },
   ],
   parserOptions: {
     ecmaVersion: "latest",
