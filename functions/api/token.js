@@ -12,11 +12,11 @@ export async function onRequest(context) {
   }
 
   try {
-    // TEMPORARY: Hardcoded API key for testing
-    const ASSEMBLYAI_API_KEY = '2100584f7fff46e5bcacdb49232dd5b3';
+    // Get API key from environment variable
+    const ASSEMBLYAI_API_KEY = context.env.ASSEMBLYAI_API_KEY;
     
     if (!ASSEMBLYAI_API_KEY) {
-      console.error('❌ ASSEMBLYAI_API_KEY not found');
+      console.error('❌ ASSEMBLYAI_API_KEY not found in environment');
       return new Response(JSON.stringify({ 
         error: 'API key not configured'
       }), {
@@ -30,12 +30,12 @@ export async function onRequest(context) {
 
     console.log('✅ API key loaded, calling AssemblyAI...');
 
-    // Use the CORRECT AssemblyAI endpoint (matching tokenGenerator.js)
+    // Use the correct AssemblyAI streaming endpoint (matching tokenGenerator.js)
     const expiresInSeconds = 600; // 10 minutes
     const url = `https://streaming.assemblyai.com/v3/token?expires_in_seconds=${expiresInSeconds}`;
     
     const tokenResponse = await fetch(url, {
-      method: 'GET',  // Changed to GET
+      method: 'GET',
       headers: {
         'Authorization': ASSEMBLYAI_API_KEY,
       }
