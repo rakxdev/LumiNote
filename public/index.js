@@ -239,22 +239,21 @@ function selectText() {
 
 // Toggle recording function
 async function toggleRecording() {
-  // Prevent rapid clicking - ignore if already processing
+  // Prevent clicking while processing
   if (recordButton.disabled) return;
   
-  recordButton.disabled = true;
-  
   if (isRecording) {
+    // Disable button until recording actually stops
+    recordButton.disabled = true;
     stopRecording();
+    // Button will be re-enabled in updateRecordingState when recording = false
   } else {
+    // Disable button until recording actually starts
+    recordButton.disabled = true;
     updateRecordingState(false, true, 'Connecting...');
     await startRecording();
+    // Button will be re-enabled in ws.onopen or on error
   }
-  
-  // Re-enable button after a short delay
-  setTimeout(() => {
-    recordButton.disabled = false;
-  }, 500);
 }
 
 async function startRecording() {
@@ -298,10 +297,13 @@ async function startRecording() {
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.close();
         }
+        recordButton.disabled = false; // Re-enable button
         return;
       }
       
       updateRecordingState(true, true);
+      recordButton.disabled = false; // Re-enable button now that recording started
+      
       microphone.startRecording((audioChunk) => {
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(audioChunk);
@@ -330,6 +332,7 @@ async function startRecording() {
     ws.onerror = (err) => {
       console.error("WebSocket error:", err);
       updateRecordingState(false);
+      recordButton.disabled = false; // Re-enable button on error
       alert("Connection error. Please check your internet connection and try again.");
     };
 
@@ -342,6 +345,7 @@ async function startRecording() {
     console.error("Error starting recording:", error);
     alert("Error accessing microphone. Please check permissions.");
     updateRecordingState(false);
+    recordButton.disabled = false; // Re-enable button on error
   }
 }
 
@@ -378,6 +382,11 @@ function stopRecording() {
 
 function updateRecordingState(recording, connected = false, customStatus = null) {
   isRecording = recording;
+
+  // Re-enable record button when recording stops
+  if (!recording && recordButton.disabled) {
+    recordButton.disabled = false;
+  }
 
   // Disable clear button while recording
   const clearButton = document.getElementById('clearButton');
