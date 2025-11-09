@@ -15,9 +15,6 @@ export async function onRequest(context) {
     // TEMPORARY: Hardcoded API key for testing
     const ASSEMBLYAI_API_KEY = '2100584f7fff46e5bcacdb49232dd5b3';
     
-    console.log('🔍 Using hardcoded API key for testing');
-    console.log('  API key length:', ASSEMBLYAI_API_KEY.length);
-    
     if (!ASSEMBLYAI_API_KEY) {
       console.error('❌ ASSEMBLYAI_API_KEY not found');
       return new Response(JSON.stringify({ 
@@ -33,16 +30,15 @@ export async function onRequest(context) {
 
     console.log('✅ API key loaded, calling AssemblyAI...');
 
-    // Use AssemblyAI's official token endpoint
-    const tokenResponse = await fetch('https://api.assemblyai.com/v2/realtime/token', {
-      method: 'POST',
+    // Use the CORRECT AssemblyAI endpoint (matching tokenGenerator.js)
+    const expiresInSeconds = 600; // 10 minutes
+    const url = `https://streaming.assemblyai.com/v3/token?expires_in_seconds=${expiresInSeconds}`;
+    
+    const tokenResponse = await fetch(url, {
+      method: 'GET',  // Changed to GET
       headers: {
         'Authorization': ASSEMBLYAI_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        expires_in: 600 // 10 minutes
-      })
+      }
     });
 
     console.log('📡 AssemblyAI response status:', tokenResponse.status);
@@ -79,7 +75,6 @@ export async function onRequest(context) {
   } catch (error) {
     console.error('❌ Token generation error:', error);
     console.error('  Error message:', error.message);
-    console.error('  Error stack:', error.stack);
     return new Response(JSON.stringify({ 
       error: 'Failed to generate token',
       message: error.message,
