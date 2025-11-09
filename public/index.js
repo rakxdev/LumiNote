@@ -327,8 +327,24 @@ async function startRecording() {
 
 function stopRecording() {
   if (ws) {
-    ws.send(JSON.stringify({ type: "Terminate" }));
-    ws.close();
+    // Only send Terminate if WebSocket is OPEN
+    if (ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.send(JSON.stringify({ type: "Terminate" }));
+      } catch (error) {
+        console.warn('⚠️ Failed to send Terminate message:', error.message);
+      }
+    }
+    
+    // Close WebSocket if it's not already CLOSING or CLOSED
+    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+      try {
+        ws.close();
+      } catch (error) {
+        console.warn('⚠️ Failed to close WebSocket:', error.message);
+      }
+    }
+    
     ws = null;
   }
 
