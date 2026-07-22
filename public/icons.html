@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LumiNote | 15 SVG Icon Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --bg-dark: #0b0c10;
+        --bg-card: rgba(22, 25, 34, 0.75);
+        --bg-card-border: rgba(255, 255, 255, 0.08);
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --accent-purple: #8b5cf6;
+        --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #06b6d4 100%);
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-dark);
+        background-image: radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
+                          radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.12) 0%, transparent 40%);
+        color: var(--text-primary);
+        padding: 2rem;
+        min-height: 100vh;
+      }
+
+      .gallery-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+
+      .gallery-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+      }
+
+      .gallery-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .icon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.5rem;
+        max-width: 1300px;
+        margin: 0 auto;
+      }
+
+      .icon-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--bg-card-border);
+        border-radius: 18px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+      }
+
+      .icon-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(139, 92, 246, 0.5);
+        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.25);
+      }
+
+      .icon-preview {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .icon-preview img {
+        width: 100%;
+        height: 100%;
+      }
+
+      .icon-number {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #c084fc;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+      }
+
+      .icon-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-top: 2rem;
+        color: #06b6d4;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="gallery-header">
+      <h1 class="gallery-title">LumiNote SVG Icon Gallery</h1>
+      <p class="gallery-subtitle">Click any design or tell me the Option number to set it as the primary site logo & favicon!</p>
+      <a href="/" class="back-link">← Back to LumiNote App</a>
+    </div>
+
+    <div class="icon-grid">
+      <div class="icon-card">
+        <div class="icon-number">Option 01</div>
+        <div class="icon-preview"><img src="icons/icon-01.svg" alt="Option 01"></div>
+        <div class="icon-name">Luminous Wave & Orbit</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 02</div>
+        <div class="icon-preview"><img src="icons/icon-02.svg" alt="Option 02"></div>
+        <div class="icon-name">Neon Pulse Ripple</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 03</div>
+        <div class="icon-preview"><img src="icons/icon-03.svg" alt="Option 03"></div>
+        <div class="icon-name">Diamond Cyber Spark</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 04</div>
+        <div class="icon-preview"><img src="icons/icon-04.svg" alt="Option 04"></div>
+        <div class="icon-name">Holographic Infinity</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 05</div>
+        <div class="icon-preview"><img src="icons/icon-05.svg" alt="Option 05"></div>
+        <div class="icon-name">Quantum Equalizer</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 06</div>
+        <div class="icon-preview"><img src="icons/icon-06.svg" alt="Option 06"></div>
+        <div class="icon-name">Horizon Audio Orb</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 07</div>
+        <div class="icon-preview"><img src="icons/icon-07.svg" alt="Option 07"></div>
+        <div class="icon-name">Minimalist Microphone</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 08</div>
+        <div class="icon-preview"><img src="icons/icon-08.svg" alt="Option 08"></div>
+        <div class="icon-name">Luminary Hex Shield</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 09</div>
+        <div class="icon-preview"><img src="icons/icon-09.svg" alt="Option 09"></div>
+        <div class="icon-name">Cosmic Constellation</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 10</div>
+        <div class="icon-preview"><img src="icons/icon-10.svg" alt="Option 10"></div>
+        <div class="icon-name">Electric Eclipse Flare</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 11</div>
+        <div class="icon-preview"><img src="icons/icon-11.svg" alt="Option 11"></div>
+        <div class="icon-name">Synthwave Crystal Gem</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 12</div>
+        <div class="icon-preview"><img src="icons/icon-12.svg" alt="Option 12"></div>
+        <div class="icon-name">Monogram 'L' Wave</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 13</div>
+        <div class="icon-preview"><img src="icons/icon-13.svg" alt="Option 13"></div>
+        <div class="icon-name">Radiant Voice Beacon</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 14</div>
+        <div class="icon-preview"><img src="icons/icon-14.svg" alt="Option 14"></div>
+        <div class="icon-name">Neon Hyperloop</div>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-number">Option 15</div>
+        <div class="icon-preview"><img src="icons/icon-15.svg" alt="Option 15"></div>
+        <div class="icon-name">Studio Equalizer Card</div>
+      </div>
+    </div>
+  </body>
+</html>
