@@ -213,8 +213,8 @@ function renderTranscript() {
     }
   }
 
-  // Automatic scrolling to bottom as text fills the container
-  scrollToBottom();
+  // Smart auto-scrolling: only auto-scroll if user is near bottom or not editing
+  scrollToBottomSmart();
   updateStats();
 }
 
@@ -234,8 +234,13 @@ function commitActiveTurn() {
   updateStats();
 }
 
-function scrollToBottom() {
-  messageEl.scrollTop = messageEl.scrollHeight;
+// Smart auto-scroll logic: preserves scroll position if user scrolls up to edit
+function scrollToBottomSmart() {
+  const distanceFromBottom = messageEl.scrollHeight - messageEl.clientHeight - messageEl.scrollTop;
+  // If user is near the bottom (within 120px) or editor is not focused, scroll to bottom
+  if (distanceFromBottom < 120 || document.activeElement !== messageEl) {
+    messageEl.scrollTop = messageEl.scrollHeight;
+  }
 }
 
 // Copy to clipboard functionality
@@ -352,8 +357,8 @@ async function startRecording() {
       return;
     }
 
-    // Universal-3.5 Pro streaming WebSocket URL at 16kHz
-    const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=universal-3-5-pro&sample_rate=16000&encoding=pcm_s16le&formatted_finals=true&token=${token}`;
+    // Universal-3.5 Pro streaming WebSocket URL tuned for ultra-low latency (min_turn_silence=100ms, max_turn_silence=800ms)
+    const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=universal-3-5-pro&sample_rate=16000&encoding=pcm_s16le&formatted_finals=true&min_turn_silence=100&max_turn_silence=800&token=${token}`;
     
     // Close any residual WebSocket to enforce max 1 concurrent session limit
     if (ws) {
