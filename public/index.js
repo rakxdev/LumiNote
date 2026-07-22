@@ -22,11 +22,23 @@ let baseText = "";
 let currentTurnOrder = null;
 let activeTurnText = "";
 
-function changeModel() {
+async function changeModel() {
   if (modelSelect) {
     selectedModel = modelSelect.value;
+    const modelLabel = selectedModel === "universal-streaming-english" ? "Fast Realtime (v01)" : "Universal-3.5 Pro";
+    
     if (modelBadge) {
-      modelBadge.textContent = selectedModel === "universal-streaming-english" ? "Fast Realtime (v01)" : "Universal-3.5 Pro";
+      modelBadge.textContent = modelLabel;
+    }
+    
+    if (isRecording) {
+      console.log(`🔄 Switching active stream to ${selectedModel}...`);
+      stopRecording();
+      
+      setTimeout(async () => {
+        updateRecordingState(false, true, `Switching to ${modelLabel}...`);
+        await startRecording();
+      }, 350);
     }
   }
 }
