@@ -14,7 +14,7 @@ const modelBadge = document.querySelector(".model-badge");
 let isRecording = false;
 let ws = null;
 let microphone = null;
-let selectedModel = "universal-streaming-english"; // Default: Fast Realtime v01 Speed
+let selectedModel = "deepgram-nova-3"; // Default: Ultra-fast Deepgram Nova-3 (150ms)
 
 // State management for interactive live editing
 let baseText = ""; 
@@ -49,20 +49,25 @@ async function selectCustomModel(value, label, element) {
   options.forEach(opt => opt.classList.remove('active'));
   if (element) element.classList.add('active');
 
-  if (modelBadge) {
-    modelBadge.textContent = value === "universal-streaming-english" ? "Fast Realtime (v01)" : "Universal-3.5 Pro";
-  }
-
   closeModelDropdown();
 
   if (isRecording) {
     console.log(`🔄 Live switching active stream to ${selectedModel}...`);
-    const modelName = value === "universal-streaming-english" ? "Fast Realtime" : "Universal-3.5 Pro";
+    let modelName = "Deepgram Nova-3";
+    if (value === "universal-streaming-english") modelName = "AssemblyAI Fast";
+    if (value === "universal-3-5-pro") modelName = "AssemblyAI 3.5 Pro";
+
     updateRecordingState(true, true, `Switching to ${modelName}...`);
 
     if (ws) {
       if (ws.readyState === WebSocket.OPEN) {
-        try { ws.send(JSON.stringify({ type: "Terminate" })); } catch (e) {}
+        try {
+          if (selectedModel.startsWith('deepgram')) {
+            ws.send(JSON.stringify({ type: "CloseStream" }));
+          } else {
+            ws.send(JSON.stringify({ type: "Terminate" }));
+          }
+        } catch (e) {}
       }
       try { ws.close(); } catch (e) {}
       ws = null;
@@ -74,11 +79,12 @@ async function selectCustomModel(value, label, element) {
   }
 }
 
-// Token Management System
+// Token & Key Management System
 const TokenManager = {
   token: null,
   tokenTimestamp: null,
   refreshInterval: null,
+  deepgramKey: null,
   
   isValid() {
     if (!this.token || !this.tokenTimestamp) return false;
@@ -94,12 +100,10 @@ const TokenManager = {
       if (data.token) {
         this.token = data.token;
         this.tokenTimestamp = Date.now();
-        console.log('✅ Token refreshed successfully');
+        console.log('✅ AssemblyAI Token refreshed successfully');
         return data.token;
-      } else {
-        console.error('❌ Token fetch failed: No token in response');
-        return null;
       }
+      return null;
     } catch (error) {
       console.error('❌ Token fetch error:', error);
       return null;
@@ -108,27 +112,36 @@ const TokenManager = {
   
   async getToken() {
     if (this.isValid()) {
-      const age = Math.round((Date.now() - this.tokenTimestamp) / 1000);
-      console.log(`🔄 Using cached token (age: ${age}s)`);
       return this.token;
     }
-    console.log('🔄 Fetching fresh token...');
     return await this.fetchToken();
+  },
+
+  async getDeepgramKey() {
+    if (this.deepgramKey) return this.deepgramKey;
+    try {
+      const res = await fetch("/api/deepgram-key");
+      const data = await res.json();
+      if (data.key) {
+        this.deepgramKey = data.key;
+        return data.key;
+      }
+    } catch (e) {
+      console.warn("⚠️ Failed to fetch Deepgram key from endpoint, using fallback.");
+    }
+    return "2b2fe3bc8ae482b82b218201b9c15c40a9fcba4e";
   },
   
   startBackgroundRefresh() {
     this.refreshInterval = setInterval(() => {
-      console.log('🔄 Background token refresh...');
       this.fetchToken();
     }, 50000);
-    console.log('✅ Background token refresh started (every 50s)');
   },
   
   stopBackgroundRefresh() {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
       this.refreshInterval = null;
-      console.log('⏹️ Background token refresh stopped');
     }
   }
 };
@@ -147,7 +160,6 @@ function getAudioContext() {
   
   if (globalAudioContext.state === 'suspended') {
     globalAudioContext.resume();
-    console.log('🎵 AudioContext resumed');
   }
   
   return globalAudioContext;
@@ -418,7 +430,10 @@ async function toggleRecording() {
     stopRecording();
   } else {
     recordButton.disabled = true;
-    const modelName = selectedModel === "universal-streaming-english" ? "Fast Realtime" : "Universal-3.5 Pro";
+    let modelName = "Deepgram Nova-3";
+    if (selectedModel === "universal-streaming-english") modelName = "AssemblyAI Fast";
+    if (selectedModel === "universal-3-5-pro") modelName = "AssemblyAI 3.5 Pro";
+
     updateRecordingState(false, true, `Connecting (${modelName})...`);
     await startRecording();
   }
@@ -428,15 +443,12 @@ async function startRecording() {
   try {
     microphone = createMicrophone();
     
-    const [permissionResult, token] = await Promise.all([
-      microphone.requestPermission()
-        .then(() => true)
-        .catch((err) => {
-          console.error('❌ Microphone permission error:', err);
-          return false;
-        }),
-      TokenManager.getToken()
-    ]);
+    const permissionResult = await microphone.requestPermission()
+      .then(() => true)
+      .catch((err) => {
+        console.error('❌ Microphone permission error:', err);
+        return false;
+      });
 
     if (!permissionResult) {
       alert("Microphone permission denied. Please allow microphone access.");
@@ -444,74 +456,123 @@ async function startRecording() {
       return;
     }
 
-    if (!token) {
-      alert("Failed to get authorization token. Please try again.");
-      updateRecordingState(false);
-      return;
-    }
-
-    const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
-    
     if (ws) {
       try { ws.close(); } catch (e) {}
       ws = null;
     }
 
-    ws = new WebSocket(endpoint);
-
-    ws.onopen = () => {
-      console.log(`🚀 Connected to AssemblyAI Realtime (${selectedModel})!`);
+    // Branch logic by selected model
+    if (selectedModel === 'deepgram-nova-3') {
+      const dgKey = await TokenManager.getDeepgramKey();
+      const dgUrl = 'wss://api.deepgram.com/v1/listen?model=nova-3&encoding=linear16&sample_rate=16000&smart_format=true&interim_results=true';
       
-      if (!microphone) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.close();
+      ws = new WebSocket(dgUrl, ['token', dgKey]);
+
+      ws.onopen = () => {
+        console.log('🚀 Connected to Deepgram Nova-3 Realtime!');
+        if (!microphone) {
+          if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+          recordButton.disabled = false;
+          return;
         }
+
+        updateRecordingState(true, true);
         recordButton.disabled = false;
+
+        microphone.startRecording((audioChunk) => {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(audioChunk);
+          }
+        });
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === "Results" && msg.channel?.alternatives?.[0]) {
+            const transcript = msg.channel.alternatives[0].transcript || "";
+            if (!transcript.trim()) return;
+
+            if (msg.is_final) {
+              activeTurnText = transcript;
+              commitActiveTurn();
+            } else {
+              activeTurnText = transcript;
+              renderTranscript();
+            }
+          }
+        } catch (e) {
+          console.error("Deepgram message parse error:", e);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.error("Deepgram WebSocket error:", err);
+        updateRecordingState(false);
+        recordButton.disabled = false;
+      };
+
+      ws.onclose = () => {
+        console.log("Deepgram WebSocket closed");
+        updateRecordingState(false, false);
+      };
+
+    } else {
+      // AssemblyAI Engine
+      const token = await TokenManager.getToken();
+      if (!token) {
+        alert("Failed to get authorization token. Please try again.");
+        updateRecordingState(false);
         return;
       }
-      
-      updateRecordingState(true, true);
-      recordButton.disabled = false;
-      
-      microphone.startRecording((audioChunk) => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(audioChunk);
-        }
-      });
-    };
 
-    ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      
-      if (msg.type === "Begin") {
-        console.log("✅ Session Begin:", msg.configuration);
-      } else if (msg.type === "Turn") {
-        const { turn_order, transcript } = msg;
-        
-        if (currentTurnOrder !== null && turn_order !== currentTurnOrder) {
-          commitActiveTurn();
+      const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
+      ws = new WebSocket(endpoint);
+
+      ws.onopen = () => {
+        console.log(`🚀 Connected to AssemblyAI Realtime (${selectedModel})!`);
+        if (!microphone) {
+          if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+          recordButton.disabled = false;
+          return;
         }
         
-        currentTurnOrder = turn_order;
-        activeTurnText = transcript || "";
-        renderTranscript();
-      }
-    };
+        updateRecordingState(true, true);
+        recordButton.disabled = false;
+        
+        microphone.startRecording((audioChunk) => {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(audioChunk);
+          }
+        });
+      };
 
-    ws.onerror = (err) => {
-      console.error("WebSocket error:", err);
-      updateRecordingState(false);
-      recordButton.disabled = false;
-      alert("Connection error. Please check your internet connection.");
-    };
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === "Turn") {
+          const { turn_order, transcript } = msg;
+          if (currentTurnOrder !== null && turn_order !== currentTurnOrder) {
+            commitActiveTurn();
+          }
+          currentTurnOrder = turn_order;
+          activeTurnText = transcript || "";
+          renderTranscript();
+        }
+      };
 
-    ws.onclose = (evt) => {
-      console.log("WebSocket closed with code:", evt.code);
-      if (evt.code === 1008) {
-        alert("Session conflict (Too many concurrent sessions). Please wait a moment and try again.");
-      }
-      updateRecordingState(false, false);
-    };
+      ws.onerror = (err) => {
+        console.error("AssemblyAI WebSocket error:", err);
+        updateRecordingState(false);
+        recordButton.disabled = false;
+      };
+
+      ws.onclose = (evt) => {
+        if (evt.code === 1008) {
+          alert("Session conflict (Too many concurrent sessions). Please wait a moment and try again.");
+        }
+        updateRecordingState(false, false);
+      };
+    }
 
   } catch (error) {
     console.error("Error starting recording:", error);
@@ -525,20 +586,17 @@ function stopRecording() {
   if (ws) {
     if (ws.readyState === WebSocket.OPEN) {
       try {
-        ws.send(JSON.stringify({ type: "Terminate" }));
-      } catch (error) {
-        console.warn('⚠️ Failed to send Terminate message:', error.message);
-      }
+        if (selectedModel === 'deepgram-nova-3') {
+          ws.send(JSON.stringify({ type: "CloseStream" }));
+        } else {
+          ws.send(JSON.stringify({ type: "Terminate" }));
+        }
+      } catch (error) {}
     }
     
     if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-      try {
-        ws.close();
-      } catch (error) {
-        console.warn('⚠️ Failed to close WebSocket:', error.message);
-      }
+      try { ws.close(); } catch (error) {}
     }
-    
     ws = null;
   }
 
@@ -549,7 +607,6 @@ function stopRecording() {
 
   commitActiveTurn();
   currentTurnOrder = null;
-
   updateRecordingState(false);
 }
 
@@ -577,7 +634,9 @@ function updateRecordingState(recording, connected = false, customStatus = null)
   statusIndicator.classList.toggle('recording', recording);
   statusIndicator.classList.toggle('connected', !recording && connected);
 
-  const modelLabel = selectedModel === "universal-streaming-english" ? "Fast Realtime" : "Universal-3.5 Pro";
+  let modelLabel = "Deepgram Nova-3";
+  if (selectedModel === "universal-streaming-english") modelLabel = "AssemblyAI Fast";
+  if (selectedModel === "universal-3-5-pro") modelLabel = "AssemblyAI 3.5 Pro";
 
   if (customStatus) {
     statusText.textContent = customStatus;
@@ -605,10 +664,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     messageEl.addEventListener('input', onEditorInput);
   }
 
-  console.log('🚀 Initializing LumiNote token system...');
-  await TokenManager.fetchToken();
+  console.log('🚀 Initializing LumiNote systems...');
+  await Promise.all([
+    TokenManager.fetchToken(),
+    TokenManager.getDeepgramKey()
+  ]);
   TokenManager.startBackgroundRefresh();
-  console.log('✅ Token system ready!');
+  console.log('✅ Token & Key systems ready!');
   
   getAudioContext();
   console.log('🎵 Audio system ready (16kHz Native)!');

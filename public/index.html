@@ -19,33 +19,42 @@
           <img src="logo.svg" alt="LumiNote Logo" class="logo-image">
           <div class="logo-title-group">
             <span class="logo-text">LumiNote</span>
-            <span class="model-badge">Universal-3.5 Pro</span>
+            <span class="model-badge">v02</span>
           </div>
         </div>
         <div class="header-right">
           <div class="custom-model-switcher" id="customModelSwitcher">
             <button type="button" class="model-switcher-btn" id="modelSwitcherBtn" onclick="toggleModelDropdown(event)">
-              <span id="selectedModelLabel">⚡ Fast Realtime (v01 Speed)</span>
+              <span id="selectedModelLabel">🚀 Deepgram Nova-3 (150ms)</span>
               <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             
             <div class="model-dropdown-menu" id="modelDropdownMenu">
-              <div class="model-option active" data-value="universal-streaming-english" onclick="selectCustomModel('universal-streaming-english', '⚡ Fast Realtime (v01 Speed)', this)">
-                <span class="option-icon">⚡</span>
+              <div class="model-option active" data-value="deepgram-nova-3" onclick="selectCustomModel('deepgram-nova-3', '🚀 Deepgram Nova-3 (150ms)', this)">
+                <span class="option-icon">🚀</span>
                 <div class="option-details">
-                  <span class="option-title">Fast Realtime</span>
-                  <span class="option-desc">Instant sub-100ms streaming (v01 Speed)</span>
+                  <span class="option-title">Deepgram Nova-3</span>
+                  <span class="option-desc">Ultra-fast 150ms real-time latency (Recommended)</span>
                 </div>
-                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
 
-              <div class="model-option" data-value="universal-3-5-pro" onclick="selectCustomModel('universal-3-5-pro', '🧠 Universal-3.5 Pro', this)">
+              <div class="model-option" data-value="universal-streaming-english" onclick="selectCustomModel('universal-streaming-english', '⚡ AssemblyAI Fast Realtime', this)">
+                <span class="option-icon">⚡</span>
+                <div class="option-details">
+                  <span class="option-title">AssemblyAI Fast Realtime</span>
+                  <span class="option-desc">Sub-200ms streaming (v01 Speed)</span>
+                </div>
+                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+
+              <div class="model-option" data-value="universal-3-5-pro" onclick="selectCustomModel('universal-3-5-pro', '🧠 AssemblyAI Universal-3.5 Pro', this)">
                 <span class="option-icon">🧠</span>
                 <div class="option-details">
-                  <span class="option-title">Universal-3.5 Pro</span>
+                  <span class="option-title">AssemblyAI Universal-3.5 Pro</span>
                   <span class="option-desc">Deep voice agent model</span>
                 </div>
-                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
             </div>
           </div>
