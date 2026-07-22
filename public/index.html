@@ -23,10 +23,12 @@
           </div>
         </div>
         <div class="header-right">
-          <select id="modelSelect" class="model-select" onchange="changeModel()" title="Select Speech Model">
-            <option value="universal-streaming-english" selected>⚡ Fast Realtime (v01 Speed)</option>
-            <option value="universal-3-5-pro">🧠 Universal-3.5 Pro</option>
-          </select>
+          <div class="model-select-wrapper">
+            <select id="modelSelect" class="model-select" onchange="changeModel()" title="Select Speech Model">
+              <option value="universal-streaming-english" selected>⚡ Fast Realtime (v01 Speed)</option>
+              <option value="universal-3-5-pro">🧠 Universal-3.5 Pro</option>
+            </select>
+          </div>
           <div class="status-indicator-container" id="statusContainer">
             <div class="status-indicator" id="statusIndicator"></div>
             <span id="statusText">Ready</span>
