@@ -1,0 +1,13 @@
+{
+  "routes": [
+    {
+      "routePath": "/api/token",
+      "mountPath": "/api",
+      "method": "",
+      "module": [
+        "api/token.js:onRequest"
+      ]
+    }
+  ],
+  "baseURL": "/"
+}

@@ -15,7 +15,7 @@ let ws = null;
 let microphone = null;
 
 // State management for interactive live editing
-let baseText = ""; // Text edited by user or finalized turns
+let baseText = ""; 
 let currentTurnOrder = null;
 let activeTurnText = "";
 
@@ -165,12 +165,10 @@ function mergeBuffers(lhs, rhs) {
 
 // Synchronize DOM edits with internal state (Interactive Editing)
 function onEditorInput() {
-  // Capture base text from contenteditable container, excluding live interim span
-  const liveSpan = messageEl.querySelector('.live-turn');
+  const liveSpan = document.getElementById('liveTurnSpan');
   if (liveSpan) {
-    // Extract non-span text as user base text
     const clone = messageEl.cloneNode(true);
-    const tempLiveSpan = clone.querySelector('.live-turn');
+    const tempLiveSpan = clone.querySelector('#liveTurnSpan');
     if (tempLiveSpan) tempLiveSpan.remove();
     baseText = clone.innerText;
   } else {
@@ -188,32 +186,56 @@ function updateStats() {
   if (charCountEl) charCountEl.textContent = `${chars} character${chars === 1 ? '' : 's'}`;
 }
 
-// Render transcript combining user edits and live streaming turn
+// Render transcript combining user edits and live streaming turn cleanly
 function renderTranscript() {
-  const cleanBase = baseText.trim();
+  let liveSpan = document.getElementById('liveTurnSpan');
   const cleanTurn = activeTurnText.trim();
 
-  if (!cleanTurn) {
-    messageEl.innerText = cleanBase;
+  if (cleanTurn) {
+    if (!liveSpan) {
+      liveSpan = document.createElement('span');
+      liveSpan.id = 'liveTurnSpan';
+      liveSpan.className = 'live-turn';
+      
+      // Ensure spacing before live turn if messageEl has existing text
+      if (messageEl.childNodes.length > 0) {
+        const lastChild = messageEl.lastChild;
+        if (lastChild && lastChild.nodeType === Node.TEXT_NODE && lastChild.textContent && !lastChild.textContent.endsWith(' ')) {
+          messageEl.appendChild(document.createTextNode(' '));
+        }
+      }
+      messageEl.appendChild(liveSpan);
+    }
+    liveSpan.textContent = cleanTurn;
   } else {
-    const spacing = cleanBase ? " " : "";
-    messageEl.innerHTML = `${escapeHtml(cleanBase)}${spacing}<span class="live-turn">${escapeHtml(cleanTurn)}</span>`;
+    if (liveSpan) {
+      liveSpan.remove();
+    }
   }
-  
-  // Auto-scroll to bottom if user is not actively editing
-  if (document.activeElement !== messageEl) {
-    messageEl.scrollTop = messageEl.scrollHeight;
-  }
+
+  // Automatic scrolling to bottom as text fills the container
+  scrollToBottom();
   updateStats();
 }
 
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+function commitActiveTurn() {
+  const liveSpan = document.getElementById('liveTurnSpan');
+  if (liveSpan) {
+    const turnText = liveSpan.textContent.trim();
+    if (turnText) {
+      const textNode = document.createTextNode((messageEl.textContent.trim() ? " " : "") + turnText);
+      liveSpan.replaceWith(textNode);
+    } else {
+      liveSpan.remove();
+    }
+  }
+  baseText = messageEl.innerText;
+  activeTurnText = "";
+  updateStats();
+}
+
+function scrollToBottom() {
+  messageEl.scrollTop = messageEl.scrollHeight;
 }
 
 // Copy to clipboard functionality
@@ -285,6 +307,8 @@ function clearTranscription() {
   activeTurnText = "";
   currentTurnOrder = null;
   messageEl.innerText = "";
+  const liveSpan = document.getElementById('liveTurnSpan');
+  if (liveSpan) liveSpan.remove();
   updateStats();
 }
 
@@ -368,11 +392,9 @@ async function startRecording() {
       } else if (msg.type === "Turn") {
         const { turn_order, transcript } = msg;
         
-        // When a new turn starts, commit the previous turn to baseText
+        // When turn order changes, commit previous turn to DOM text
         if (currentTurnOrder !== null && turn_order !== currentTurnOrder) {
-          if (activeTurnText.trim()) {
-            baseText = (baseText.trim() + " " + activeTurnText.trim()).trim();
-          }
+          commitActiveTurn();
         }
         
         currentTurnOrder = turn_order;
@@ -430,13 +452,8 @@ function stopRecording() {
     microphone = null;
   }
 
-  // Merge active turn into baseText on stop
-  if (activeTurnText.trim()) {
-    baseText = (baseText.trim() + " " + activeTurnText.trim()).trim();
-    activeTurnText = "";
-  }
+  commitActiveTurn();
   currentTurnOrder = null;
-  renderTranscript();
 
   updateRecordingState(false);
 }
@@ -487,7 +504,6 @@ function updateRecordingState(recording, connected = false, customStatus = null)
 document.addEventListener('DOMContentLoaded', async function() {
   updateRecordingState(false);
   
-  // Attach input listener to editable transcript area
   if (messageEl) {
     messageEl.addEventListener('input', onEditorInput);
   }
