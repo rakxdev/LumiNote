@@ -431,28 +431,45 @@ body {
   opacity: 0.5;
 }
 
-/* Feedback Notification */
+/* Dark Neon Toast Popup */
 .copy-feedback {
-  position: absolute;
-  top: 3.5rem;
-  right: 1.75rem;
-  background: var(--success);
-  color: #000;
-  padding: 0.35rem 0.85rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.825rem;
-  font-weight: 600;
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px) scale(0.95);
+  background: rgba(15, 18, 28, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  color: var(--text-primary);
+  padding: 0.55rem 1.25rem;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(139, 92, 246, 0.25);
   opacity: 0;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
-  z-index: 20;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  z-index: 1000;
+  white-space: nowrap;
 }
 
 .copy-feedback.show {
   opacity: 1;
-  transform: translateY(0);
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.toast-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 10px var(--accent-cyan);
 }
 
 /* Controls Bar */

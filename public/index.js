@@ -53,6 +53,10 @@ async function selectCustomModel(value, label, element) {
 
   if (isRecording) {
     console.log(`🔄 Live switching active stream to ${selectedModel}...`);
+    if (microphone && microphone.resetBuffer) {
+      microphone.resetBuffer();
+    }
+
     let modelName = "Deepgram Nova-3";
     if (value === "universal-streaming-english") modelName = "AssemblyAI Fast";
     if (value === "universal-3-5-pro") modelName = "AssemblyAI 3.5 Pro";
@@ -204,6 +208,10 @@ function createMicrophone() {
           }
         }
       };
+    },
+    resetBuffer() {
+      audioBufferQueue = new Int16Array(0);
+      console.log('🧹 Audio buffer queue cleared');
     },
     stopRecording() {
       if (audioWorkletNode) {
@@ -403,7 +411,12 @@ function downloadTranscript() {
 }
 
 function showCopyFeedback(message) {
-  copyFeedback.textContent = message;
+  const toastText = document.getElementById('toastText');
+  if (toastText) {
+    toastText.textContent = message;
+  } else {
+    copyFeedback.textContent = message;
+  }
   copyFeedback.classList.add('show');
 
   setTimeout(() => {
