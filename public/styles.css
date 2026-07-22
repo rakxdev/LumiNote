@@ -348,6 +348,28 @@ body {
   transform: none;
 }
 
+.grammar-button {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: #c084fc;
+}
+
+.grammar-button:hover {
+  background: rgba(139, 92, 246, 0.3);
+  color: #ffffff;
+  border-color: rgba(139, 92, 246, 0.55);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.35);
+}
+
+.grammar-button.loading svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Main Record Button */
 .record-button {
   background: var(--accent-gradient);

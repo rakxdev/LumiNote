@@ -132,7 +132,6 @@ function createMicrophone() {
           const finalBuffer = audioBufferQueue.subarray(0, totalSamples);
           audioBufferQueue = audioBufferQueue.subarray(totalSamples);
 
-          // Pure native 16kHz audio stream sent directly to Universal-3.5 Pro
           if (onAudioCallback) {
             onAudioCallback(new Uint8Array(finalBuffer.buffer));
           }
@@ -197,7 +196,6 @@ function renderTranscript() {
       liveSpan.id = 'liveTurnSpan';
       liveSpan.className = 'live-turn';
       
-      // Ensure spacing before live turn if messageEl has existing text
       if (messageEl.childNodes.length > 0) {
         const lastChild = messageEl.lastChild;
         if (lastChild && lastChild.nodeType === Node.TEXT_NODE && lastChild.textContent && !lastChild.textContent.endsWith(' ')) {
@@ -213,7 +211,6 @@ function renderTranscript() {
     }
   }
 
-  // Smart auto-scrolling: only auto-scroll if user is near bottom or not editing
   scrollToBottomSmart();
   updateStats();
 }
@@ -234,12 +231,52 @@ function commitActiveTurn() {
   updateStats();
 }
 
-// Smart auto-scroll logic: preserves scroll position if user scrolls up to edit
+// Smart auto-scroll logic
 function scrollToBottomSmart() {
   const distanceFromBottom = messageEl.scrollHeight - messageEl.clientHeight - messageEl.scrollTop;
-  // If user is near the bottom (within 120px) or editor is not focused, scroll to bottom
   if (distanceFromBottom < 120 || document.activeElement !== messageEl) {
     messageEl.scrollTop = messageEl.scrollHeight;
+  }
+}
+
+// AI & Rule-Based Grammar Correction Function
+async function fixGrammar() {
+  const text = messageEl.innerText.trim();
+  const grammarBtn = document.getElementById('grammarButton');
+
+  if (!text) {
+    showCopyFeedback('No text to fix!');
+    return;
+  }
+
+  if (grammarBtn) grammarBtn.classList.add('loading');
+
+  try {
+    const res = await fetch('/api/grammar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+
+    const data = await res.json();
+
+    if (data.correctedText) {
+      baseText = data.correctedText;
+      activeTurnText = "";
+      currentTurnOrder = null;
+      messageEl.innerText = baseText;
+      const liveSpan = document.getElementById('liveTurnSpan');
+      if (liveSpan) liveSpan.remove();
+      updateStats();
+      showCopyFeedback('✨ Grammar polished & corrected!');
+    } else {
+      showCopyFeedback('Grammar check complete!');
+    }
+  } catch (err) {
+    console.error('Grammar check error:', err);
+    showCopyFeedback('Failed to process grammar');
+  } finally {
+    if (grammarBtn) grammarBtn.classList.remove('loading');
   }
 }
 
@@ -357,10 +394,9 @@ async function startRecording() {
       return;
     }
 
-    // Universal-3.5 Pro streaming WebSocket URL tuned for ultra-low latency (min_turn_silence=100ms, max_turn_silence=800ms)
-    const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=universal-3-5-pro&sample_rate=16000&encoding=pcm_s16le&formatted_finals=true&min_turn_silence=100&max_turn_silence=800&token=${token}`;
+    // Instant real-time word streaming (min_turn_silence=100ms, max_turn_silence=400ms)
+    const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=universal-3-5-pro&sample_rate=16000&encoding=pcm_s16le&min_turn_silence=100&max_turn_silence=400&token=${token}`;
     
-    // Close any residual WebSocket to enforce max 1 concurrent session limit
     if (ws) {
       try { ws.close(); } catch (e) {}
       ws = null;
@@ -397,7 +433,6 @@ async function startRecording() {
       } else if (msg.type === "Turn") {
         const { turn_order, transcript } = msg;
         
-        // When turn order changes, commit previous turn to DOM text
         if (currentTurnOrder !== null && turn_order !== currentTurnOrder) {
           commitActiveTurn();
         }
@@ -536,3 +571,4 @@ window.copyToClipboard = copyToClipboard;
 window.downloadTranscript = downloadTranscript;
 window.toggleRecording = toggleRecording;
 window.clearTranscription = clearTranscription;
+window.fixGrammar = fixGrammar;
