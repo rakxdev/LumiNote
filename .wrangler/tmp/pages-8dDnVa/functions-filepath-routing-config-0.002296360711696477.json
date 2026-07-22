@@ -1,0 +1,21 @@
+{
+  "routes": [
+    {
+      "routePath": "/api/grammar",
+      "mountPath": "/api",
+      "method": "",
+      "module": [
+        "api/grammar.js:onRequest"
+      ]
+    },
+    {
+      "routePath": "/api/token",
+      "mountPath": "/api",
+      "method": "",
+      "module": [
+        "api/token.js:onRequest"
+      ]
+    }
+  ],
+  "baseURL": "/"
+}
