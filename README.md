@@ -1,200 +1,97 @@
-# LumiNote - Real-Time Voice Transcription
+# 🎙️ LumiNote v2 — Real-Time Voice Intelligence Engine
 
-A high-performance, real-time voice transcription app powered by AssemblyAI with optimized loading times and smooth user experience.
+A state-of-the-art, multi-model real-time voice transcription web application built with **Deepgram Nova-3**, **AssemblyAI Universal-3.5 Pro**, Cloudflare Serverless Functions, interactive live text editing, and an AI-powered grammar correction engine.
 
-## ✨ Features
-
-- ⚡ **Lightning Fast** - Optimized startup time with 60-75% faster recording initialization
-- 🎙️ **Real-Time Transcription** - Instant speech-to-text conversion using AssemblyAI
-- 🎨 **Beautiful UI** - Modern, responsive design with dark/light theme support
-- 🔄 **Smart Token Management** - Pre-fetching and background refresh for instant recording
-- 🎵 **Audio Optimization** - Reusable AudioContext for consistent performance
-- 📱 **Mobile Friendly** - Works seamlessly on desktop and mobile browsers
-
-## 🚀 Performance Optimizations
-
-### Phase 1: Token Pre-fetching
-- Tokens are pre-fetched on page load
-- Background refresh every 50 seconds
-- Zero wait time for cached tokens
-
-### Phase 2: AudioContext Reuse
-- Pre-created AudioContext on initialization
-- Reused across all recording sessions
-- Eliminates 100-300ms creation overhead
-
-### Phase 3: Parallel Operations
-- Microphone permission + token fetch run simultaneously
-- No sequential blocking
-- Maximum parallelization for fastest startup
-
-**Result**: Recording starts in ~200-300ms (down from 1500ms!)
-
-## 📋 Prerequisites
-
-- Node.js (v14 or higher)
-- AssemblyAI API Key ([Get one here](https://www.assemblyai.com/))
-- Modern web browser (Chrome, Firefox, Safari, Edge)
-
-## 🛠️ Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/rakxdev/LumiNote.git
-   cd LumiNote
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-3. **Set up environment variables**
-   
-   Create a `.env` file in the root directory:
-   ```env
-   ASSEMBLYAI_API_KEY=your_api_key_here
-   ```
-
-4. **Start the server**
-   ```bash
-   npm start
-   # or
-   yarn serve
-   ```
-
-5. **Open in browser**
-   ```
-   http://localhost:8000
-   ```
-
-## 🌐 Deployment
-
-### Cloudflare Pages (Recommended)
-
-1. Push code to GitHub
-2. Connect repository to Cloudflare Pages
-3. Add environment variable: `ASSEMBLYAI_API_KEY`
-4. Deploy!
-
-### Other Platforms
-
-Works on any platform supporting Node.js:
-- Vercel
-- Netlify
-- Railway
-- Render
-- AWS/GCP/Azure
-
-**Important**: Must be deployed with HTTPS for microphone access.
-
-## 📁 Project Structure
-
-```
-LumiNote/
-├── public/
-│   ├── index.html          # Main HTML file
-│   ├── index.js            # Client-side logic with optimizations
-│   ├── audio-processor.js  # Audio worklet for processing
-│   ├── styles.css          # Styling
-│   └── reset.css           # CSS reset
-├── server.js               # Express server with token generation
-├── package.json            # Dependencies
-└── README.md              # This file
-```
-
-## 🔧 Configuration
-
-### Token Expiry (server.js)
-```javascript
-const token = jwt.sign(
-  { api_key: process.env.ASSEMBLYAI_API_KEY },
-  process.env.ASSEMBLYAI_API_KEY,
-  { 
-    algorithm: "HS256",
-    expiresIn: "10m"  // 10 minutes
-  }
-);
-```
-
-### Background Refresh (index.js)
-```javascript
-TokenManager.startBackgroundRefresh()  // Refreshes every 50 seconds
-```
-
-## 🎯 Usage
-
-1. Click **"Start Recording"** button
-2. Allow microphone permission (first time only)
-3. Start speaking
-4. Real-time transcription appears instantly
-5. Click **"Stop Recording"** to end
-6. Copy or clear transcription as needed
-
-## 🔒 Security
-
-- ✅ API key stored server-side only
-- ✅ Secure WebSocket (WSS) connection
-- ✅ Token-based authentication
-- ✅ HTTPS required for production
-- ✅ No sensitive data exposed to client
-
-## 🌍 Browser Compatibility
-
-| Browser | Desktop | Mobile |
-|---------|---------|--------|
-| Chrome  | ✅      | ✅     |
-| Firefox | ✅      | ✅     |
-| Safari  | ✅      | ✅     |
-| Edge    | ✅      | ✅     |
-| Opera   | ✅      | ✅     |
-
-## 🐛 Troubleshooting
-
-### "getUserMedia requires secure context"
-- **Solution**: Deploy with HTTPS (required for microphone access)
-
-### "AudioContext was not allowed to start"
-- **Solution**: Already handled! AudioContext resumes on user interaction
-
-### Slow first recording
-- **Solution**: Already optimized! Token pre-fetching eliminates delay
-
-### CORS errors
-- **Solution**: Already configured in server.js
-
-## 📚 Documentation
-
-- [AssemblyAI Real-Time API](https://www.assemblyai.com/docs/speech-to-text/real-time)
-- [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
-- [AudioWorklet](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet)
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 👤 Author
-
-**Rakesh Kumar**
-- GitHub: [@rakxdev](https://github.com/rakxdev)
-
-## 🙏 Acknowledgments
-
-- [AssemblyAI](https://www.assemblyai.com/) for the amazing real-time transcription API
-- [Anime.js](https://animejs.com/) for smooth animations
-
-## 📞 Support
-
-For issues or questions:
-- Open an issue on GitHub
-- Contact: rakesh.943803@gmail.com
+![LumiNote Banner](public/logo.svg)
 
 ---
 
-Made with ❤️ by Rakesh Kumar
+## ⚡ Key Highlights in v2
+
+- 🚀 **Multi-Model Speech Engine**: Seamlessly switch between **Deepgram Nova-3 (150ms latency)**, **AssemblyAI Fast Realtime**, and **AssemblyAI Universal-3.5 Pro**.
+- ✨ **AI & Rule-Based Grammar Corrector (`/api/grammar`)**: 1-Click **"✨ Fix Grammar"** button converts broken spoken English into clean, professional, grammatically correct text.
+- ✏️ **Interactive Live Editing**: Edit any previous word or sentence while live speech recording continues in real time without moving your cursor.
+- 🔒 **English Language Enforcement**: Pinned `language_code=en` parameters prevent accidental auto-switching to foreign scripts or Hindi.
+- 📐 **Single-Window Viewport Lock**: 100vh fixed desktop/mobile viewport with zero outer page scrollbars. Only the text editor container scrolls.
+- 🎨 **Glassmorphism Dark UI**: Built with `Outfit` & `Inter` typography, neon status indicators, and centered glowing toast notifications.
+- ⚡ **Cloudflare Pages Serverless Backend**: Powered by zero-latency Cloudflare Pages Functions (`/api/token`, `/api/deepgram-key`, `/api/grammar`).
+
+---
+
+## 📊 Speech Model Matrix
+
+| Model Name | Provider | Real-Time Latency | Primary Use Case | Free Tier Concurrency |
+| :--- | :--- | :--- | :--- | :--- |
+| **Deepgram Nova-3** *(Default)* | Deepgram | ⚡ **150ms - 200ms** | Ultra-fast real-time streaming ($200 credit) | 🚀 **100 Concurrent Streams** |
+| **AssemblyAI Fast Realtime** | AssemblyAI | ⚡ **180ms - 250ms** | Fast verbatim transcription (v01 speed) | ⚠️ 1 Concurrent Stream |
+| **AssemblyAI Universal-3.5 Pro** | AssemblyAI | 🧠 **450ms - 800ms** | Deep voice agent & complex terminology | ⚠️ 1 Concurrent Stream |
+
+---
+
+## 🛠️ Architecture & Serverless Stack
+
+```
+LumiNote/
+├── functions/
+│   └── api/
+│       ├── token.js        # AssemblyAI WSS Token Generator
+│       ├── deepgram-key.js # Deepgram Credentials Gateway
+│       └── grammar.js     # AI & Rule-based Spoken Grammar Engine
+├── public/
+│   ├── index.html          # Single-Page App HTML
+│   ├── index.js            # Client-side Real-time Engine & AudioWorklet Manager
+│   ├── audio-processor.js  # AudioWorklet 16kHz PCM Streamer
+│   ├── styles.css          # Glassmorphism Design System & Viewport Lock
+│   ├── logo.svg            # Combined Monogram L & Constellation Logo
+│   └── reset.css           # CSS Reset
+├── svg_icons/              # Raw SVG icon library (Options 01 - 15)
+├── wrangler.toml           # Cloudflare Pages deployment manifest
+└── README.md              # Project Documentation
+```
+
+---
+
+## 🚀 Getting Started
+
+### 1. **Clone the Repository**
+```bash
+git clone -b cloudflare-v02 https://github.com/rakxdev/LumiNote.git
+cd LumiNote
+```
+
+### 2. **Set Up Secrets / Environment Variables**
+For Cloudflare Pages deployment, set the following secrets in your Cloudflare dashboard or via Wrangler:
+```env
+ASSEMBLYAI_API_KEY=your_assemblyai_api_key
+DEEPGRAM_API_KEY=your_deepgram_api_key
+```
+
+### 3. **Deploy to Cloudflare Pages via Wrangler CLI**
+```bash
+npx wrangler pages deploy public --project-name=luminote-v2 --branch=cloudflare-v02
+```
+
+---
+
+## 🎯 Features Deep-Dive
+
+### 1. **Interactive Live Text Editing Engine**
+* Completed turns are converted into standard DOM text nodes.
+* Active interim turns stream strictly into a dedicated `#liveTurnSpan` pinned to the bottom of the container.
+* Editing earlier sentences while talking leaves your selection and cursor untouched.
+
+### 2. **AI Grammar Engine (`POST /api/grammar`)**
+* Combines LanguageTool API checking with rule-based broken English cleanup rules.
+* Filters out spoken filler words (*"uh"*, *"um"*, *"like"*), fixes subject-verb agreement (*"me and him is"* $\rightarrow$ *"He and I are"*), and formats sentence punctuation.
+
+### 3. **Zero-Lag Audio Buffer Management**
+* Pre-created 16kHz `AudioContext` with background token pre-fetching.
+* `microphone.resetBuffer()` flushes residual AudioWorklet ring buffers during live model switches, eliminating initial latency bursts.
+
+---
+
+## 📄 License & Attribution
+
+* **License**: MIT License
+* **Author**: Rakesh Kumar ([@rakxdev](https://github.com/rakxdev))
+* **Live App**: [https://luminote-v2.pages.dev](https://luminote-v2.pages.dev)
