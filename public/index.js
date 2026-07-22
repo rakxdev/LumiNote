@@ -464,7 +464,7 @@ async function startRecording() {
     // Branch logic by selected model
     if (selectedModel === 'deepgram-nova-3') {
       const dgKey = await TokenManager.getDeepgramKey();
-      const dgUrl = 'wss://api.deepgram.com/v1/listen?model=nova-3&encoding=linear16&sample_rate=16000&smart_format=true&interim_results=true';
+      const dgUrl = 'wss://api.deepgram.com/v1/listen?model=nova-3&language=en&encoding=linear16&sample_rate=16000&smart_format=true&interim_results=true';
       
       ws = new WebSocket(dgUrl, ['token', dgKey]);
 
@@ -526,7 +526,7 @@ async function startRecording() {
         return;
       }
 
-      const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
+      const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&language_code=en&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
       ws = new WebSocket(endpoint);
 
       ws.onopen = () => {
