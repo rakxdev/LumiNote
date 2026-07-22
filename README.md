@@ -22,9 +22,9 @@ A state-of-the-art, multi-model real-time voice transcription web application bu
 
 | Model Name | Provider | Real-Time Latency | Primary Use Case | Free Tier Concurrency |
 | :--- | :--- | :--- | :--- | :--- |
-| **Deepgram Nova-3** *(Default)* | Deepgram | ⚡ **150ms - 200ms** | Ultra-fast real-time streaming ($200 credit) | 🚀 **100 Concurrent Streams** |
+| **AssemblyAI Universal-3.5 Pro** *(Default)* | AssemblyAI | 🧠 **450ms - 800ms** | Deep voice agent & complex terminology | ⚠️ 1 Concurrent Stream |
+| **Deepgram Nova-3** | Deepgram | ⚡ **150ms - 200ms** | Ultra-fast real-time streaming ($200 credit) | 🚀 **100 Concurrent Streams** |
 | **AssemblyAI Fast Realtime** | AssemblyAI | ⚡ **180ms - 250ms** | Fast verbatim transcription (v01 speed) | ⚠️ 1 Concurrent Stream |
-| **AssemblyAI Universal-3.5 Pro** | AssemblyAI | 🧠 **450ms - 800ms** | Deep voice agent & complex terminology | ⚠️ 1 Concurrent Stream |
 
 ---
 
