@@ -25,20 +25,29 @@ let activeTurnText = "";
 async function changeModel() {
   if (modelSelect) {
     selectedModel = modelSelect.value;
-    const modelLabel = selectedModel === "universal-streaming-english" ? "Fast Realtime (v01)" : "Universal-3.5 Pro";
+    const modelLabel = selectedModel === "universal-streaming-english" ? "Fast Realtime" : "Universal-3.5 Pro";
     
     if (modelBadge) {
-      modelBadge.textContent = modelLabel;
+      modelBadge.textContent = selectedModel === "universal-streaming-english" ? "Fast Realtime (v01)" : "Universal-3.5 Pro";
     }
     
     if (isRecording) {
-      console.log(`🔄 Switching active stream to ${selectedModel}...`);
-      stopRecording();
+      console.log(`🔄 Live switching active stream to ${selectedModel}...`);
+      
+      // Preserve active recording UI state
+      updateRecordingState(true, true, `Switching to ${modelLabel}...`);
+      
+      if (ws) {
+        if (ws.readyState === WebSocket.OPEN) {
+          try { ws.send(JSON.stringify({ type: "Terminate" })); } catch (e) {}
+        }
+        try { ws.close(); } catch (e) {}
+        ws = null;
+      }
       
       setTimeout(async () => {
-        updateRecordingState(false, true, `Switching to ${modelLabel}...`);
         await startRecording();
-      }, 350);
+      }, 300);
     }
   }
 }
