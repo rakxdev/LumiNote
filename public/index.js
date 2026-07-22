@@ -2,16 +2,24 @@
 // DOM elements
 const recordButton = document.getElementById("recordButton");
 const buttonText = document.getElementById("buttonText");
+const buttonIcon = document.getElementById("buttonIcon");
 const messageEl = document.getElementById("message");
 const statusIndicator = document.getElementById("statusIndicator");
 const statusText = document.getElementById("statusText");
 const copyFeedback = document.getElementById("copyFeedback");
+const wordCountEl = document.getElementById("wordCount");
+const charCountEl = document.getElementById("charCount");
 
 let isRecording = false;
-let ws;
-let microphone;
+let ws = null;
+let microphone = null;
 
-// Token Management System - Phase 1: Delay Optimization
+// State management for interactive live editing
+let baseText = ""; // Text edited by user or finalized turns
+let currentTurnOrder = null;
+let activeTurnText = "";
+
+// Token Management System
 const TokenManager = {
   token: null,
   tokenTimestamp: null,
@@ -20,12 +28,11 @@ const TokenManager = {
   isValid() {
     if (!this.token || !this.tokenTimestamp) return false;
     const age = (Date.now() - this.tokenTimestamp) / 1000;
-    return age < 55; // Consider valid if less than 55 seconds old
+    return age < 55;
   },
   
   async fetchToken() {
     try {
-      // Use relative URL - works on both localhost and Cloudflare
       const response = await fetch("/api/token");
       const data = await response.json();
       
@@ -55,7 +62,6 @@ const TokenManager = {
   },
   
   startBackgroundRefresh() {
-    // Refresh every 50 seconds
     this.refreshInterval = setInterval(() => {
       console.log('🔄 Background token refresh...');
       this.fetchToken();
@@ -72,16 +78,16 @@ const TokenManager = {
   }
 };
 
-// Phase 2: Pre-created Audio Context for faster recording start
+// Pre-created Audio Context for zero-latency recording
 let globalAudioContext = null;
 
 function getAudioContext() {
   if (!globalAudioContext || globalAudioContext.state === 'closed') {
     globalAudioContext = new AudioContext({
-      sampleRate: 16000,
-      latencyHint: 'balanced'
+      sampleRate: 16000, // Native 16kHz for Universal-3.5 Pro
+      latencyHint: 'interactive'
     });
-    console.log('🎵 AudioContext created');
+    console.log('🎵 16kHz AudioContext created');
   }
   
   if (globalAudioContext.state === 'suspended') {
@@ -90,27 +96,6 @@ function getAudioContext() {
   }
   
   return globalAudioContext;
-}
-
-// Create this function
-function resampleAudioBuffer(originalSampleRate, targetSampleRate, buffer) {
-  if (originalSampleRate === targetSampleRate) return buffer;
-
-  const ratio = originalSampleRate / targetSampleRate;
-  const newLength = Math.round(buffer.length / ratio);
-  const result = new Int16Array(newLength);
-
-  for (let i = 0; i < newLength; i++) {
-    const sourceIndex = Math.floor(i * ratio);
-    const nextIndex = Math.min(sourceIndex + 1, buffer.length - 1);
-    const fraction = (i * ratio) - sourceIndex;
-
-    const left = buffer[sourceIndex];
-    const right = buffer[nextIndex];
-    result[i] = Math.round(left + (right - left) * fraction);
-  }
-
-  return result;
 }
 
 function createMicrophone() {
@@ -127,7 +112,6 @@ function createMicrophone() {
     async startRecording(onAudioCallback) {
       if (!stream) stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Use pre-created AudioContext (Phase 2 optimization)
       audioContext = getAudioContext();
 
       source = audioContext.createMediaStreamSource(stream);
@@ -145,12 +129,10 @@ function createMicrophone() {
 
         if (bufferDuration >= 100) {
           const totalSamples = Math.floor(audioContext.sampleRate * 0.1);
-          let finalBuffer = audioBufferQueue.subarray(0, totalSamples);
+          const finalBuffer = audioBufferQueue.subarray(0, totalSamples);
           audioBufferQueue = audioBufferQueue.subarray(totalSamples);
 
-          // Resample from 16kHz to 8kHz for free accounts
-          finalBuffer = resampleAudioBuffer(16000, 8000, finalBuffer);
-
+          // Pure native 16kHz audio stream sent directly to Universal-3.5 Pro
           if (onAudioCallback) {
             onAudioCallback(new Uint8Array(finalBuffer.buffer));
           }
@@ -158,7 +140,6 @@ function createMicrophone() {
       };
     },
     stopRecording() {
-      // Disconnect audio worklet first to stop data flow
       if (audioWorkletNode) {
         audioWorkletNode.port.onmessage = null;
         audioWorkletNode.disconnect();
@@ -170,8 +151,6 @@ function createMicrophone() {
       }
       stream?.getTracks().forEach((track) => track.stop());
       stream = null;
-      // Don't close AudioContext - reuse it (Phase 2 optimization)
-      // audioContext?.close();
       audioBufferQueue = new Int16Array(0);
     }
   };
@@ -182,6 +161,59 @@ function mergeBuffers(lhs, rhs) {
   merged.set(lhs, 0);
   merged.set(rhs, lhs.length);
   return merged;
+}
+
+// Synchronize DOM edits with internal state (Interactive Editing)
+function onEditorInput() {
+  // Capture base text from contenteditable container, excluding live interim span
+  const liveSpan = messageEl.querySelector('.live-turn');
+  if (liveSpan) {
+    // Extract non-span text as user base text
+    const clone = messageEl.cloneNode(true);
+    const tempLiveSpan = clone.querySelector('.live-turn');
+    if (tempLiveSpan) tempLiveSpan.remove();
+    baseText = clone.innerText;
+  } else {
+    baseText = messageEl.innerText;
+  }
+  updateStats();
+}
+
+function updateStats() {
+  const fullText = messageEl.innerText.trim();
+  const words = fullText ? fullText.split(/\s+/).filter(Boolean).length : 0;
+  const chars = fullText.length;
+  
+  if (wordCountEl) wordCountEl.textContent = `${words} word${words === 1 ? '' : 's'}`;
+  if (charCountEl) charCountEl.textContent = `${chars} character${chars === 1 ? '' : 's'}`;
+}
+
+// Render transcript combining user edits and live streaming turn
+function renderTranscript() {
+  const cleanBase = baseText.trim();
+  const cleanTurn = activeTurnText.trim();
+
+  if (!cleanTurn) {
+    messageEl.innerText = cleanBase;
+  } else {
+    const spacing = cleanBase ? " " : "";
+    messageEl.innerHTML = `${escapeHtml(cleanBase)}${spacing}<span class="live-turn">${escapeHtml(cleanTurn)}</span>`;
+  }
+  
+  // Auto-scroll to bottom if user is not actively editing
+  if (document.activeElement !== messageEl) {
+    messageEl.scrollTop = messageEl.scrollHeight;
+  }
+  updateStats();
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 // Copy to clipboard functionality
@@ -201,6 +233,7 @@ async function copyToClipboard() {
     
     copyIcon.style.display = 'none';
     tickIcon.style.display = 'inline-block';
+    showCopyFeedback('Copied to clipboard!');
     
     anime({
       targets: tickIcon,
@@ -219,40 +252,53 @@ async function copyToClipboard() {
   }
 }
 
+// Download transcript as a .txt file
+function downloadTranscript() {
+  const text = messageEl.innerText.trim();
+  if (!text) {
+    showCopyFeedback('No text to download!');
+    return;
+  }
+
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `LumiNote-Transcript-${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function showCopyFeedback(message) {
   copyFeedback.textContent = message;
   copyFeedback.classList.add('show');
 
   setTimeout(() => {
     copyFeedback.classList.remove('show');
-  }, 2000);
+  }, 2200);
 }
 
-// Select text when clicking on message area
-function selectText() {
-  const selection = window.getSelection();
-  const range = document.createRange();
-  range.selectNodeContents(messageEl);
-  selection.removeAllRanges();
-  selection.addRange(range);
+function clearTranscription() {
+  baseText = "";
+  activeTurnText = "";
+  currentTurnOrder = null;
+  messageEl.innerText = "";
+  updateStats();
 }
 
 // Toggle recording function
 async function toggleRecording() {
-  // Prevent clicking while processing
   if (recordButton.disabled) return;
   
   if (isRecording) {
-    // Disable button until recording actually stops
     recordButton.disabled = true;
     stopRecording();
-    // Button will be re-enabled in updateRecordingState when recording = false
   } else {
-    // Disable button until recording actually starts
     recordButton.disabled = true;
-    updateRecordingState(false, true, 'Connecting...');
+    updateRecordingState(false, true, 'Connecting to Universal-3.5 Pro...');
     await startRecording();
-    // Button will be re-enabled in ws.onopen or on error
   }
 }
 
@@ -260,7 +306,6 @@ async function startRecording() {
   try {
     microphone = createMicrophone();
     
-    // Phase 3: Run operations in parallel for maximum speed
     const [permissionResult, token] = await Promise.all([
       microphone.requestPermission()
         .then(() => true)
@@ -278,31 +323,35 @@ async function startRecording() {
     }
 
     if (!token) {
-      alert("Failed to get token. Please check your connection.");
+      alert("Failed to get authorization token. Please try again.");
       updateRecordingState(false);
       return;
     }
 
-    const endpoint = `wss://streaming.assemblyai.com/v3/ws?sample_rate=8000&formatted_finals=true&token=${token}`;
+    // Universal-3.5 Pro streaming WebSocket URL at 16kHz
+    const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=universal-3-5-pro&sample_rate=16000&encoding=pcm_s16le&formatted_finals=true&token=${token}`;
+    
+    // Close any residual WebSocket to enforce max 1 concurrent session limit
+    if (ws) {
+      try { ws.close(); } catch (e) {}
+      ws = null;
+    }
+
     ws = new WebSocket(endpoint);
 
-    const turns = {}; // keyed by turn_order
-
     ws.onopen = () => {
-      console.log("WebSocket connected!");
+      console.log("🚀 Connected to AssemblyAI Universal-3.5 Pro Realtime!");
       
-      // Check if microphone still exists (might have been stopped during connection)
       if (!microphone) {
-        console.warn('⚠️ Microphone was stopped before WebSocket opened');
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.close();
         }
-        recordButton.disabled = false; // Re-enable button
+        recordButton.disabled = false;
         return;
       }
       
       updateRecordingState(true, true);
-      recordButton.disabled = false; // Re-enable button now that recording started
+      recordButton.disabled = false;
       
       microphone.startRecording((audioChunk) => {
         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -313,31 +362,37 @@ async function startRecording() {
 
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.type === "Turn") {
+      
+      if (msg.type === "Begin") {
+        console.log("✅ Session Begin:", msg.configuration);
+      } else if (msg.type === "Turn") {
         const { turn_order, transcript } = msg;
-        turns[turn_order] = transcript;
-
-        const orderedTurns = Object.keys(turns)
-          .sort((a, b) => Number(a) - Number(b))
-          .map((k) => turns[k])
-          .join(" ");
-
-        messageEl.innerText = orderedTurns;
-
-        // Auto-scroll to the bottom
-        messageEl.scrollTop = messageEl.scrollHeight;
+        
+        // When a new turn starts, commit the previous turn to baseText
+        if (currentTurnOrder !== null && turn_order !== currentTurnOrder) {
+          if (activeTurnText.trim()) {
+            baseText = (baseText.trim() + " " + activeTurnText.trim()).trim();
+          }
+        }
+        
+        currentTurnOrder = turn_order;
+        activeTurnText = transcript || "";
+        renderTranscript();
       }
     };
 
     ws.onerror = (err) => {
       console.error("WebSocket error:", err);
       updateRecordingState(false);
-      recordButton.disabled = false; // Re-enable button on error
-      alert("Connection error. Please check your internet connection and try again.");
+      recordButton.disabled = false;
+      alert("Connection error. Please check your internet connection.");
     };
 
-    ws.onclose = () => {
-      console.log("WebSocket closed");
+    ws.onclose = (evt) => {
+      console.log("WebSocket closed with code:", evt.code);
+      if (evt.code === 1008) {
+        alert("Session conflict (Too many concurrent sessions). Please wait a moment and try again.");
+      }
       updateRecordingState(false, false);
     };
 
@@ -345,13 +400,12 @@ async function startRecording() {
     console.error("Error starting recording:", error);
     alert("Error accessing microphone. Please check permissions.");
     updateRecordingState(false);
-    recordButton.disabled = false; // Re-enable button on error
+    recordButton.disabled = false;
   }
 }
 
 function stopRecording() {
   if (ws) {
-    // Only send Terminate if WebSocket is OPEN
     if (ws.readyState === WebSocket.OPEN) {
       try {
         ws.send(JSON.stringify({ type: "Terminate" }));
@@ -360,7 +414,6 @@ function stopRecording() {
       }
     }
     
-    // Close WebSocket if it's not already CLOSING or CLOSED
     if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
       try {
         ws.close();
@@ -377,81 +430,78 @@ function stopRecording() {
     microphone = null;
   }
 
+  // Merge active turn into baseText on stop
+  if (activeTurnText.trim()) {
+    baseText = (baseText.trim() + " " + activeTurnText.trim()).trim();
+    activeTurnText = "";
+  }
+  currentTurnOrder = null;
+  renderTranscript();
+
   updateRecordingState(false);
 }
 
 function updateRecordingState(recording, connected = false, customStatus = null) {
   isRecording = recording;
 
-  // Re-enable record button when recording stops
   if (!recording && recordButton.disabled) {
     recordButton.disabled = false;
   }
 
-  // Disable clear button while recording
   const clearButton = document.getElementById('clearButton');
   if (clearButton) {
     clearButton.disabled = recording;
   }
 
-  // Update button
   recordButton.classList.toggle('recording', recording);
-  const icon = document.getElementById('buttonIcon');
   buttonText.textContent = recording ? 'Stop Recording' : 'Start Recording';
 
   if (recording) {
-    // Show a stop icon
-    icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>`;
+    buttonIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>`;
   } else {
-    // Show a mic icon
-    icon.innerHTML = `<svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`;
+    buttonIcon.innerHTML = `<svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`;
   }
 
-  // Update status indicator
   statusIndicator.classList.toggle('recording', recording);
   statusIndicator.classList.toggle('connected', !recording && connected);
 
   if (customStatus) {
     statusText.textContent = customStatus;
   } else if (recording) {
-    statusText.textContent = 'Recording';
+    statusText.textContent = 'Recording (Universal-3.5 Pro)';
   } else if (connected) {
     statusText.textContent = 'Connected';
   } else {
     statusText.textContent = 'Ready';
   }
 
-  // Animate button and status
   anime({
     targets: [recordButton, statusIndicator],
     scale: [0.95, 1],
-    duration: 400,
+    duration: 350,
     easing: 'easeOutElastic(1, .8)'
   });
-
-  // Clear message when starting new recording
-  if (recording) {
-    messageEl.innerText = '';
-  }
 }
 
 // Initialize event listeners
 document.addEventListener('DOMContentLoaded', async function() {
-  // Initial state
   updateRecordingState(false);
   
-  // Phase 1: Pre-fetch token and start background refresh
-  console.log('🚀 Initializing token system...');
+  // Attach input listener to editable transcript area
+  if (messageEl) {
+    messageEl.addEventListener('input', onEditorInput);
+  }
+
+  console.log('🚀 Initializing LumiNote token system...');
   await TokenManager.fetchToken();
   TokenManager.startBackgroundRefresh();
   console.log('✅ Token system ready!');
   
-  // Phase 2: Pre-create AudioContext for instant recording
   getAudioContext();
-  console.log('🎵 Audio system ready!');
+  console.log('🎵 Audio system ready (16kHz Native)!');
+  updateStats();
 });
 
-// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
   TokenManager.stopBackgroundRefresh();
   if (globalAudioContext) {
@@ -460,12 +510,8 @@ window.addEventListener('beforeunload', () => {
   }
 });
 
-// Expose functions to global scope for HTML onclick handlers
+// Global exports
 window.copyToClipboard = copyToClipboard;
-window.selectText = selectText;
+window.downloadTranscript = downloadTranscript;
 window.toggleRecording = toggleRecording;
 window.clearTranscription = clearTranscription;
-
-function clearTranscription() {
-  messageEl.innerText = '';
-}
