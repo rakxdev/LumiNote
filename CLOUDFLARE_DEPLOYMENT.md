@@ -1,6 +1,6 @@
-# Cloudflare Pages Deployment Guide (LumiNote v2)
+# Cloudflare Pages Deployment Guide (LumiNote v02)
 
-This guide explains how to deploy LumiNote v2 to Cloudflare Pages with Functions.
+This guide explains how to deploy LumiNote v02 to Cloudflare Pages with Functions.
 
 ---
 

@@ -1,6 +1,6 @@
-# 🎙️ LumiNote v2 — Real-Time Voice Intelligence Engine
+# 🎙️ LumiNote v02 — Real-Time Voice Intelligence Engine
 
-A state-of-the-art, multi-model real-time voice transcription web application built with **Deepgram Nova-3**, **AssemblyAI Universal-3.5 Pro**, Cloudflare Serverless Functions, interactive live text editing, and an AI-powered grammar correction engine.
+A state-of-the-art, multi-model real-time voice transcription web application built with **AssemblyAI Universal-3.5 Pro**, **Deepgram Nova-3**, Cloudflare Serverless Functions, interactive live text editing, and an AI-powered grammar correction engine.
 
 ![LumiNote Banner](public/logo.svg)
 
