@@ -9,7 +9,6 @@ const statusText = document.getElementById("statusText");
 const copyFeedback = document.getElementById("copyFeedback");
 const wordCountEl = document.getElementById("wordCount");
 const charCountEl = document.getElementById("charCount");
-const modelSelect = document.getElementById("modelSelect");
 const modelBadge = document.querySelector(".model-badge");
 
 let isRecording = false;
@@ -22,33 +21,56 @@ let baseText = "";
 let currentTurnOrder = null;
 let activeTurnText = "";
 
-async function changeModel() {
-  if (modelSelect) {
-    selectedModel = modelSelect.value;
-    const modelLabel = selectedModel === "universal-streaming-english" ? "Fast Realtime" : "Universal-3.5 Pro";
-    
-    if (modelBadge) {
-      modelBadge.textContent = selectedModel === "universal-streaming-english" ? "Fast Realtime (v01)" : "Universal-3.5 Pro";
-    }
-    
-    if (isRecording) {
-      console.log(`🔄 Live switching active stream to ${selectedModel}...`);
-      
-      // Preserve active recording UI state
-      updateRecordingState(true, true, `Switching to ${modelLabel}...`);
-      
-      if (ws) {
-        if (ws.readyState === WebSocket.OPEN) {
-          try { ws.send(JSON.stringify({ type: "Terminate" })); } catch (e) {}
-        }
-        try { ws.close(); } catch (e) {}
-        ws = null;
+function toggleModelDropdown(event) {
+  event.stopPropagation();
+  const switcher = document.getElementById('customModelSwitcher');
+  if (switcher) {
+    switcher.classList.toggle('open');
+  }
+}
+
+function closeModelDropdown() {
+  const switcher = document.getElementById('customModelSwitcher');
+  if (switcher) switcher.classList.remove('open');
+}
+
+async function selectCustomModel(value, label, element) {
+  if (selectedModel === value) {
+    closeModelDropdown();
+    return;
+  }
+
+  selectedModel = value;
+  
+  const labelEl = document.getElementById('selectedModelLabel');
+  if (labelEl) labelEl.textContent = label;
+
+  const options = document.querySelectorAll('.model-option');
+  options.forEach(opt => opt.classList.remove('active'));
+  if (element) element.classList.add('active');
+
+  if (modelBadge) {
+    modelBadge.textContent = value === "universal-streaming-english" ? "Fast Realtime (v01)" : "Universal-3.5 Pro";
+  }
+
+  closeModelDropdown();
+
+  if (isRecording) {
+    console.log(`🔄 Live switching active stream to ${selectedModel}...`);
+    const modelName = value === "universal-streaming-english" ? "Fast Realtime" : "Universal-3.5 Pro";
+    updateRecordingState(true, true, `Switching to ${modelName}...`);
+
+    if (ws) {
+      if (ws.readyState === WebSocket.OPEN) {
+        try { ws.send(JSON.stringify({ type: "Terminate" })); } catch (e) {}
       }
-      
-      setTimeout(async () => {
-        await startRecording();
-      }, 300);
+      try { ws.close(); } catch (e) {}
+      ws = null;
     }
+
+    setTimeout(async () => {
+      await startRecording();
+    }, 300);
   }
 }
 
@@ -428,7 +450,6 @@ async function startRecording() {
       return;
     }
 
-    // Endpoint URL using selectedModel (defaults to universal-streaming-english for instant v01 speed)
     const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
     
     if (ws) {
@@ -578,7 +599,6 @@ function updateRecordingState(recording, connected = false, customStatus = null)
 
 // Initialize event listeners
 document.addEventListener('DOMContentLoaded', async function() {
-  changeModel();
   updateRecordingState(false);
   
   if (messageEl) {
@@ -595,6 +615,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   updateStats();
 });
 
+// Global click listener to close custom dropdown menu on outside click
+document.addEventListener('click', (e) => {
+  const switcher = document.getElementById('customModelSwitcher');
+  if (switcher && !switcher.contains(e.target)) {
+    switcher.classList.remove('open');
+  }
+});
+
 window.addEventListener('beforeunload', () => {
   TokenManager.stopBackgroundRefresh();
   if (globalAudioContext) {
@@ -609,4 +637,5 @@ window.downloadTranscript = downloadTranscript;
 window.toggleRecording = toggleRecording;
 window.clearTranscription = clearTranscription;
 window.fixGrammar = fixGrammar;
-window.changeModel = changeModel;
+window.toggleModelDropdown = toggleModelDropdown;
+window.selectCustomModel = selectCustomModel;

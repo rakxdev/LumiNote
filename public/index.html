@@ -23,11 +23,31 @@
           </div>
         </div>
         <div class="header-right">
-          <div class="model-select-wrapper">
-            <select id="modelSelect" class="model-select" onchange="changeModel()" title="Select Speech Model">
-              <option value="universal-streaming-english" selected>⚡ Fast Realtime (v01 Speed)</option>
-              <option value="universal-3-5-pro">🧠 Universal-3.5 Pro</option>
-            </select>
+          <div class="custom-model-switcher" id="customModelSwitcher">
+            <button type="button" class="model-switcher-btn" id="modelSwitcherBtn" onclick="toggleModelDropdown(event)">
+              <span id="selectedModelLabel">⚡ Fast Realtime (v01 Speed)</span>
+              <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            
+            <div class="model-dropdown-menu" id="modelDropdownMenu">
+              <div class="model-option active" data-value="universal-streaming-english" onclick="selectCustomModel('universal-streaming-english', '⚡ Fast Realtime (v01 Speed)', this)">
+                <span class="option-icon">⚡</span>
+                <div class="option-details">
+                  <span class="option-title">Fast Realtime</span>
+                  <span class="option-desc">Instant sub-100ms streaming (v01 Speed)</span>
+                </div>
+                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+
+              <div class="model-option" data-value="universal-3-5-pro" onclick="selectCustomModel('universal-3-5-pro', '🧠 Universal-3.5 Pro', this)">
+                <span class="option-icon">🧠</span>
+                <div class="option-details">
+                  <span class="option-title">Universal-3.5 Pro</span>
+                  <span class="option-desc">Deep voice agent model</span>
+                </div>
+                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
           </div>
           <div class="status-indicator-container" id="statusContainer">
             <div class="status-indicator" id="statusIndicator"></div>
