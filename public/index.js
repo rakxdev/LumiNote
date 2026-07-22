@@ -9,15 +9,27 @@ const statusText = document.getElementById("statusText");
 const copyFeedback = document.getElementById("copyFeedback");
 const wordCountEl = document.getElementById("wordCount");
 const charCountEl = document.getElementById("charCount");
+const modelSelect = document.getElementById("modelSelect");
+const modelBadge = document.querySelector(".model-badge");
 
 let isRecording = false;
 let ws = null;
 let microphone = null;
+let selectedModel = "universal-streaming-english"; // Default: Fast Realtime v01 Speed
 
 // State management for interactive live editing
 let baseText = ""; 
 let currentTurnOrder = null;
 let activeTurnText = "";
+
+function changeModel() {
+  if (modelSelect) {
+    selectedModel = modelSelect.value;
+    if (modelBadge) {
+      modelBadge.textContent = selectedModel === "universal-streaming-english" ? "Fast Realtime (v01)" : "Universal-3.5 Pro";
+    }
+  }
+}
 
 // Token Management System
 const TokenManager = {
@@ -84,7 +96,7 @@ let globalAudioContext = null;
 function getAudioContext() {
   if (!globalAudioContext || globalAudioContext.state === 'closed') {
     globalAudioContext = new AudioContext({
-      sampleRate: 16000, // Native 16kHz for Universal-3.5 Pro
+      sampleRate: 16000,
       latencyHint: 'interactive'
     });
     console.log('🎵 16kHz AudioContext created');
@@ -363,7 +375,8 @@ async function toggleRecording() {
     stopRecording();
   } else {
     recordButton.disabled = true;
-    updateRecordingState(false, true, 'Connecting to Universal-3.5 Pro...');
+    const modelName = selectedModel === "universal-streaming-english" ? "Fast Realtime" : "Universal-3.5 Pro";
+    updateRecordingState(false, true, `Connecting (${modelName})...`);
     await startRecording();
   }
 }
@@ -394,8 +407,8 @@ async function startRecording() {
       return;
     }
 
-    // Instant real-time word streaming (min_turn_silence=100ms, max_turn_silence=400ms)
-    const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=universal-3-5-pro&sample_rate=16000&encoding=pcm_s16le&min_turn_silence=100&max_turn_silence=400&token=${token}`;
+    // Endpoint URL using selectedModel (defaults to universal-streaming-english for instant v01 speed)
+    const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
     
     if (ws) {
       try { ws.close(); } catch (e) {}
@@ -405,7 +418,7 @@ async function startRecording() {
     ws = new WebSocket(endpoint);
 
     ws.onopen = () => {
-      console.log("🚀 Connected to AssemblyAI Universal-3.5 Pro Realtime!");
+      console.log(`🚀 Connected to AssemblyAI Realtime (${selectedModel})!`);
       
       if (!microphone) {
         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -522,10 +535,12 @@ function updateRecordingState(recording, connected = false, customStatus = null)
   statusIndicator.classList.toggle('recording', recording);
   statusIndicator.classList.toggle('connected', !recording && connected);
 
+  const modelLabel = selectedModel === "universal-streaming-english" ? "Fast Realtime" : "Universal-3.5 Pro";
+
   if (customStatus) {
     statusText.textContent = customStatus;
   } else if (recording) {
-    statusText.textContent = 'Recording (Universal-3.5 Pro)';
+    statusText.textContent = `Recording (${modelLabel})`;
   } else if (connected) {
     statusText.textContent = 'Connected';
   } else {
@@ -542,6 +557,7 @@ function updateRecordingState(recording, connected = false, customStatus = null)
 
 // Initialize event listeners
 document.addEventListener('DOMContentLoaded', async function() {
+  changeModel();
   updateRecordingState(false);
   
   if (messageEl) {
@@ -572,3 +588,4 @@ window.downloadTranscript = downloadTranscript;
 window.toggleRecording = toggleRecording;
 window.clearTranscription = clearTranscription;
 window.fixGrammar = fixGrammar;
+window.changeModel = changeModel;
