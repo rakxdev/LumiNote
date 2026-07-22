@@ -14,7 +14,7 @@ const modelBadge = document.querySelector(".model-badge");
 let isRecording = false;
 let ws = null;
 let microphone = null;
-let selectedModel = "deepgram-nova-3"; // Default: Ultra-fast Deepgram Nova-3 (150ms)
+let selectedModel = "universal-3-5-pro"; // Default: AssemblyAI Universal-3.5 Pro
 
 // State management for interactive live editing
 let baseText = ""; 
