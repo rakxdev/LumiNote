@@ -97,84 +97,105 @@ const TokenManager = {
   }
 };
 
-// Visualizer Loop & Oscilloscope Renderer
+// Real-Time Visualizer Engine (Header Pill & Ambient Workspace Resonance)
 let animFrameId = null;
-let latestPcmChunk = null;
+let currentPcmEnergy = 0;
+let smoothedEnergy = 0;
 
 function renderOscilloscopeFrame() {
-  const canvas = document.getElementById("fftOscilloscope");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+  const headerCanvas = document.getElementById("fftOscilloscope");
+  const bgCanvas = document.getElementById("waveformCanvasBackdrop");
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
 
-  if (!isRecording) {
-    // Clean resting baseline
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.beginPath();
-    ctx.moveTo(0, canvas.height / 2);
-    ctx.lineTo(canvas.width, canvas.height / 2);
-    ctx.strokeStyle = isLight ? 'rgba(43,38,33,0.2)' : 'rgba(217,182,74,0.3)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    return;
-  }
+  // 1. Render Header Oscilloscope Pill
+  if (headerCanvas) {
+    const ctx = headerCanvas.getContext("2d");
+    ctx.clearRect(0, 0, headerCanvas.width, headerCanvas.height);
 
-  animFrameId = requestAnimationFrame(renderOscilloscopeFrame);
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const numBars = 16;
-  const barWidth = (canvas.width / numBars) - 2;
-  
-  // Compute acoustic RMS and frequency distribution from raw incoming PCM audio chunks
-  let energyLevels = new Float32Array(numBars);
-  
-  if (latestPcmChunk && latestPcmChunk.length > 0) {
-    const step = Math.floor(latestPcmChunk.length / numBars);
-    for (let b = 0; b < numBars; b++) {
-      let sum = 0;
-      const start = b * step;
-      const end = Math.min(start + step, latestPcmChunk.length);
-      for (let i = start; i < end; i++) {
-        sum += Math.abs(latestPcmChunk[i]);
-      }
-      const avg = sum / (end - start || 1);
-      // Scale from Int16 range (0..32767) to normalized 0..1
-      energyLevels[b] = Math.min(1, (avg / 3500) * 1.5);
-    }
-  }
-
-  // Draw responsive audio spectrum bars
-  for (let i = 0; i < numBars; i++) {
-    const rawVal = energyLevels[i];
-    // Natural idle vibration if quiet
-    const time = Date.now() * 0.006;
-    const idleVal = Math.sin(time + i * 0.4) * 0.1 + 0.12;
-    const finalVal = Math.max(idleVal, rawVal);
-
-    const barHeight = Math.max(3, finalVal * (canvas.height - 2));
-    const x = i * (barWidth + 2);
-    const y = canvas.height - barHeight;
-
-    const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
-    if (isLight) {
-      grad.addColorStop(0, '#b91c1c');
-      grad.addColorStop(1, '#d97706');
+    if (!isRecording) {
+      // Idle straight resting line
+      ctx.beginPath();
+      ctx.moveTo(0, headerCanvas.height / 2);
+      ctx.lineTo(headerCanvas.width, headerCanvas.height / 2);
+      ctx.strokeStyle = isLight ? 'rgba(43,38,33,0.2)' : 'rgba(217,182,74,0.25)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     } else {
-      grad.addColorStop(0, '#d9b64a');
-      grad.addColorStop(1, '#e8452c');
+      // 16 Frequency Spectrum Bars
+      const numBars = 16;
+      const barWidth = (headerCanvas.width / numBars) - 2;
+      const time = Date.now() * 0.008;
+
+      for (let i = 0; i < numBars; i++) {
+        // Frequency simulation driven by real vocal PCM energy + organic harmonic dispersion
+        const harmonic = Math.sin(time * 2 + i * 0.45) * 0.25 + 0.35;
+        const barEnergy = Math.max(0.15, smoothedEnergy * harmonic * 2.2);
+        const barHeight = Math.min(headerCanvas.height - 2, Math.max(3, barEnergy * headerCanvas.height));
+        const x = i * (barWidth + 2);
+        const y = headerCanvas.height - barHeight;
+
+        const grad = ctx.createLinearGradient(0, headerCanvas.height, 0, 0);
+        if (isLight) {
+          grad.addColorStop(0, '#b91c1c');
+          grad.addColorStop(1, '#d97706');
+        } else {
+          grad.addColorStop(0, '#d9b64a');
+          grad.addColorStop(1, '#e8452c');
+        }
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(x, y, barWidth, barHeight, [2, 2, 0, 0]);
+        } else {
+          ctx.rect(x, y, barWidth, barHeight);
+        }
+        ctx.fill();
+      }
+    }
+  }
+
+  // 2. Render Full-Canvas Sine Resonance Waveform
+  if (bgCanvas) {
+    const bgCtx = bgCanvas.getContext("2d");
+    if (bgCanvas.width !== bgCanvas.offsetWidth || bgCanvas.height !== bgCanvas.offsetHeight) {
+      bgCanvas.width = bgCanvas.offsetWidth;
+      bgCanvas.height = bgCanvas.offsetHeight;
     }
 
-    ctx.fillStyle = grad;
-    // Rounded bar top
-    ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(x, y, barWidth, barHeight, [2, 2, 0, 0]) : ctx.rect(x, y, barWidth, barHeight);
-    ctx.fill();
+    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+    if (isRecording) {
+      const time = Date.now() * 0.003;
+      const amplitude = Math.max(12, smoothedEnergy * 90);
+
+      bgCtx.beginPath();
+      bgCtx.lineWidth = 1.5;
+      bgCtx.strokeStyle = isLight ? 'rgba(185, 28, 28, 0.35)' : 'rgba(217, 182, 74, 0.35)';
+
+      for (let x = 0; x < bgCanvas.width; x += 4) {
+        const y = bgCanvas.height / 2 + 
+          Math.sin(x * 0.015 + time) * amplitude * 0.6 + 
+          Math.sin(x * 0.035 - time * 1.5) * amplitude * 0.4;
+        if (x === 0) bgCtx.moveTo(x, y);
+        else bgCtx.lineTo(x, y);
+      }
+      bgCtx.stroke();
+    }
+  }
+
+  if (isRecording) {
+    // Smooth decay of vocal energy level
+    smoothedEnergy += (currentPcmEnergy - smoothedEnergy) * 0.25;
+    currentPcmEnergy *= 0.85; // decay
+    animFrameId = requestAnimationFrame(renderOscilloscopeFrame);
   }
 }
 
 function startOscilloscope() {
   if (animFrameId) cancelAnimationFrame(animFrameId);
+  smoothedEnergy = 0.4;
+  currentPcmEnergy = 0.5;
   renderOscilloscopeFrame();
 }
 
@@ -183,7 +204,8 @@ function stopOscilloscope() {
     cancelAnimationFrame(animFrameId);
     animFrameId = null;
   }
-  latestPcmChunk = null;
+  currentPcmEnergy = 0;
+  smoothedEnergy = 0;
   renderOscilloscopeFrame();
 }
 
@@ -219,8 +241,13 @@ function createMicrophone() {
       audioWorkletNode.port.onmessage = (event) => {
         const currentBuffer = new Int16Array(event.data.audio_data);
         
-        // Pass real-time PCM audio directly to oscilloscope frame renderer
-        latestPcmChunk = currentBuffer;
+        // Measure real RMS energy from voice sample
+        let sum = 0;
+        for (let i = 0; i < currentBuffer.length; i++) {
+          sum += Math.abs(currentBuffer[i]);
+        }
+        const avg = sum / (currentBuffer.length || 1);
+        currentPcmEnergy = Math.min(1, (avg / 2200) * 1.6);
 
         audioBufferQueue = mergeBuffers(audioBufferQueue, currentBuffer);
 
