@@ -125,8 +125,10 @@ function renderOscilloscopeFrame() {
 
   // 1. Render Header Oscilloscope Pill
   if (headerCanvas) {
-    const ctx = headerCanvas.getContext("2d");
-    ctx.clearRect(0, 0, headerCanvas.width, headerCanvas.height);
+    const ctx = headerCanvas.getContext("2d", { alpha: false });
+    // Fill solid background instead of clearRect for composite optimization
+    ctx.fillStyle = isLight ? '#f4efe6' : '#101318';
+    ctx.fillRect(0, 0, headerCanvas.width, headerCanvas.height);
 
     if (!isRecording) {
       // Idle straight resting line
@@ -209,7 +211,9 @@ function renderOscilloscopeFrame() {
 
   // 2. Render Full-Canvas Time-Domain Voice Waveform in Background
   if (bgCanvas) {
-    const bgCtx = bgCanvas.getContext("2d");
+    const bgCtx = bgCanvas.getContext("2d", { alpha: true });
+    
+    // Only resize if actually needed (prevents layout thrashing)
     if (bgCanvas.width !== bgCanvas.offsetWidth || bgCanvas.height !== bgCanvas.offsetHeight) {
       bgCanvas.width = bgCanvas.offsetWidth;
       bgCanvas.height = bgCanvas.offsetHeight;
