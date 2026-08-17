@@ -1,20 +1,20 @@
-# 🎙️ LumiNote v03 — Real-Time Speech Intelligence
+# 🎙️ LumiNote — Vāk & Nāda Edition
 
-LumiNote is a production-hardened, browser-native real-time voice dictation app deployed on **Cloudflare Pages**. It streams live microphone audio via WebSockets to AI transcription models and features zero-latency interactive transcript editing.
+LumiNote is a production-hardened, browser-native real-time speech intelligence studio. Deployed on **Cloudflare Pages**, it streams live microphone audio directly to advanced AI transcription models (AssemblyAI & Deepgram) via WebSockets, featuring zero-latency interactive editing and a dual-world architectural design.
 
-![LumiNote Banner](public/logo.svg)
+![LumiNote Studio](public/logo.svg)
 
 ---
 
-## ⚡ What's New in v03 (Production Hardening)
+## ⚡ Architecture & Features (v03)
 
-- 🔒 **Ephemeral Grant Auth:** Replaced static exposed keys with on-demand temporary session tokens (~30s TTL for Deepgram, 10m TTL for AssemblyAI).
-- 🎙️ **Leak-Free Audio Lifecycle:** Complete audio pipeline teardown on model switches, remote disconnects, and unloads.
-- ✨ **Safe Grammar Cleanup:** Fixed grammar rules to preserve legitimate English words (`like`, `had had`, `Node.js`, `ER`).
-- 🛡️ **Edge Security Headers:** Strict Content-Security-Policy (CSP), HSTS, and X-Content-Type-Options via `_headers`.
-- 📱 **Mobile Responsive 100dvh:** Full viewport containment eliminating mobile address bar clipping.
-- ♿ **Full WCAG Accessibility:** Proper ARIA live regions, semantic elements, and keyboard navigability.
-- 🧪 **Native Test Suite:** Automated unit tests covering grammar rules, audio conversions, and state management.
+- 🕉️ **Vāk & Nāda Fusion Design:** A highly distinctive UI fusing RodeX technical precision with ancient Sanskrit acoustic philosophy. Features a seamless **Dark Mode (Obsidian & Brass)** and **Light Mode (Silk & Red Lacquer)** toggle.
+- 🌊 **Kinetic Acoustic Visualizers:** Dual real-time audio oscilloscopes (header spectrum bars and background time-domain waveforms) that respond dynamically to voice activity at 60fps.
+- 🔒 **Zero-Trust Ephemeral Auth:** No master API keys are exposed to the client. Cloudflare Functions securely mint on-demand temporary JWT grant tokens (~30s TTL) for WebSocket handshakes.
+- 🎙️ **Leak-Free Audio Lifecycle:** Complete AudioWorklet and `MediaStream` teardown on model switches, remote disconnects, and browser unloads to prevent memory leaks and ghost streams.
+- ✨ **Safe Grammar Engine:** Custom LanguageTool proxy with bespoke regex rules that preserve legitimate English (`like`, `had had`, `Node.js`, `ER`) while intelligently collapsing stuttered speech.
+- 💾 **Local Draft Resilience:** Real-time autosaving to `localStorage` ensures transcripts survive accidental tab closures and browser crashes.
+- 📱 **Fluid 100dvh Ergonomics:** Adapts flawlessly from 4K desktop scaling down to mobile 2x2 touch grids, utilizing `viewport-fit=cover` for notch/home-bar safety.
 
 ---
 
@@ -22,16 +22,18 @@ LumiNote is a production-hardened, browser-native real-time voice dictation app 
 
 | Model | Provider | Latency | Target Use Case |
 |---|---|---|---|
-| **AssemblyAI Universal-3.5 Pro** *(Default)* | AssemblyAI Streaming v3 | ~300ms | High-accuracy voice agents & dictation |
+| **AssemblyAI Universal-3.5 Pro** *(Default)* | AssemblyAI Streaming v3 | ~300ms | High-accuracy contextual voice intelligence |
 | **Deepgram Nova-3** | Deepgram Realtime v1 | ~150ms | Ultra-fast conversational interactions |
-| **AssemblyAI Fast Realtime** | AssemblyAI Streaming v3 | ~180ms | Low-latency stream processing |
+| **AssemblyAI Fast Realtime** | AssemblyAI Streaming v3 | ~180ms | Low-latency lightweight stream processing |
 
 ---
 
 ## 🛠️ Local Development & Testing
 
+Built with pure vanilla JavaScript, native Web Audio APIs, and Node native test runners. Zero heavy frameworks.
+
 ```bash
-# Run unit tests
+# Run the 12-suite native unit tests
 npm test
 
 # Run local development server with Cloudflare Pages Functions
@@ -48,7 +50,7 @@ DEEPGRAM_API_KEY=your_deepgram_api_key
 
 ## 🚀 Deployment to Cloudflare Pages
 
-1. Set environment secrets in your Cloudflare Pages project:
+1. Set environment secrets securely via Wrangler:
 ```bash
 npx wrangler pages secret put ASSEMBLYAI_API_KEY
 npx wrangler pages secret put DEEPGRAM_API_KEY
@@ -60,6 +62,9 @@ npm run deploy
 ```
 
 ---
+
+## 📚 Documentation
+See the `docs/decisions` directory for Architecture Decision Records (ADRs) regarding the synthetic oscilloscope overlay and ephemeral WebSocket grant tokens.
 
 ## 📄 License
 MIT License.
