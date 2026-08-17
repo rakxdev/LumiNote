@@ -254,6 +254,37 @@ function commitActiveTurn() {
   baseText = messageEl.innerText;
   activeTurnText = "";
   updateStats();
+  saveDraftToStorage();
+}
+
+// Autosave & Local Draft Recovery
+const DRAFT_STORAGE_KEY = "luminote_v03_saved_draft";
+
+function saveDraftToStorage() {
+  if (!messageEl) return;
+  const content = messageEl.innerText;
+  if (content && content.trim().length > 0) {
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, content);
+    } catch (e) {}
+  } else {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch (e) {}
+  }
+}
+
+function restoreDraftFromStorage() {
+  if (!messageEl) return;
+  try {
+    const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (saved && saved.trim().length > 0 && messageEl.innerText.trim().length === 0) {
+      messageEl.innerText = saved;
+      baseText = saved;
+      updateStats();
+      showToast("Restored unsaved draft from local storage");
+    }
+  } catch (e) {}
 }
 
 function onEditorInput() {
@@ -268,6 +299,7 @@ function onEditorInput() {
     baseText = messageEl.innerText;
   }
   updateStats();
+  saveDraftToStorage();
 }
 
 // Dual Theme Switcher (Dark Mode / Light Mode)
@@ -668,6 +700,7 @@ function clearTranscription() {
     const liveSpan = document.getElementById('liveTurnSpan');
     if (liveSpan) liveSpan.remove();
     updateStats();
+    saveDraftToStorage();
     showToast('Canvas Purged');
   }
 }
@@ -750,6 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  restoreDraftFromStorage();
   updateStats();
 });
 
