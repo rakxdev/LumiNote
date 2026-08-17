@@ -118,10 +118,10 @@ html, body {
 
 /* Container */
 .container {
-  max-width: 1360px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
-  padding: 0.85rem 2rem;
+  padding: 1rem 2.25rem;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -130,6 +130,7 @@ html, body {
   max-height: 100dvh;
   overflow: hidden;
   position: relative;
+  gap: 0.85rem;
 }
 
 /* Sacred Devanagari & Telemetry Side Pillar */
