@@ -376,7 +376,7 @@ html, body {
 .mode-switch-btn {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   background: var(--btn-bg);
   border: 1px solid var(--btn-border);
   color: var(--ink-primary);
@@ -389,6 +389,16 @@ html, body {
   box-shadow: var(--btn-shadow);
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.theme-icon-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+}
+.theme-svg-icon {
+  display: block;
 }
 .mode-switch-btn:hover {
   border-color: var(--gold);
@@ -695,31 +705,48 @@ html, body {
   box-shadow: 0 0 8px #ffffff;
 }
 
-/* Toast */
+/* Custom Scrollbar Inside Editor */
+.transcription-output::-webkit-scrollbar {
+  width: 6px;
+}
+.transcription-output::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+.transcription-output::-webkit-scrollbar-thumb {
+  background: var(--gold);
+  border-radius: 4px;
+  opacity: 0.7;
+}
+.transcription-output::-webkit-scrollbar-thumb:hover {
+  background: var(--amber);
+}
+
+/* Mid-Rail Toast Notification (Clean, Non-Overlapping) */
 .copy-toast {
-  position: fixed;
-  top: 1.25rem;
-  left: 50%;
-  transform: translateX(-50%) translateY(-10px);
-  background: var(--panel-chassis);
-  border: 1.5px solid var(--gold);
+  position: static;
+  background: var(--btn-bg);
+  border: 1px solid var(--gold);
   color: var(--ink-primary);
-  padding: 0.45rem 1.15rem;
-  border-radius: 5px;
+  padding: 0.25rem 0.85rem;
+  border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: 0.725rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   opacity: 0;
-  pointer-events: none;
-  transition: all 0.25s var(--ease);
-  z-index: 1000;
+  visibility: hidden;
+  transform: translateY(-2px);
+  transition: all 0.2s var(--ease);
 }
 .copy-toast.show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  visibility: visible;
+  transform: translateY(0);
 }
 .toast-indicator-dot {
   width: 5px;
@@ -727,7 +754,6 @@ html, body {
   border-radius: 50%;
   background: var(--gold);
   display: inline-block;
-  margin-right: 0.35rem;
 }
 
 /* App Footer */

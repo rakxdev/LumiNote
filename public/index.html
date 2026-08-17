@@ -88,8 +88,17 @@
           </div>
 
           <!-- Dual Mode Switcher (Dark: RodeX Obsidian / Light: Wabi-Sabi Silk) -->
-          <button type="button" class="mode-switch-btn" id="themeToggleBtn" aria-label="Toggle Dark and Light Mode" title="Toggle Mode">
-            <span id="modeIcon" aria-hidden="true">☀️</span>
+          <button type="button" class="mode-switch-btn" id="themeToggleBtn" aria-label="Toggle Dark and Light Mode" title="Toggle Theme">
+            <span class="theme-icon-slot" id="themeIconSlot">
+              <!-- Custom Crafted SVG Sun / Moon Icon -->
+              <svg class="theme-svg-icon" id="themeSvgIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            </span>
             <span id="modeLabel">Light Mode</span>
           </button>
 
@@ -109,6 +118,13 @@
             <!-- Live Web Audio FFT Oscilloscope Canvas -->
             <canvas id="fftOscilloscope" class="fft-oscilloscope" width="160" height="24" aria-hidden="true"></canvas>
           </div>
+
+          <!-- Mid-Rail Toast Notification Slot (Non-Overlapping) -->
+          <div class="copy-toast" id="copyFeedback" role="status" aria-live="polite">
+            <span class="toast-indicator-dot" aria-hidden="true"></span>
+            <span id="toastText">Ready</span>
+          </div>
+
           <div class="live-stream-badge" aria-live="polite">
             <span class="badge-bindu-pulse" aria-hidden="true"></span>
             <span>नाद प्रवाह • LIVE ACOUSTIC CHANNEL</span>
@@ -157,12 +173,6 @@
           <span id="buttonText">Start Dictating</span>
         </button>
       </footer>
-
-      <!-- Telemetry Toast -->
-      <div class="copy-toast" id="copyFeedback" role="status" aria-live="polite">
-        <span class="toast-indicator-dot" aria-hidden="true"></span>
-        <span id="toastText">Copied to clipboard!</span>
-      </div>
 
       <!-- App Footer -->
       <footer class="app-footer" role="contentinfo">
