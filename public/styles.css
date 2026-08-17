@@ -546,6 +546,19 @@ body.is-recording .wb5 { animation-delay: 0.15s; }
   border-radius: 2px;
   font-style: italic;
   font-weight: 600;
+  display: inline;
+  animation: ink-flow 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes ink-flow {
+  0% {
+    opacity: 0.4;
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
 }
 
 .workspace-bottom-bar {
