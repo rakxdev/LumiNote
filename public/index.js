@@ -97,10 +97,27 @@ const TokenManager = {
   }
 };
 
-// Real-Time Visualizer Engine (Header Pill & Ambient Workspace Resonance)
+// Web Audio Real-Time Analyser Pipeline
+let liveAnalyser = null;
+let liveDataArray = null;
 let animFrameId = null;
-let currentPcmEnergy = 0;
-let smoothedEnergy = 0;
+
+function setupLiveAnalyser(sourceNode, audioCtx) {
+  try {
+    liveAnalyser = audioCtx.createAnalyser();
+    liveAnalyser.fftSize = 128;
+    liveAnalyser.smoothingTimeConstant = 0.8;
+    liveAnalyser.minDecibels = -90;
+    liveAnalyser.maxDecibels = -10;
+    
+    // Connect microphone source directly to AnalyserNode
+    sourceNode.connect(liveAnalyser);
+    
+    liveDataArray = new Uint8Array(liveAnalyser.frequencyBinCount);
+  } catch (err) {
+    console.error("Failed to setup Live Web Audio Analyser:", err);
+  }
+}
 
 function renderOscilloscopeFrame() {
   const headerCanvas = document.getElementById("fftOscilloscope");
@@ -112,25 +129,31 @@ function renderOscilloscopeFrame() {
     const ctx = headerCanvas.getContext("2d");
     ctx.clearRect(0, 0, headerCanvas.width, headerCanvas.height);
 
-    if (!isRecording) {
+    if (!isRecording || !liveAnalyser) {
       // Idle straight resting line
       ctx.beginPath();
       ctx.moveTo(0, headerCanvas.height / 2);
       ctx.lineTo(headerCanvas.width, headerCanvas.height / 2);
-      ctx.strokeStyle = isLight ? 'rgba(43,38,33,0.2)' : 'rgba(217,182,74,0.25)';
+      ctx.strokeStyle = isLight ? 'rgba(43,38,33,0.2)' : 'rgba(217,182,74,0.3)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
     } else {
-      // 16 Frequency Spectrum Bars
+      liveAnalyser.getByteFrequencyData(liveDataArray);
+
       const numBars = 16;
-      const barWidth = (headerCanvas.width / numBars) - 2;
-      const time = Date.now() * 0.008;
+      const step = Math.floor(liveDataArray.length / numBars);
+      const barWidth = Math.max(2, (headerCanvas.width / numBars) - 2);
 
       for (let i = 0; i < numBars; i++) {
-        // Frequency simulation driven by real vocal PCM energy + organic harmonic dispersion
-        const harmonic = Math.sin(time * 2 + i * 0.45) * 0.25 + 0.35;
-        const barEnergy = Math.max(0.15, smoothedEnergy * harmonic * 2.2);
-        const barHeight = Math.min(headerCanvas.height - 2, Math.max(3, barEnergy * headerCanvas.height));
+        let sum = 0;
+        for (let j = 0; j < step; j++) {
+          sum += liveDataArray[i * step + j] || 0;
+        }
+        const val = sum / step; // 0..255
+        const norm = val / 255;
+        
+        // Responsive bar height (always has a visible 2px base, expands with real voice pitch/volume)
+        const barHeight = Math.max(2, norm * (headerCanvas.height - 2));
         const x = i * (barWidth + 2);
         const y = headerCanvas.height - barHeight;
 
@@ -155,7 +178,7 @@ function renderOscilloscopeFrame() {
     }
   }
 
-  // 2. Render Full-Canvas Sine Resonance Waveform
+  // 2. Render Full-Canvas Time-Domain Voice Waveform in Background
   if (bgCanvas) {
     const bgCtx = bgCanvas.getContext("2d");
     if (bgCanvas.width !== bgCanvas.offsetWidth || bgCanvas.height !== bgCanvas.offsetHeight) {
@@ -165,37 +188,42 @@ function renderOscilloscopeFrame() {
 
     bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
 
-    if (isRecording) {
-      const time = Date.now() * 0.003;
-      const amplitude = Math.max(12, smoothedEnergy * 90);
+    if (isRecording && liveAnalyser) {
+      const timeDomainData = new Uint8Array(liveAnalyser.fftSize);
+      liveAnalyser.getByteTimeDomainData(timeDomainData);
 
       bgCtx.beginPath();
       bgCtx.lineWidth = 1.5;
-      bgCtx.strokeStyle = isLight ? 'rgba(185, 28, 28, 0.35)' : 'rgba(217, 182, 74, 0.35)';
+      bgCtx.strokeStyle = isLight ? 'rgba(185, 28, 28, 0.4)' : 'rgba(217, 182, 74, 0.35)';
 
-      for (let x = 0; x < bgCanvas.width; x += 4) {
-        const y = bgCanvas.height / 2 + 
-          Math.sin(x * 0.015 + time) * amplitude * 0.6 + 
-          Math.sin(x * 0.035 - time * 1.5) * amplitude * 0.4;
-        if (x === 0) bgCtx.moveTo(x, y);
-        else bgCtx.lineTo(x, y);
+      const sliceWidth = bgCanvas.width / timeDomainData.length;
+      let x = 0;
+
+      for (let i = 0; i < timeDomainData.length; i++) {
+        const v = timeDomainData[i] / 128.0; // 1.0 = center
+        const y = (v * bgCanvas.height) / 2;
+
+        if (i === 0) {
+          bgCtx.moveTo(x, y);
+        } else {
+          bgCtx.lineTo(x, y);
+        }
+
+        x += sliceWidth;
       }
+
+      bgCtx.lineTo(bgCanvas.width, bgCanvas.height / 2);
       bgCtx.stroke();
     }
   }
 
   if (isRecording) {
-    // Smooth decay of vocal energy level
-    smoothedEnergy += (currentPcmEnergy - smoothedEnergy) * 0.25;
-    currentPcmEnergy *= 0.85; // decay
     animFrameId = requestAnimationFrame(renderOscilloscopeFrame);
   }
 }
 
 function startOscilloscope() {
   if (animFrameId) cancelAnimationFrame(animFrameId);
-  smoothedEnergy = 0.4;
-  currentPcmEnergy = 0.5;
   renderOscilloscopeFrame();
 }
 
@@ -204,8 +232,11 @@ function stopOscilloscope() {
     cancelAnimationFrame(animFrameId);
     animFrameId = null;
   }
-  currentPcmEnergy = 0;
-  smoothedEnergy = 0;
+  if (liveAnalyser) {
+    try { liveAnalyser.disconnect(); } catch (e) {}
+    liveAnalyser = null;
+  }
+  liveDataArray = null;
   renderOscilloscopeFrame();
 }
 
@@ -228,7 +259,14 @@ function createMicrophone() {
       });
 
       audioContext = getAudioContext();
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+
       source = audioContext.createMediaStreamSource(stream);
+
+      // Connect standard Web Audio Analyser directly to microphone input stream
+      setupLiveAnalyser(source, audioContext);
 
       await audioContext.audioWorklet.addModule('audio-processor.js');
 
@@ -240,15 +278,6 @@ function createMicrophone() {
 
       audioWorkletNode.port.onmessage = (event) => {
         const currentBuffer = new Int16Array(event.data.audio_data);
-        
-        // Measure real RMS energy from voice sample
-        let sum = 0;
-        for (let i = 0; i < currentBuffer.length; i++) {
-          sum += Math.abs(currentBuffer[i]);
-        }
-        const avg = sum / (currentBuffer.length || 1);
-        currentPcmEnergy = Math.min(1, (avg / 2200) * 1.6);
-
         audioBufferQueue = mergeBuffers(audioBufferQueue, currentBuffer);
 
         const bufferDuration = (audioBufferQueue.length / audioContext.sampleRate) * 1000;
