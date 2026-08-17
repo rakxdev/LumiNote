@@ -735,6 +735,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Global Keyboard Shortcuts (Space to dictate, Escape to close dropdown)
+  document.addEventListener('keydown', (e) => {
+    // Escape key closes dropdown
+    if (e.key === 'Escape') {
+      closeModelDropdown();
+      return;
+    }
+
+    // Space key toggles recording when not actively typing inside the editor
+    if (e.code === 'Space' && document.activeElement !== messageEl) {
+      e.preventDefault();
+      toggleRecording();
+    }
+  });
+
   updateStats();
 });
 
