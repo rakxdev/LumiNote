@@ -626,9 +626,9 @@ async function fixGrammar() {
       const liveSpan = document.getElementById('liveTurnSpan');
       if (liveSpan) liveSpan.remove();
       updateStats();
-      showToast('✨ Vāk Sanskāra (Grammar Polished)');
+      showToast('✨ Vāk Sanskāra: Grammar polished & structured!');
     } else {
-      showToast('Grammar check complete');
+      showToast('Grammar analysis verified: Text is clean');
     }
   } catch (err) {
     console.error('Grammar check error:', err);
@@ -659,6 +659,16 @@ async function copyToClipboard() {
         tickIcon.style.display = 'inline-block';
         showToast('Copied to clipboard [⌘C]');
         
+        if (typeof anime !== 'undefined') {
+          anime({
+            targets: tickIcon,
+            scale: [0.7, 1.15, 1],
+            rotate: [-10, 5, 0],
+            duration: 350,
+            easing: 'easeOutElastic(1, .6)'
+          });
+        }
+
         setTimeout(() => {
           copyIcon.style.display = 'inline-block';
           tickIcon.style.display = 'none';
