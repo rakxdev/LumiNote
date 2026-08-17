@@ -635,48 +635,56 @@ body.is-recording .wb5 { animation-delay: 0.15s; }
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
+/* Master Transmit Key */
 .master-transmit-btn {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  background: linear-gradient(150deg, var(--gold), var(--gold-deep));
-  border: 1px solid var(--panel-border);
-  color: #1a1508;
+  gap: 0.85rem;
+  background: linear-gradient(135deg, #f5d77f 0%, var(--gold) 45%, var(--gold-deep) 100%);
+  border: 1px solid var(--gold);
+  color: #121008;
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 0.75rem 2.25rem;
-  border-radius: 6px;
+  padding: 0.85rem 2.5rem;
+  border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(217, 182, 74, 0.4);
+  box-shadow: 0 6px 25px rgba(217, 182, 74, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transition: all 0.2s var(--ease);
 }
 .master-transmit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(217, 182, 74, 0.6);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 35px rgba(217, 182, 74, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.master-transmit-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 3px 12px rgba(217, 182, 74, 0.35);
 }
 .master-transmit-btn.recording {
-  background: linear-gradient(150deg, var(--red), #991b1b) !important;
+  background: linear-gradient(135deg, #f87171 0%, var(--red) 50%, #991b1b 100%) !important;
+  border-color: var(--red);
   color: #ffffff;
-  box-shadow: 0 0 30px rgba(232, 69, 44, 0.6);
+  box-shadow: 0 0 35px rgba(232, 69, 44, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   animation: pulse-rec 1.5s infinite;
 }
 @keyframes pulse-rec {
   0% { box-shadow: 0 0 0 0 rgba(232, 69, 44, 0.7); }
-  70% { box-shadow: 0 0 0 16px rgba(232, 69, 44, 0); }
+  70% { box-shadow: 0 0 0 18px rgba(232, 69, 44, 0); }
   100% { box-shadow: 0 0 0 0 rgba(232, 69, 44, 0); }
 }
 
 .tally-dot {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: #1a1508;
+  background: #121008;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
 }
 .master-transmit-btn.recording .tally-dot {
   background: #ffffff;
+  box-shadow: 0 0 10px #ffffff;
 }
 
 /* Toast */
