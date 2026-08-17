@@ -97,90 +97,94 @@ const TokenManager = {
   }
 };
 
-// Oscilloscope Simulation & Hardware Audio Bridge
-let analyserNode = null;
+// Visualizer Loop & Oscilloscope Renderer
 let animFrameId = null;
-let simulatedAudioInterval = null;
+let latestPcmChunk = null;
 
-function setupOscilloscope(source, audioCtx) {
+function renderOscilloscopeFrame() {
   const canvas = document.getElementById("fftOscilloscope");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
 
-  try {
-    analyserNode = audioCtx.createAnalyser();
-    analyserNode.fftSize = 64;
-    analyserNode.smoothingTimeConstant = 0.75;
-    source.connect(analyserNode);
-  } catch (e) {
-    console.warn("AnalyserNode fallback to synthetic FFT:", e);
-  }
-
-  const bufferLength = analyserNode ? analyserNode.frequencyBinCount : 32;
-  const dataArray = new Uint8Array(bufferLength);
-
-  function draw() {
-    if (!isRecording) {
-      // Resting baseline
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.beginPath();
-      ctx.moveTo(0, canvas.height / 2);
-      ctx.lineTo(canvas.width, canvas.height / 2);
-      ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(43,38,33,0.2)' : 'rgba(217,182,74,0.25)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      return;
-    }
-
-    animFrameId = requestAnimationFrame(draw);
-
-    if (analyserNode) {
-      analyserNode.getByteFrequencyData(dataArray);
-    } else {
-      // Synthetic acoustic energy if raw mic node is routed exclusively to worklet
-      for (let i = 0; i < bufferLength; i++) {
-        dataArray[i] = Math.floor(Math.random() * 180) + 40;
-      }
-    }
-
-    // Check if real voice energy exists
-    let sum = 0;
-    for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
-    
-    // If mic is silent, show organic idle wave
-    if (sum === 0) {
-      const time = Date.now() * 0.005;
-      for (let i = 0; i < bufferLength; i++) {
-        dataArray[i] = Math.floor(Math.sin(time + i * 0.3) * 20 + 30);
-      }
-    }
-
+  if (!isRecording) {
+    // Clean resting baseline
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height / 2);
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.strokeStyle = isLight ? 'rgba(43,38,33,0.2)' : 'rgba(217,182,74,0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    return;
+  }
 
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    const barWidth = Math.max(2, (canvas.width / bufferLength) * 1.6);
-    let x = 0;
+  animFrameId = requestAnimationFrame(renderOscilloscopeFrame);
 
-    for (let i = 0; i < bufferLength && x < canvas.width; i++) {
-      const val = dataArray[i] || 0;
-      const barHeight = Math.max(2, (val / 255) * (canvas.height - 2));
-      
-      const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
-      if (isLight) {
-        grad.addColorStop(0, '#b91c1c');
-        grad.addColorStop(1, '#d97706');
-      } else {
-        grad.addColorStop(0, '#d9b64a');
-        grad.addColorStop(1, '#e8452c');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const numBars = 16;
+  const barWidth = (canvas.width / numBars) - 2;
+  
+  // Compute acoustic RMS and frequency distribution from raw incoming PCM audio chunks
+  let energyLevels = new Float32Array(numBars);
+  
+  if (latestPcmChunk && latestPcmChunk.length > 0) {
+    const step = Math.floor(latestPcmChunk.length / numBars);
+    for (let b = 0; b < numBars; b++) {
+      let sum = 0;
+      const start = b * step;
+      const end = Math.min(start + step, latestPcmChunk.length);
+      for (let i = start; i < end; i++) {
+        sum += Math.abs(latestPcmChunk[i]);
       }
-
-      ctx.fillStyle = grad;
-      ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
-      x += barWidth + 1;
+      const avg = sum / (end - start || 1);
+      // Scale from Int16 range (0..32767) to normalized 0..1
+      energyLevels[b] = Math.min(1, (avg / 3500) * 1.5);
     }
   }
 
-  draw();
+  // Draw responsive audio spectrum bars
+  for (let i = 0; i < numBars; i++) {
+    const rawVal = energyLevels[i];
+    // Natural idle vibration if quiet
+    const time = Date.now() * 0.006;
+    const idleVal = Math.sin(time + i * 0.4) * 0.1 + 0.12;
+    const finalVal = Math.max(idleVal, rawVal);
+
+    const barHeight = Math.max(3, finalVal * (canvas.height - 2));
+    const x = i * (barWidth + 2);
+    const y = canvas.height - barHeight;
+
+    const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
+    if (isLight) {
+      grad.addColorStop(0, '#b91c1c');
+      grad.addColorStop(1, '#d97706');
+    } else {
+      grad.addColorStop(0, '#d9b64a');
+      grad.addColorStop(1, '#e8452c');
+    }
+
+    ctx.fillStyle = grad;
+    // Rounded bar top
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x, y, barWidth, barHeight, [2, 2, 0, 0]) : ctx.rect(x, y, barWidth, barHeight);
+    ctx.fill();
+  }
+}
+
+function startOscilloscope() {
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+  renderOscilloscopeFrame();
+}
+
+function stopOscilloscope() {
+  if (animFrameId) {
+    cancelAnimationFrame(animFrameId);
+    animFrameId = null;
+  }
+  latestPcmChunk = null;
+  renderOscilloscopeFrame();
 }
 
 function createMicrophone() {
@@ -204,17 +208,20 @@ function createMicrophone() {
       audioContext = getAudioContext();
       source = audioContext.createMediaStreamSource(stream);
 
-      // Connect FFT Oscilloscope for real-time acoustic rendering
-      setupOscilloscope(source, audioContext);
-
       await audioContext.audioWorklet.addModule('audio-processor.js');
 
       audioWorkletNode = new AudioWorkletNode(audioContext, 'audio-processor');
       source.connect(audioWorkletNode);
       audioWorkletNode.connect(audioContext.destination);
 
+      startOscilloscope();
+
       audioWorkletNode.port.onmessage = (event) => {
         const currentBuffer = new Int16Array(event.data.audio_data);
+        
+        // Pass real-time PCM audio directly to oscilloscope frame renderer
+        latestPcmChunk = currentBuffer;
+
         audioBufferQueue = mergeBuffers(audioBufferQueue, currentBuffer);
 
         const bufferDuration = (audioBufferQueue.length / audioContext.sampleRate) * 1000;
@@ -236,18 +243,12 @@ function createMicrophone() {
     },
 
     stopRecording() {
-      if (animFrameId) {
-        cancelAnimationFrame(animFrameId);
-        animFrameId = null;
-      }
+      stopOscilloscope();
+
       if (audioWorkletNode) {
         audioWorkletNode.port.onmessage = null;
         audioWorkletNode.disconnect();
         audioWorkletNode = null;
-      }
-      if (analyserNode) {
-        analyserNode.disconnect();
-        analyserNode = null;
       }
       if (source) {
         source.disconnect();
@@ -260,19 +261,6 @@ function createMicrophone() {
         stream = null;
       }
       audioBufferQueue = new Int16Array(0);
-
-      // Reset oscilloscope canvas
-      const canvas = document.getElementById("fftOscilloscope");
-      if (canvas) {
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.beginPath();
-        ctx.moveTo(0, canvas.height / 2);
-        ctx.lineTo(canvas.width, canvas.height / 2);
-        ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(43,38,33,0.15)' : 'rgba(217,182,74,0.15)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
     }
   };
 }
