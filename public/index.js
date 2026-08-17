@@ -359,6 +359,8 @@ function stopAudioAndWebSocket() {
 function updateRecordingState(recording, connected = false, customStatus = null) {
   isRecording = recording;
 
+  document.body.classList.toggle('is-recording', recording);
+
   if (recordButton) {
     recordButton.disabled = false;
     recordButton.classList.toggle('recording', recording);

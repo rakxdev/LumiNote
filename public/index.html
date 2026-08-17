@@ -3,20 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LumiNote | Real-Time Speech Intelligence</title>
-    <meta name="description" content="LumiNote - Real-Time AI Speech Intelligence & Voice Dictation with AssemblyAI & Deepgram." />
-    <meta name="theme-color" content="#0b0c10" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>LumiNote | Real-Time Voice Intelligence</title>
+    <meta name="description" content="LumiNote - Ultra-fast real-time speech intelligence & voice dictation studio." />
+    <meta name="theme-color" content="#090a0f" />
     <link rel="icon" type="image/svg+xml" href="logo.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=General+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="reset.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <noscript>
-      <div style="background:#ef4444;color:#fff;padding:0.75rem;text-align:center;font-weight:600;">
+      <div class="noscript-banner">
         JavaScript is required to use LumiNote real-time voice dictation. Please enable JavaScript in your browser.
       </div>
     </noscript>
@@ -30,44 +30,49 @@
             <span class="model-badge">v03</span>
           </div>
         </div>
+
         <div class="header-right">
           <div class="custom-model-switcher" id="customModelSwitcher">
             <button type="button" class="model-switcher-btn" id="modelSwitcherTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Select AI Speech Model">
-              <span id="selectedModelLabel">🧠 AssemblyAI Universal-3.5 Pro</span>
+              <span class="model-led-dot"></span>
+              <span id="selectedModelLabel">AssemblyAI Universal-3.5 Pro</span>
               <svg class="chevron-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             
             <div class="model-dropdown-menu" id="modelDropdownMenu" role="listbox" aria-label="Speech Models">
               <div class="model-option active" role="option" aria-selected="true" data-value="universal-3-5-pro" tabindex="0">
-                <span class="option-icon" aria-hidden="true">🧠</span>
+                <div class="option-indicator"></div>
                 <div class="option-details">
                   <span class="option-title">AssemblyAI Universal-3.5 Pro</span>
-                  <span class="option-desc">Deep voice agent model (Default)</span>
+                  <span class="option-desc">Deep contextual intelligence • High accuracy</span>
                 </div>
                 <svg class="check-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
 
               <div class="model-option" role="option" aria-selected="false" data-value="deepgram-nova-3" tabindex="0">
-                <span class="option-icon" aria-hidden="true">🚀</span>
+                <div class="option-indicator"></div>
                 <div class="option-details">
                   <span class="option-title">Deepgram Nova-3</span>
-                  <span class="option-desc">Ultra-fast 150ms real-time latency</span>
+                  <span class="option-desc">Ultra-fast ~150ms stream latency</span>
                 </div>
                 <svg class="check-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
 
               <div class="model-option" role="option" aria-selected="false" data-value="universal-streaming-english" tabindex="0">
-                <span class="option-icon" aria-hidden="true">⚡</span>
+                <div class="option-indicator"></div>
                 <div class="option-details">
                   <span class="option-title">AssemblyAI Fast Realtime</span>
-                  <span class="option-desc">Sub-200ms streaming (v01 Speed)</span>
+                  <span class="option-desc">Sub-200ms lightweight stream</span>
                 </div>
                 <svg class="check-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
             </div>
           </div>
+
           <div class="status-indicator-container" id="statusContainer">
-            <div class="status-indicator" id="statusIndicator" aria-hidden="true"></div>
+            <div class="status-radar-ring">
+              <div class="status-indicator" id="statusIndicator" aria-hidden="true"></div>
+            </div>
             <span id="statusText" aria-live="polite">Ready</span>
           </div>
         </div>
@@ -76,22 +81,36 @@
       <main class="transcription-interface">
         <div class="editor-header">
           <div class="editor-title">
-            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            <span>Live Transcript Editor</span>
+            <svg class="editor-title-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            <span>Live Workspace</span>
           </div>
-          <div class="edit-badge">
-            <span class="edit-dot" aria-hidden="true"></span>
-            <span>Interactive Editing Enabled</span>
+
+          <div class="editor-header-right">
+            <div class="audio-visualizer-bar" id="audioVisualizer" aria-hidden="true">
+              <span class="v-bar v1"></span>
+              <span class="v-bar v2"></span>
+              <span class="v-bar v3"></span>
+              <span class="v-bar v4"></span>
+              <span class="v-bar v5"></span>
+            </div>
+            <div class="edit-badge">
+              <span class="edit-dot" aria-hidden="true"></span>
+              <span>Interactive Stream</span>
+            </div>
           </div>
         </div>
 
-        <div id="message" class="transcription-output" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Transcript editor content" data-placeholder="Start recording or type your text here... You can edit any word while live transcribing!"></div>
+        <div id="message" class="transcription-output" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Transcript editor content" data-placeholder="Speak naturally or type your draft... Edit any phrase in real-time as words stream in."></div>
         
         <div class="editor-footer">
           <div class="stats-counter" id="statsCounter" aria-live="polite">
             <span id="wordCount">0 words</span>
             <span class="dot-separator" aria-hidden="true">•</span>
             <span id="charCount">0 characters</span>
+          </div>
+
+          <div class="editor-hotkey-hint">
+            <span>Press <kbd>Space</kbd> or click to dictate</span>
           </div>
         </div>
 
@@ -102,36 +121,37 @@
 
         <div class="controls">
           <div class="utility-buttons">
-            <button id="clearButton" class="control-button clear-button" type="button" title="Clear text">
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <button id="clearButton" class="control-button clear-button" type="button" title="Clear canvas">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
               <span>Clear</span>
             </button>
             <button id="copyButton" class="control-button copy-button" type="button" title="Copy text">
-              <svg class="copy-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              <svg class="tick-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <svg class="copy-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              <svg class="tick-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <span>Copy</span>
             </button>
-            <button id="downloadButton" class="control-button download-button" type="button" title="Download text">
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <button id="downloadButton" class="control-button download-button" type="button" title="Export .txt">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
               <span>Export</span>
             </button>
-            <button id="grammarButton" class="control-button grammar-button" type="button" title="Fix and polish grammar">
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
-              <span>Fix Grammar</span>
+            <button id="grammarButton" class="control-button grammar-button" type="button" title="Refine grammar & clarity">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              <span>Polish</span>
             </button>
           </div>
 
           <button id="recordButton" class="record-button" type="button" aria-pressed="false" aria-label="Toggle voice recording">
+            <span class="record-glow-aura" aria-hidden="true"></span>
             <span class="icon-container" id="buttonIcon">
-              <svg class="mic-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              <svg class="mic-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
             </span>
-            <span id="buttonText">Start Recording</span>
+            <span id="buttonText">Start Dictating</span>
           </button>
         </div>
       </main>
 
       <footer class="app-footer">
-        <p>&copy; 2026 LumiNote • Real-Time Speech Intelligence</p>
+        <p>&copy; 2026 LumiNote • Voice Intelligence Engine</p>
       </footer>
     </div>
 
