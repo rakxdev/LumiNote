@@ -103,13 +103,8 @@
         <div class="workspace-top-bar">
           <div class="telemetry-left">
             <span>PCM S16LE • 16.0 kHz LOSSLESS</span>
-            <div class="waveform-rack" id="audioVisualizer" aria-hidden="true">
-              <span class="w-bar wb1"></span>
-              <span class="w-bar wb2"></span>
-              <span class="w-bar wb3"></span>
-              <span class="w-bar wb4"></span>
-              <span class="w-bar wb5"></span>
-            </div>
+            <!-- Live Web Audio FFT Oscilloscope Canvas -->
+            <canvas id="fftOscilloscope" class="fft-oscilloscope" width="160" height="24" aria-hidden="true"></canvas>
           </div>
           <div class="live-stream-badge" aria-live="polite">
             <span class="badge-bindu-pulse" aria-hidden="true"></span>

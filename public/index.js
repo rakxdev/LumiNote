@@ -97,7 +97,66 @@ const TokenManager = {
   }
 };
 
-// Microphone & AudioWorklet pipeline
+// Microphone & AudioWorklet pipeline with Real-Time Web Audio FFT Analyser
+let analyserNode = null;
+let animFrameId = null;
+
+function setupOscilloscope(source, audioCtx) {
+  const canvas = document.getElementById("fftOscilloscope");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  analyserNode = audioCtx.createAnalyser();
+  analyserNode.fftSize = 64;
+  analyserNode.smoothingTimeConstant = 0.8;
+  source.connect(analyserNode);
+
+  const bufferLength = analyserNode.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+
+  function draw() {
+    if (!isRecording) {
+      // Idle baseline
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height / 2);
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(43,38,33,0.15)' : 'rgba(217,182,74,0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      return;
+    }
+
+    animFrameId = requestAnimationFrame(draw);
+    analyserNode.getByteFrequencyData(dataArray);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const barWidth = (canvas.width / bufferLength) * 1.8;
+    let x = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+      const barHeight = (dataArray[i] / 255) * (canvas.height - 2) + 2;
+      
+      const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
+      if (isLight) {
+        grad.addColorStop(0, '#b91c1c');
+        grad.addColorStop(1, '#d97706');
+      } else {
+        grad.addColorStop(0, '#d9b64a');
+        grad.addColorStop(1, '#e8452c');
+      }
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+      x += barWidth + 1;
+    }
+  }
+
+  draw();
+}
+
 function createMicrophone() {
   let stream = null;
   let audioContext = null;
@@ -118,6 +177,9 @@ function createMicrophone() {
 
       audioContext = getAudioContext();
       source = audioContext.createMediaStreamSource(stream);
+
+      // Connect FFT Oscilloscope for real-time acoustic rendering
+      setupOscilloscope(source, audioContext);
 
       await audioContext.audioWorklet.addModule('audio-processor.js');
 
@@ -148,10 +210,18 @@ function createMicrophone() {
     },
 
     stopRecording() {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
       if (audioWorkletNode) {
         audioWorkletNode.port.onmessage = null;
         audioWorkletNode.disconnect();
         audioWorkletNode = null;
+      }
+      if (analyserNode) {
+        analyserNode.disconnect();
+        analyserNode = null;
       }
       if (source) {
         source.disconnect();
@@ -164,6 +234,19 @@ function createMicrophone() {
         stream = null;
       }
       audioBufferQueue = new Int16Array(0);
+
+      // Reset oscilloscope canvas
+      const canvas = document.getElementById("fftOscilloscope");
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(43,38,33,0.15)' : 'rgba(217,182,74,0.15)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
     }
   };
 }
@@ -795,6 +878,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   restoreDraftFromStorage();
   updateStats();
+
+  // Initialize Oscilloscope in idle state
+  const canvas = document.getElementById("fftOscilloscope");
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height / 2);
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(43,38,33,0.15)' : 'rgba(217,182,74,0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
 });
 
 window.addEventListener('beforeunload', (e) => {
