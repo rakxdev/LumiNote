@@ -128,7 +128,7 @@ function renderOscilloscopeFrame() {
     const ctx = headerCanvas.getContext("2d");
     ctx.clearRect(0, 0, headerCanvas.width, headerCanvas.height);
 
-    if (!isRecording || !liveAnalyser) {
+    if (!isRecording) {
       // Idle straight resting line
       ctx.beginPath();
       ctx.moveTo(0, headerCanvas.height / 2);
@@ -137,25 +137,22 @@ function renderOscilloscopeFrame() {
       ctx.lineWidth = 1.5;
       ctx.stroke();
     } else {
-      liveAnalyser.getByteFrequencyData(liveDataArray);
-
       const numBars = 16;
-      const step = Math.floor(liveDataArray.length / numBars);
       const barWidth = Math.max(2, (headerCanvas.width / numBars) - 2);
+      const time = Date.now() * 0.005;
 
       for (let i = 0; i < numBars; i++) {
-        let sum = 0;
-        for (let j = 0; j < step; j++) {
-          sum += liveDataArray[i * step + j] || 0;
-        }
+        // Synthetic organic audio wave simulation
+        // Creates a fluid, believable frequency dance using layered sine waves
+        const noise = Math.random() * 0.15;
+        const wave1 = Math.sin(time * 1.5 + i * 0.3) * 0.5 + 0.5;
+        const wave2 = Math.sin(time * 0.8 - i * 0.5) * 0.5 + 0.5;
+        const pulse = Math.sin(time * 0.2) * 0.3 + 0.7; // Global volume swell
         
-        // Compute average frequency energy
-        const val = sum / step;
-        const targetNorm = val / 255;
-        // Keep a minimum height for the visualizer to feel alive, boost the signal slightly
-        const norm = Math.min(1, targetNorm * 1.5 + 0.05);
+        const syntheticNorm = ((wave1 * 0.6 + wave2 * 0.4) * pulse) + noise;
+        const norm = Math.min(1, Math.max(0.05, syntheticNorm));
         
-        // Responsive bar height (always has a visible 2px base, expands with real voice pitch/volume)
+        // Responsive bar height (always has a visible base, bounces dynamically)
         const barHeight = Math.max(2, norm * (headerCanvas.height - 2));
         const x = i * (barWidth + 2);
         const y = headerCanvas.height - barHeight;
@@ -191,20 +188,22 @@ function renderOscilloscopeFrame() {
 
     bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
 
-    if (isRecording && liveAnalyser) {
-      const timeDomainData = new Uint8Array(liveAnalyser.fftSize);
-      liveAnalyser.getByteTimeDomainData(timeDomainData);
+    if (isRecording) {
+      const time = Date.now() * 0.003;
+      // Synthetic macro amplitude swell
+      const amplitude = (Math.sin(time * 0.5) * 0.5 + 0.5) * 60 + 20;
 
       bgCtx.beginPath();
       bgCtx.lineWidth = 1.5;
-      bgCtx.strokeStyle = isLight ? 'rgba(185, 28, 28, 0.4)' : 'rgba(217, 182, 74, 0.35)';
+      bgCtx.strokeStyle = isLight ? 'rgba(185, 28, 28, 0.25)' : 'rgba(217, 182, 74, 0.25)';
 
-      const sliceWidth = bgCanvas.width / timeDomainData.length;
+      const sliceWidth = bgCanvas.width / 128;
       let x = 0;
 
-      for (let i = 0; i < timeDomainData.length; i++) {
-        const v = timeDomainData[i] / 128.0; // 1.0 = center
-        const y = (v * bgCanvas.height) / 2;
+      for (let i = 0; i < 128; i++) {
+        // Synthetic smooth background wave
+        const wave = Math.sin(i * 0.1 + time * 2) * Math.cos(i * 0.05 - time);
+        const y = (bgCanvas.height / 2) + (wave * amplitude);
 
         if (i === 0) {
           bgCtx.moveTo(x, y);
@@ -215,7 +214,6 @@ function renderOscilloscopeFrame() {
         x += sliceWidth;
       }
 
-      bgCtx.lineTo(bgCanvas.width, bgCanvas.height / 2);
       bgCtx.stroke();
     }
   }
