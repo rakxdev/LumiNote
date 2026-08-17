@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LumiNote — RodeX x Neo-Mirai x Sanskrit Fusion Studio</title>
+  <meta name="description" content="LumiNote - Luxury real-time voice intelligence fusing RodeX technical precision, Neo-Mirai Wabi-Sabi modernism, and ancient Sanskrit acoustic mastery.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Martel:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Yatra+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       RODEX x NEO-MIRAI x SANSKRIT FUSION TOKENS
+       ========================================================================== */
+
+    :root {
+      --font-display: "Chakra Petch", sans-serif;
+      --font-sanskrit: "Yatra One", serif;
+      --font-body: "Martel", serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+      --font-sans: "Plus Jakarta Sans", sans-serif;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* 🌙 DARK MODE: RodeX Technical Obsidian & Glowing Brass Foil */
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg-base: #0a0c0f;
+      --bg-ambient: 
+        radial-gradient(900px 420px at 72% -10%, rgba(217, 182, 74, 0.12) 0%, transparent 60%),
+        repeating-linear-gradient(0deg, transparent 0 31px, rgba(255, 255, 255, 0.018) 31px 32px),
+        repeating-linear-gradient(90deg, transparent 0 31px, rgba(255, 255, 255, 0.018) 31px 32px);
+      
+      --panel-chassis: #13161c;
+      --panel-inner: #0d0f14;
+      --panel-border: #232832;
+      --dashed-line: rgba(217, 182, 74, 0.25);
+
+      --ink-primary: #f2efe6;
+      --ink-dim: #8a9184;
+      --ink-muted: #565d50;
+
+      --gold: #d9b64a;
+      --gold-deep: #b8952f;
+      --amber: #d9a441;
+      --red: #e8452c;
+      --emerald: #10b981;
+
+      --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      --btn-bg: #1a1e25;
+      --btn-border: #2e3542;
+      --btn-hover: #232933;
+      --btn-shadow: 0 4px 14px rgba(0,0,0,0.4);
+
+      --live-ink-bg: rgba(232, 69, 44, 0.15);
+      --live-ink-color: #fca5a5;
+      --live-ink-border: #e8452c;
+
+      --yantra-opacity: 0.05;
+    }
+
+    /* ☀️ LIGHT MODE: Neo-Mirai Wabi-Sabi Washi Paper & Red Lacquer Seal */
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg-base: #f4efe6;
+      --bg-ambient: 
+        radial-gradient(circle at 75% 10%, rgba(212, 160, 55, 0.2), transparent 22rem),
+        repeating-linear-gradient(0deg, transparent 0 31px, rgba(43, 38, 33, 0.03) 31px 32px),
+        repeating-linear-gradient(90deg, transparent 0 31px, rgba(43, 38, 33, 0.03) 31px 32px);
+
+      --panel-chassis: #fbf9f4;
+      --panel-inner: #ffffff;
+      --panel-border: #2b2621;
+      --dashed-line: rgba(43, 38, 33, 0.3);
+
+      --ink-primary: #1c1814;
+      --ink-dim: #5c5348;
+      --ink-muted: #8c8172;
+
+      --gold: #b8952f;
+      --gold-deep: #8f6f19;
+      --amber: #c27803;
+      --red: #b91c1c;
+      --emerald: #059669;
+
+      --card-shadow: 6px 6px 0px #2b2621;
+      --btn-bg: #fdfbf7;
+      --btn-border: #2b2621;
+      --btn-hover: #eae3d6;
+      --btn-shadow: 3px 3px 0px #2b2621;
+
+      --live-ink-bg: rgba(185, 28, 28, 0.1);
+      --live-ink-color: #991b1b;
+      --live-ink-border: #b91c1c;
+
+      --yantra-opacity: 0.08;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg-base);
+      background-image: var(--bg-ambient);
+      color: var(--ink-primary);
+      font-family: var(--font-mono);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.3s var(--ease), color 0.3s var(--ease);
+    }
+
+    .app-shell {
+      max-width: 1360px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0.85rem 2rem;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ancient Sanskrit & Technical Telemetry Rail */
+    .sacred-telemetry-pillar {
+      position: absolute;
+      left: 0.65rem;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--ink-dim);
+      pointer-events: none;
+      user-select: none;
+      z-index: 10;
+    }
+    .yantra-hanko-box {
+      width: 28px;
+      height: 28px;
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-sanskrit);
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 4px;
+      background: var(--panel-inner);
+    }
+    .pillar-sanskrit-text {
+      font-family: var(--font-sanskrit);
+      font-size: 1.05rem;
+      writing-mode: vertical-rl;
+      letter-spacing: 0.35em;
+      color: var(--gold);
+    }
+    .dashed-pillar-line {
+      width: 1px;
+      height: 50px;
+      background: repeating-linear-gradient(0deg, var(--panel-border) 0 4px, transparent 4px 8px);
+    }
+
+    /* ==========================================================================
+       Top Technical Header (RodeX Specimen Architecture)
+       ========================================================================== */
+
+    .chassis-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      background: var(--panel-chassis);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+      margin-left: 1.75rem;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    /* RodeX Corner Stamp Seal */
+    .packet-seal {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: linear-gradient(150deg, var(--gold), var(--gold-deep));
+      color: #1a1508;
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      padding: 3px 12px 4px;
+      border-bottom-left-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .brand-identity {
+      display: flex;
+      align-items: center;
+      gap: 0.95rem;
+    }
+
+    .rodex-mark-square {
+      width: 32px;
+      height: 32px;
+      border: 1.5px solid var(--gold);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      color: var(--gold);
+      font-size: 14px;
+      background: var(--panel-inner);
+      box-shadow: 0 0 10px rgba(217, 182, 74, 0.2);
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .brand-name {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-primary);
+    }
+    .brand-name em {
+      font-style: normal;
+      color: var(--gold);
+    }
+
+    .fuse-badge {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.15em;
+      color: var(--amber);
+      border: 1px solid rgba(217, 164, 65, 0.4);
+      background: rgba(217, 164, 65, 0.08);
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+
+    .header-instruments {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-right: 4rem; /* room for corner seal */
+    }
+
+    /* Engine Selector Dropdown */
+    .engine-switcher-wrap {
+      position: relative;
+    }
+    .engine-trigger-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      border-radius: 6px;
+      padding: 0.4rem 0.85rem;
+      color: var(--ink-primary);
+      font-family: var(--font-mono);
+      font-size: 0.725rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: var(--btn-shadow);
+      transition: all 0.15s ease;
+    }
+    .engine-trigger-btn:hover {
+      border-color: var(--gold);
+    }
+    .engine-pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+
+    .engine-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      width: 310px;
+      background: var(--panel-chassis);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      box-shadow: var(--card-shadow);
+      padding: 0.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-4px);
+      transition: all 0.2s var(--ease);
+    }
+    .engine-switcher-wrap.open .engine-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .engine-opt {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.55rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .engine-opt:hover {
+      background: rgba(217, 182, 74, 0.1);
+    }
+    .engine-opt.active {
+      background: rgba(217, 182, 74, 0.15);
+      border: 1px solid var(--gold);
+    }
+
+    /* Dual Mode Switch Button */
+    .mode-switch-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--ink-primary);
+      font-family: var(--font-mono);
+      font-size: 0.725rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.4rem 0.85rem;
+      border-radius: 6px;
+      box-shadow: var(--btn-shadow);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .mode-switch-btn:hover {
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+
+    /* Status Pill */
+    .status-stamp {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid;
+      color: var(--amber);
+      border-color: rgba(217, 164, 65, 0.55);
+      background: rgba(217, 164, 65, 0.08);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .status-stamp.recording {
+      color: var(--red);
+      border-color: var(--red);
+      background: rgba(232, 69, 44, 0.1);
+      animation: pulse-stamp 1.5s infinite;
+    }
+    @keyframes pulse-stamp {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+
+    /* ==========================================================================
+       Central Fusion Transcription Workspace
+       ========================================================================== */
+
+    .fusion-workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      margin: 0.85rem 0 0.85rem 1.75rem;
+      background: var(--panel-chassis);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+      padding: 1rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle Sacred Geometry Watermark */
+    .fusion-workspace::before {
+      content: 'ॐ';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-sanskrit);
+      font-size: 26rem;
+      color: var(--gold);
+      opacity: var(--yantra-opacity);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .workspace-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px dashed var(--dashed-line);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--ink-dim);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 5;
+    }
+
+    .telemetry-left {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    /* Waveform Kinetic Meters */
+    .waveform-rack {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 14px;
+    }
+    .w-bar {
+      width: 3px;
+      height: 4px;
+      background: var(--ink-muted);
+      border-radius: 1px;
+      transition: all 0.2s ease;
+    }
+    body.is-recording .w-bar {
+      background: var(--gold);
+      animation: wave-bounce 0.85s ease-in-out infinite alternate;
+    }
+    body.is-recording .wb1 { animation-delay: 0.1s; }
+    body.is-recording .wb2 { animation-delay: 0.3s; }
+    body.is-recording .wb3 { animation-delay: 0.2s; }
+    body.is-recording .wb4 { animation-delay: 0.4s; }
+    body.is-recording .wb5 { animation-delay: 0.15s; }
+    @keyframes wave-bounce {
+      0% { height: 4px; }
+      100% { height: 16px; }
+    }
+
+    .live-stream-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    /* Live Output Transcription Canvas */
+    .editor-zone {
+      flex: 1;
+      margin: 0.75rem 0;
+      background: var(--panel-inner);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 1.75rem 2.25rem;
+      font-family: var(--font-body);
+      font-size: 1.4rem;
+      line-height: 1.85;
+      color: var(--ink-primary);
+      outline: none;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      position: relative;
+      z-index: 5;
+    }
+    .editor-zone:empty::before {
+      content: "वाचं वदति यथार्थम्... Begin speaking. Spoken words stream in real-time with flawless acoustic precision.";
+      color: var(--ink-dim);
+      font-style: italic;
+    }
+
+    /* Live Interim Spoken Words */
+    .live-token-span {
+      color: var(--live-ink-color);
+      background: var(--live-ink-bg);
+      border-bottom: 2px solid var(--live-ink-border);
+      padding: 0.1rem 0.35rem;
+      border-radius: 2px;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .workspace-bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.75rem;
+      border-top: 1px dashed var(--dashed-line);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--ink-dim);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 5;
+    }
+
+    .cell-tag {
+      font-size: 8px;
+      color: rgba(138, 145, 132, 0.6);
+      letter-spacing: 0.2em;
+    }
+
+    /* ==========================================================================
+       Bottom Controls Deck
+       ========================================================================== */
+
+    .controls-deck {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-left: 1.75rem;
+      flex-shrink: 0;
+    }
+
+    .tool-group {
+      display: flex;
+      gap: 0.55rem;
+    }
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--ink-primary);
+      font-family: var(--font-mono);
+      font-size: 0.725rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.65rem 1.15rem;
+      border-radius: 6px;
+      box-shadow: var(--btn-shadow);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tool-btn:hover:not(:disabled) {
+      background: var(--btn-hover);
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+    .tool-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .master-transmit-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: linear-gradient(150deg, var(--gold), var(--gold-deep));
+      border: 1px solid var(--panel-border);
+      color: #1a1508;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.75rem 2.25rem;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(217, 182, 74, 0.4);
+      transition: all 0.2s var(--ease);
+    }
+    .master-transmit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(217, 182, 74, 0.6);
+    }
+    .master-transmit-btn.recording {
+      background: linear-gradient(150deg, var(--red), #991b1b) !important;
+      color: #ffffff;
+      box-shadow: 0 0 30px rgba(232, 69, 44, 0.6);
+      animation: pulse-rec 1.5s infinite;
+    }
+    @keyframes pulse-rec {
+      0% { box-shadow: 0 0 0 0 rgba(232, 69, 44, 0.7); }
+      70% { box-shadow: 0 0 0 16px rgba(232, 69, 44, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(232, 69, 44, 0); }
+    }
+
+    .tally-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #1a1508;
+    }
+    .master-transmit-btn.recording .tally-dot {
+      background: #ffffff;
+    }
+
+    /* Feedback Toast */
+    .copy-toast {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: var(--panel-chassis);
+      border: 1.5px solid var(--gold);
+      color: var(--ink-primary);
+      padding: 0.55rem 1.35rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s var(--ease);
+      z-index: 1000;
+    }
+    .copy-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 880px) {
+      .app-shell { padding: 0.75rem; }
+      .sacred-telemetry-pillar { display: none; }
+      .chassis-header, .fusion-workspace, .controls-deck { margin-left: 0; }
+      .controls-deck { flex-direction: column-reverse; align-items: stretch; gap: 0.65rem; }
+      .tool-group { display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; }
+      .tool-btn { justify-content: center; }
+      .master-transmit-btn { justify-content: center; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Sacred Sanskrit Side Pillar -->
+    <aside class="sacred-telemetry-pillar">
+      <div class="yantra-hanko-box">ॐ</div>
+      <div class="pillar-sanskrit-text">नादब्रह्म</div>
+      <div class="dashed-pillar-line"></div>
+      <div style="font-size:8px; letter-spacing:0.15em;">VĀK 2026</div>
+    </aside>
+
+    <!-- Top Technical Chassis Header -->
+    <header class="chassis-header">
+      <div class="packet-seal">SPEC v03 • VERIFIED</div>
+
+      <div class="brand-identity">
+        <div class="rodex-mark-square">L</div>
+        <div class="brand-title-wrap">
+          <h1 class="brand-name">Lumi<em>Note</em></h1>
+          <span class="fuse-badge">VĀK • NĀDA // 16kHz PCM</span>
+        </div>
+      </div>
+
+      <div class="header-instruments">
+        <!-- Engine Switcher -->
+        <div class="engine-switcher-wrap" id="engineWrap">
+          <button type="button" class="engine-trigger-btn" onclick="toggleEngineMenu()">
+            <span class="engine-pulse-dot"></span>
+            <span id="selectedEngineText">Deepgram Nova-3 • 150ms</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+
+          <div class="engine-dropdown" id="engineDropdown">
+            <div class="engine-opt active" onclick="selectEngine('deepgram-nova-3', 'Deepgram Nova-3 • 150ms', this)">
+              <div>
+                <div style="font-size:0.775rem; font-weight:700;">Deepgram Nova-3</div>
+                <div style="font-size:0.675rem; color:var(--ink-dim);">Ultra-fast 150ms streaming</div>
+              </div>
+              <span style="color:var(--gold);">✓</span>
+            </div>
+
+            <div class="engine-opt" onclick="selectEngine('universal-3-5-pro', 'AssemblyAI 3.5 Pro', this)">
+              <div>
+                <div style="font-size:0.775rem; font-weight:700;">AssemblyAI 3.5 Pro</div>
+                <div style="font-size:0.675rem; color:var(--ink-dim);">Deep contextual voice model</div>
+              </div>
+              <span style="color:var(--gold);">✓</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dual Mode Switcher (Dark Mode / Light Mode) -->
+        <button type="button" class="mode-switch-btn" onclick="toggleDualMode()" title="Toggle Dark / Light Mode">
+          <span id="modeIcon">☀️</span>
+          <span id="modeLabel">Light Mode</span>
+        </button>
+
+        <!-- Status Stamp -->
+        <div class="status-stamp" id="statusStamp">READY</div>
+      </div>
+    </header>
+
+    <!-- Central Fusion Transcription Workspace -->
+    <main class="fusion-workspace">
+      <div class="workspace-top-bar">
+        <div class="telemetry-left">
+          <span>PCM S16LE • 16.0 kHz LOSSLESS</span>
+          <div class="waveform-rack">
+            <span class="w-bar wb1"></span>
+            <span class="w-bar wb2"></span>
+            <span class="w-bar wb3"></span>
+            <span class="w-bar wb4"></span>
+            <span class="w-bar wb5"></span>
+          </div>
+        </div>
+        <div class="live-stream-badge">
+          <span>●</span>
+          <span>नाद प्रवाह • LIVE ACOUSTIC CHANNEL</span>
+        </div>
+      </div>
+
+      <div class="editor-zone" contenteditable="true">
+        Speech transforms with sacred resonance into pristine typography. <span class="live-token-span">Words stream in real-time with instant editing freedom...</span>
+      </div>
+
+      <div class="workspace-bottom-bar">
+        <span>22 WORDS • 146 CHARACTERS</span>
+        <span class="cell-tag">NODE: WEBSOCKET_ACTIVE • PROTOCOL: V3</span>
+        <span>PRESS [SPACE] OR CLICK TO RECORD</span>
+      </div>
+    </main>
+
+    <!-- Bottom Controls Deck -->
+    <footer class="controls-deck">
+      <div class="tool-group">
+        <button class="tool-btn" onclick="clearCanvas()">⟲ Clear</button>
+        <button class="tool-btn" onclick="polishText()">✨ Polish AI</button>
+        <button class="tool-btn" onclick="copyText()">📋 Copy [⌘C]</button>
+        <button class="tool-btn" onclick="exportText()">⤓ Export</button>
+      </div>
+
+      <button class="master-transmit-btn" id="recBtn" onclick="toggleRec()">
+        <span class="tally-dot"></span>
+        <span id="recText">Start Dictating</span>
+      </button>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="copy-toast" id="toast">Copied to clipboard!</div>
+  </div>
+
+  <script>
+    // Dual Mode Toggle
+    function toggleDualMode() {
+      const html = document.documentElement;
+      const cur = html.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      
+      document.getElementById('modeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+      document.getElementById('modeLabel').textContent = next === 'dark' ? 'Light Mode' : 'Dark Mode';
+      showToast(next === 'dark' ? 'RodeX Obsidian Dark Active' : 'Wabi-Sabi Silk Light Active');
+    }
+
+    // Engine Dropdown
+    function toggleEngineMenu() {
+      document.getElementById('engineWrap').classList.toggle('open');
+    }
+
+    function selectEngine(val, label, el) {
+      document.getElementById('selectedEngineText').textContent = label;
+      document.querySelectorAll('.engine-opt').forEach(o => o.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('engineWrap').classList.remove('open');
+      showToast(`Acoustic Engine: ${label}`);
+    }
+
+    // Recording State
+    let rec = false;
+    function toggleRec() {
+      rec = !rec;
+      document.body.classList.toggle('is-recording', rec);
+      const btn = document.getElementById('recBtn');
+      const text = document.getElementById('recText');
+      const stamp = document.getElementById('statusStamp');
+
+      btn.classList.toggle('recording', rec);
+      stamp.classList.toggle('recording', rec);
+
+      if (rec) {
+        text.textContent = 'Stop Dictating';
+        stamp.textContent = 'TRANSMITTING';
+        showToast('Microphone stream engaged • 150ms');
+      } else {
+        text.textContent = 'Start Dictating';
+        stamp.textContent = 'READY';
+        showToast('Stream committed');
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function clearCanvas() { document.querySelector('.editor-zone').innerText = ''; showToast('Canvas Cleared'); }
+    function copyText() { navigator.clipboard.writeText(document.querySelector('.editor-zone').innerText); showToast('Copied to clipboard [⌘C]'); }
+    function polishText() { showToast('✨ Vāk Sanskāra (Grammar Polished)'); }
+    function exportText() { showToast('Exporting transcript .txt'); }
+
+    document.addEventListener('click', (e) => {
+      const wrap = document.getElementById('engineWrap');
+      if (wrap && !wrap.contains(e.target)) {
+        wrap.classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>

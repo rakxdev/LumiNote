@@ -1,30 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
   <defs>
-    <linearGradient id="lumiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8b5cf6" />
-      <stop offset="50%" stop-color="#ec4899" />
-      <stop offset="100%" stop-color="#06b6d4" />
+    <!-- Sacred Gold & Vermilion Gradients -->
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5d77f" />
+      <stop offset="50%" stop-color="#d9b64a" />
+      <stop offset="100%" stop-color="#997920" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+    <linearGradient id="yantraGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8452c" />
+      <stop offset="100%" stop-color="#d9a441" />
+    </linearGradient>
+    <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
       <feGaussianBlur stdDeviation="3" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
 
-  <!-- Background Glow Aura -->
-  <circle cx="50" cy="50" r="44" fill="rgba(139, 92, 246, 0.08)" />
+  <!-- Outer Technical RodeX Precision Box with Corner Cutouts -->
+  <rect x="6" y="6" width="88" height="88" rx="14" fill="#0d0f14" stroke="url(#goldGradient)" stroke-width="2.5" />
+  
+  <!-- Dashed Geometric Inner Yantra Guide -->
+  <rect x="14" y="14" width="72" height="72" rx="8" fill="none" stroke="rgba(217, 182, 74, 0.25)" stroke-width="1.2" stroke-dasharray="4 4" />
 
-  <!-- Monogram 'L' (Option 12) -->
-  <path d="M 28 18 V 76 H 76" fill="none" stroke="url(#lumiGrad)" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+  <!-- Sacred Acoustic Diamond Yantra Geometry -->
+  <polygon points="50,20 80,50 50,80 20,50" fill="none" stroke="url(#goldGradient)" stroke-width="1.8" filter="url(#goldGlow)" />
+  
+  <!-- Central Soundwave Resonance Rings (Nāda Chakra) -->
+  <circle cx="50" cy="50" r="15" fill="none" stroke="rgba(217, 182, 74, 0.4)" stroke-width="1" />
+  <circle cx="50" cy="50" r="9" fill="none" stroke="rgba(232, 69, 44, 0.5)" stroke-width="1.2" />
 
-  <!-- Constellation Audio Sine Wave (Option 9) -->
-  <path d="M 16 52 Q 36 26, 56 72 T 88 40" fill="none" stroke="#06b6d4" stroke-width="4.5" stroke-linecap="round" filter="url(#glow)" />
+  <!-- Modern Sanskrit 'L' Stylized Monogram / Vāk Glyph Core -->
+  <path d="M 40 33 L 40 65 L 64 65" fill="none" stroke="url(#goldGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
 
-  <!-- Constellation Star Nodes (Option 9) -->
-  <circle cx="28" cy="18" r="5" fill="#8b5cf6" filter="url(#glow)" />
-  <circle cx="28" cy="76" r="6" fill="#ec4899" filter="url(#glow)" />
-  <circle cx="76" cy="76" r="5" fill="#06b6d4" filter="url(#glow)" />
-  <circle cx="36" cy="36" r="4.5" fill="#ffffff" filter="url(#glow)" />
-  <circle cx="56" cy="72" r="5.5" fill="#06b6d4" filter="url(#glow)" />
-  <circle cx="88" cy="40" r="5" fill="#a78bfa" filter="url(#glow)" />
+  <!-- Sacred Golden Bindu (Origin Point of Sound) -->
+  <circle cx="64" cy="36" r="3.5" fill="#f5d77f" filter="url(#goldGlow)" />
+
+  <!-- Precision Corner Technical Calipers -->
+  <path d="M 6 22 L 6 6 L 22 6" fill="none" stroke="#d9b64a" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M 94 78 L 94 94 L 78 94" fill="none" stroke="#d9b64a" stroke-width="2.5" stroke-linecap="round" />
 </svg>

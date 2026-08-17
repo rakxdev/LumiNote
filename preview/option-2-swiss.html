@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LumiNote — Swiss Kinetic Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       OPTION 2: SWISS KINETIC STUDIO (International Typographic Style)
+       ========================================================================== */
+
+    :root {
+      --font-display: "Instrument Sans", -apple-system, sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* 🌙 DARK MODE: Pure Carbon Grid & Acid Electric Yellow Accent */
+    html[data-theme="dark"] {
+      --bg: #09090b;
+      --grid-line: rgba(255, 255, 255, 0.04);
+      --card-bg: #111115;
+      --card-border: rgba(255, 255, 255, 0.1);
+      --editor-bg: #0c0c10;
+      
+      --text-main: #f4f4f5;
+      --text-dim: #71717a;
+      --text-muted: #52525b;
+
+      --accent: #eab308;
+      --accent-glow: rgba(234, 179, 8, 0.35);
+      --accent-live: #facc15;
+      
+      --btn-bg: #18181b;
+      --btn-border: #27272a;
+      --btn-hover: #27272a;
+      --btn-text: #f4f4f5;
+
+      --master-bg: #eab308;
+      --master-text: #09090b;
+      --master-shadow: 0 8px 25px rgba(234, 179, 8, 0.4);
+    }
+
+    /* ☀️ LIGHT MODE: Pure Clean Helvetica White Paper & Signal Vermilion Red */
+    html[data-theme="light"] {
+      --bg: #ffffff;
+      --grid-line: rgba(0, 0, 0, 0.04);
+      --card-bg: #fafafa;
+      --card-border: #e4e4e7;
+      --editor-bg: #ffffff;
+
+      --text-main: #09090b;
+      --text-dim: #52525b;
+      --text-muted: #a1a1aa;
+
+      --accent: #ef4444;
+      --accent-glow: rgba(239, 68, 68, 0.25);
+      --accent-live: #dc2626;
+
+      --btn-bg: #ffffff;
+      --btn-border: #d4d4d8;
+      --btn-hover: #f4f4f5;
+      --btn-text: #09090b;
+
+      --master-bg: #09090b;
+      --master-text: #ffffff;
+      --master-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg);
+      background-image: 
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(0deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 60px 60px;
+      color: var(--text-main);
+      font-family: var(--font-display);
+      -webkit-font-smoothing: antialiased;
+      transition: all 0.25s ease;
+    }
+
+    .swiss-container {
+      max-width: 1320px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.25rem 2rem;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* Top Grid Header */
+    .swiss-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .swiss-logo-mark {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      color: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.9rem;
+      border-radius: 4px;
+    }
+    .brand-wordmark {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+    }
+    .index-tag {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      border: 1px solid var(--card-border);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .mode-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.45rem 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Main Workspace */
+    .swiss-workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin: 1rem 0;
+      background: var(--editor-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    .workspace-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--card-border);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .editor-sheet {
+      flex: 1;
+      padding: 2rem 0;
+      font-size: 1.6rem;
+      font-weight: 500;
+      line-height: 1.65;
+      color: var(--text-main);
+      outline: none;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .editor-sheet:empty::before {
+      content: "Type or speak to start transcription...";
+      color: var(--text-muted);
+    }
+
+    .live-stream-phrase {
+      color: var(--accent-live);
+      border-bottom: 2px solid var(--accent);
+      font-weight: 600;
+    }
+
+    .workspace-footer-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 1rem;
+      border-top: 1px solid var(--card-border);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* Bottom Toolbar */
+    .swiss-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .utility-set {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .u-btn {
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--btn-text);
+      font-family: var(--font-mono);
+      font-size: 0.775rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.65rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .u-btn:hover {
+      background: var(--btn-hover);
+    }
+
+    .master-rec-btn {
+      background: var(--master-bg);
+      color: var(--master-text);
+      border: none;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 0.75rem 2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: var(--master-shadow);
+      transition: transform 0.15s ease;
+    }
+    .master-rec-btn:hover {
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <div class="swiss-container">
+    <header class="swiss-header">
+      <div class="brand-section">
+        <div class="swiss-logo-mark">L</div>
+        <div class="brand-wordmark">LumiNote</div>
+        <span class="index-tag">SWISS 03</span>
+      </div>
+
+      <div class="header-tools">
+        <button class="mode-btn" onclick="toggleTheme()">
+          <span id="themeSymbol">☀️</span>
+          <span id="themeName">Light</span>
+        </button>
+
+        <div style="font-family:var(--font-mono); font-size:0.75rem; font-weight:700;">
+          NOVA-3 // 150MS
+        </div>
+      </div>
+    </header>
+
+    <main class="swiss-workspace">
+      <div class="workspace-meta">
+        <span>ENCODING: 16kHz PCM S16LE</span>
+        <span>LATENCY: ~150MS STREAM</span>
+        <span>STATUS: LIVE READY</span>
+      </div>
+
+      <div class="editor-sheet" contenteditable="true">
+        Swiss modernist voice drafting transforms spoken vocabulary into crisp, structured typography. <span class="live-stream-phrase">Real-time incoming speech streams directly onto the baseline grid...</span>
+      </div>
+
+      <div class="workspace-footer-stats">
+        <span>WORDS: 26 • CHARACTERS: 168</span>
+        <span>PRESS [SPACE] OR CLICK TO RECORD</span>
+      </div>
+    </main>
+
+    <footer class="swiss-footer">
+      <div class="utility-set">
+        <button class="u-btn">Clear</button>
+        <button class="u-btn">Polish</button>
+        <button class="u-btn">Copy</button>
+        <button class="u-btn">Export</button>
+      </div>
+
+      <button class="master-rec-btn">Start Recording</button>
+    </footer>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const cur = html.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      document.getElementById('themeSymbol').textContent = next === 'dark' ? '☀️' : '🌙';
+      document.getElementById('themeName').textContent = next === 'dark' ? 'Light' : 'Dark';
+    }
+  </script>
+</body>
+</html>

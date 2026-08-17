@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LumiNote — VĀK • NĀDA Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Martel:wght@300;400;600;700;800&family=Rozha+One&family=Azeret+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Yatra+One&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       OPTION 1: VĀK • NĀDA (Ancient Sanskrit Acoustics x Celestial Luxury)
+       ========================================================================== */
+
+    :root {
+      --font-title: "Cinzel", serif;
+      --font-sanskrit: "Yatra One", "Rozha One", serif;
+      --font-body: "Martel", serif;
+      --font-mono: "Azeret Mono", monospace;
+      --font-sans: "Plus Jakarta Sans", sans-serif;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* 🌙 DARK MODE: "NĀDA BRAHMA" (Celestial Obsidian & Radiant Saffron Gold) */
+    html[data-theme="dark"] {
+      --bg-body: #050608;
+      --bg-ambient: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(229, 169, 60, 0.12) 0%, transparent 65%),
+                     radial-gradient(ellipse 50% 50% at 85% 90%, rgba(225, 29, 72, 0.08) 0%, transparent 70%);
+      --grid-line: rgba(255, 255, 255, 0.025);
+      
+      --shell-bg: rgba(13, 16, 25, 0.88);
+      --shell-border: rgba(229, 169, 60, 0.25);
+      --shell-shadow: 0 25px 60px -10px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.08);
+      --shell-radius: 20px;
+
+      --editor-bg: #080a10;
+      --editor-border: rgba(255, 255, 255, 0.06);
+      --editor-shadow: inset 0 2px 14px rgba(0,0,0,0.9);
+      --editor-radius: 14px;
+      
+      --text-main: #f8fafc;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      
+      --gold-accent: #e5a93c;
+      --gold-bright: #f59e0b;
+      --gold-glow: rgba(245, 158, 11, 0.35);
+      --vermilion: #e11d48;
+      --emerald: #10b981;
+
+      --live-ink: #fde047;
+      --live-bg: rgba(245, 158, 11, 0.16);
+      --live-border: #f59e0b;
+
+      --btn-bg: rgba(20, 25, 38, 0.9);
+      --btn-border: rgba(229, 169, 60, 0.25);
+      --btn-text: #f8fafc;
+      --btn-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      --btn-radius: 8px;
+
+      --master-btn-bg: linear-gradient(135deg, #e5a93c 0%, #e11d48 100%);
+      --master-btn-shadow: 0 8px 30px rgba(229, 169, 60, 0.4);
+      --mandala-opacity: 0.06;
+    }
+
+    /* ☀️ LIGHT MODE: "VĀK PALM-LEAF" (Royal Sandalwood & Red Lacquer Manuscript) */
+    html[data-theme="light"] {
+      --bg-body: #f5ede0;
+      --bg-ambient: radial-gradient(circle at 80% 10%, rgba(194, 120, 3, 0.16), transparent 25rem),
+                     radial-gradient(circle at 15% 90%, rgba(185, 28, 28, 0.08), transparent 22rem);
+      --grid-line: rgba(70, 45, 15, 0.045);
+
+      --shell-bg: #fefcf8;
+      --shell-border: #2c1f10;
+      --shell-shadow: 6px 6px 0px #2c1f10;
+      --shell-radius: 4px;
+
+      --editor-bg: #fffdf9;
+      --editor-border: #3d2b18;
+      --editor-shadow: 4px 4px 0px #e6dac8;
+      --editor-radius: 2px;
+
+      --text-main: #1c150c;
+      --text-dim: #5c4b37;
+      --text-muted: #8c765c;
+
+      --gold-accent: #b45309;
+      --gold-bright: #d97706;
+      --gold-glow: rgba(180, 83, 9, 0.25);
+      --vermilion: #b91c1c;
+      --emerald: #059669;
+
+      --live-ink: #991b1b;
+      --live-bg: rgba(185, 28, 28, 0.1);
+      --live-border: #b91c1c;
+
+      --btn-bg: #fdfaf4;
+      --btn-border: #2c1f10;
+      --btn-text: #1c150c;
+      --btn-shadow: 3px 3px 0px #2c1f10;
+      --btn-radius: 3px;
+
+      --master-btn-bg: #b91c1c;
+      --master-btn-shadow: 4px 4px 0px #2c1f10;
+      --mandala-opacity: 0.1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg-body);
+      background-image: 
+        var(--bg-ambient),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(0deg, var(--grid-line) 1px, transparent 1px);
+      background-size: auto, 80px 80px, 80px 80px;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.35s var(--ease), color 0.35s var(--ease);
+    }
+
+    .studio-shell {
+      max-width: 1360px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0.85rem 2rem;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ancient Pillar Aside */
+    .vedic-side-pillar {
+      position: absolute;
+      left: 0.65rem;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text-muted);
+      pointer-events: none;
+      user-select: none;
+      z-index: 10;
+    }
+    .yantra-hanko {
+      width: 28px;
+      height: 28px;
+      border: 1.5px solid var(--gold-accent);
+      color: var(--gold-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-sanskrit);
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 4px;
+      box-shadow: 0 0 10px var(--gold-glow);
+    }
+    .pillar-inscription {
+      font-family: var(--font-sanskrit);
+      font-size: 1.05rem;
+      writing-mode: vertical-rl;
+      letter-spacing: 0.32em;
+      color: var(--gold-accent);
+    }
+    .pillar-hairline {
+      width: 1px;
+      height: 45px;
+      background: var(--shell-border);
+    }
+
+    /* Header */
+    .studio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      background: var(--shell-bg);
+      border: 1px solid var(--shell-border);
+      border-radius: var(--shell-radius);
+      box-shadow: var(--shell-shadow);
+      margin-left: 1.75rem;
+      flex-shrink: 0;
+      transition: all 0.3s var(--ease);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .sacred-emblem {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-accent) 0%, var(--vermilion) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: var(--font-sanskrit);
+      font-size: 1.05rem;
+      font-weight: 700;
+      box-shadow: 0 4px 15px var(--gold-glow);
+    }
+    .brand-title {
+      font-family: var(--font-title);
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      color: var(--text-main);
+    }
+    .vada-badge {
+      font-family: var(--font-sanskrit);
+      font-size: 0.85rem;
+      color: var(--gold-accent);
+      background: rgba(229, 169, 60, 0.12);
+      border: 1px solid var(--shell-border);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      margin-left: 0.5rem;
+    }
+
+    .header-instruments {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* Dual Mode Switch Button */
+    .mode-switch-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--btn-text);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--btn-radius);
+      box-shadow: var(--btn-shadow);
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+    }
+    .mode-switch-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .engine-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--btn-radius);
+      box-shadow: var(--btn-shadow);
+    }
+    .emerald-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+
+    /* Central Acoustic Canvas */
+    .canvas-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      margin: 0.85rem 0 0.85rem 1.75rem;
+      background: var(--shell-bg);
+      border: 1px solid var(--shell-border);
+      border-radius: var(--shell-radius);
+      box-shadow: var(--shell-shadow);
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s var(--ease);
+    }
+
+    /* Watermark Sacred Glyph */
+    .canvas-stage::before {
+      content: 'ॐ';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-sanskrit);
+      font-size: 26rem;
+      color: var(--gold-accent);
+      opacity: var(--mandala-opacity);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .canvas-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.85rem;
+      font-family: var(--font-mono);
+      font-size: 0.725rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--shell-border);
+      position: relative;
+      z-index: 5;
+    }
+
+    .wave-visualizer {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 14px;
+    }
+    .w-bar {
+      width: 3px;
+      height: 4px;
+      background: var(--text-muted);
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+    body.is-recording .w-bar {
+      background: var(--gold-bright);
+      animation: wave-play 0.85s ease-in-out infinite alternate;
+    }
+    body.is-recording .wb1 { animation-delay: 0.1s; }
+    body.is-recording .wb2 { animation-delay: 0.3s; }
+    body.is-recording .wb3 { animation-delay: 0.2s; }
+    body.is-recording .wb4 { animation-delay: 0.4s; }
+    body.is-recording .wb5 { animation-delay: 0.15s; }
+    @keyframes wave-play {
+      0% { height: 4px; }
+      100% { height: 16px; }
+    }
+
+    .editor-zone {
+      flex: 1;
+      margin: 1rem 0;
+      background: var(--editor-bg);
+      border: 1px solid var(--editor-border);
+      border-radius: var(--editor-radius);
+      box-shadow: var(--editor-shadow);
+      padding: 2rem 2.5rem;
+      font-family: var(--font-body);
+      font-size: 1.4rem;
+      line-height: 1.85;
+      color: var(--text-main);
+      outline: none;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      position: relative;
+      z-index: 5;
+    }
+    .editor-zone:empty::before {
+      content: "वाचं वदति यथार्थम्... Speak naturally. Real-time words stream with sacred acoustic clarity.";
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .live-turn-token {
+      color: var(--live-ink);
+      background: var(--live-bg);
+      border-bottom: 2px solid var(--live-border);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .canvas-bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--shell-border);
+      font-family: var(--font-mono);
+      font-size: 0.725rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      position: relative;
+      z-index: 5;
+    }
+
+    /* Bottom Sacred Controls */
+    .controls-deck {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-left: 1.75rem;
+      flex-shrink: 0;
+    }
+
+    .tool-group {
+      display: flex;
+      gap: 0.6rem;
+    }
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--btn-text);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.65rem 1.25rem;
+      border-radius: var(--btn-radius);
+      box-shadow: var(--btn-shadow);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tool-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .master-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--master-btn-bg);
+      color: #ffffff;
+      font-family: var(--font-title);
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.75rem 2.25rem;
+      border: none;
+      border-radius: var(--btn-radius);
+      box-shadow: var(--master-btn-shadow);
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+    }
+    .master-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+    }
+    .master-btn.recording {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+      animation: pulse-master 1.5s infinite;
+    }
+    @keyframes pulse-master {
+      0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+      70% { box-shadow: 0 0 0 16px rgba(220, 38, 38, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    }
+
+    /* Toast */
+    .toast-msg {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: var(--shell-bg);
+      border: 1.5px solid var(--gold-accent);
+      color: var(--text-main);
+      padding: 0.55rem 1.4rem;
+      border-radius: 50px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s var(--ease);
+      z-index: 1000;
+    }
+    .toast-msg.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 880px) {
+      .studio-shell { padding: 0.75rem; }
+      .vedic-side-pillar { display: none; }
+      .studio-header, .canvas-stage, .controls-deck { margin-left: 0; }
+      .controls-deck { flex-direction: column-reverse; align-items: stretch; gap: 0.65rem; }
+      .tool-group { display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; }
+      .tool-btn { justify-content: center; }
+      .master-btn { justify-content: center; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="studio-shell">
+    <aside class="vedic-side-pillar">
+      <div class="yantra-hanko">ॐ</div>
+      <div class="pillar-inscription">नादब्रह्म</div>
+      <div class="pillar-hairline"></div>
+      <div style="font-family:var(--font-mono); font-size:0.65rem;">VĀK 2026</div>
+    </aside>
+
+    <header class="studio-header">
+      <div class="brand-group">
+        <div class="sacred-emblem">ॐ</div>
+        <div>
+          <span class="brand-title">LumiNote</span>
+          <span class="vada-badge">वाक् & नाद</span>
+        </div>
+      </div>
+
+      <div class="header-instruments">
+        <button class="mode-switch-btn" onclick="toggleMode()">
+          <span id="modeIcon">☀️</span>
+          <span id="modeLabel">Light Mode</span>
+        </button>
+
+        <div class="engine-pill">
+          <div class="emerald-pulse"></div>
+          <span>NOVA-3 • 150MS</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="canvas-stage">
+      <div class="canvas-top-bar">
+        <div style="display:flex; align-items:center; gap:1rem;">
+          <span>PCM S16LE • 16.0 kHz LOSSLESS</span>
+          <div class="wave-visualizer">
+            <span class="w-bar wb1"></span>
+            <span class="w-bar wb2"></span>
+            <span class="w-bar wb3"></span>
+            <span class="w-bar wb4"></span>
+            <span class="w-bar wb5"></span>
+          </div>
+        </div>
+        <span style="color:var(--gold-accent); font-weight:700;">नाद प्रवाह • LIVE ACOUSTIC STREAM</span>
+      </div>
+
+      <div class="editor-zone" contenteditable="true">
+        Speech transforms with divine resonance and editorial clarity. <span class="live-turn-token">Words stream in real-time with instant editing freedom...</span>
+      </div>
+
+      <div class="canvas-bottom-bar">
+        <span>22 WORDS • 146 CHARACTERS</span>
+        <span>PRESS [SPACE] OR CLICK TO DICTATE</span>
+      </div>
+    </main>
+
+    <footer class="controls-deck">
+      <div class="tool-group">
+        <button class="tool-btn" onclick="clearCanvas()">⟲ Clear</button>
+        <button class="tool-btn" onclick="polishText()">✨ Polish AI</button>
+        <button class="tool-btn" onclick="copyText()">📋 Copy [⌘C]</button>
+        <button class="tool-btn" onclick="exportText()">⤓ Export</button>
+      </div>
+
+      <button class="master-btn" id="recordBtn" onclick="toggleRec()">
+        <span style="width:8px;height:8px;background:#fff;border-radius:50%;"></span>
+        <span id="btnText">Start Dictating</span>
+      </button>
+    </footer>
+
+    <div class="toast-msg" id="toast">Copied to clipboard!</div>
+  </div>
+
+  <script>
+    function toggleMode() {
+      const html = document.documentElement;
+      const cur = html.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      document.getElementById('modeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+      document.getElementById('modeLabel').textContent = next === 'dark' ? 'Light Mode' : 'Dark Mode';
+      showToast(next === 'dark' ? 'NĀDA BRAHMA (Obsidian Mode)' : 'VĀK PALM-LEAF (Manuscript Mode)');
+    }
+
+    let rec = false;
+    function toggleRec() {
+      rec = !rec;
+      document.body.classList.toggle('is-recording', rec);
+      const btn = document.getElementById('recordBtn');
+      const text = document.getElementById('btnText');
+      btn.classList.toggle('recording', rec);
+      text.textContent = rec ? 'Stop Dictating' : 'Start Dictating';
+      showToast(rec ? 'Microphone stream engaged' : 'Stream committed');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function clearCanvas() { document.querySelector('.editor-zone').innerText = ''; showToast('Canvas Cleared'); }
+    function copyText() { navigator.clipboard.writeText(document.querySelector('.editor-zone').innerText); showToast('Copied to clipboard [⌘C]'); }
+    function polishText() { showToast('✨ Vāk Sanskāra (Grammar Polished)'); }
+    function exportText() { showToast('Exporting transcript .txt'); }
+  </script>
+</body>
+</html>

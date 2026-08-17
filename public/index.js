@@ -2,16 +2,15 @@
 
 /**
  * LumiNote v03 Client Engine
- * Real-time voice dictation with zero-latency streaming (AssemblyAI v3 & Deepgram Nova-3)
+ * Real-time voice intelligence streaming with AssemblyAI v3 & Deepgram Nova-3
+ * Dual-World Mode (RodeX Obsidian & Wabi-Sabi Silk)
  */
 
-// DOM element references
+// DOM Elements
 const recordButton = document.getElementById("recordButton");
 const buttonText = document.getElementById("buttonText");
-const buttonIcon = document.getElementById("buttonIcon");
 const messageEl = document.getElementById("message");
-const statusIndicator = document.getElementById("statusIndicator");
-const statusText = document.getElementById("statusText");
+const statusStamp = document.getElementById("statusStamp");
 const copyFeedback = document.getElementById("copyFeedback");
 const wordCountEl = document.getElementById("wordCount");
 const charCountEl = document.getElementById("charCount");
@@ -19,19 +18,20 @@ const grammarButton = document.getElementById("grammarButton");
 const copyButton = document.getElementById("copyButton");
 const downloadButton = document.getElementById("downloadButton");
 const clearButton = document.getElementById("clearButton");
+const themeToggleBtn = document.getElementById("themeToggleBtn");
 const customModelSwitcher = document.getElementById("customModelSwitcher");
 const modelSwitcherTrigger = document.getElementById("modelSwitcherTrigger");
 const modelDropdownMenu = document.getElementById("modelDropdownMenu");
 const selectedModelLabel = document.getElementById("selectedModelLabel");
 
-// Session state variables
+// Session state
 let isRecording = false;
 let ws = null;
 let microphone = null;
-let selectedModel = "universal-3-5-pro"; // Default: AssemblyAI Universal-3.5 Pro
+let selectedModel = "deepgram-nova-3"; // Default: Deepgram Nova-3 (~150ms)
 let switchTimer = null;
 
-// Editor state management
+// Editor state
 let baseText = "";
 let currentTurnOrder = null;
 let activeTurnText = "";
@@ -55,13 +55,12 @@ function getAudioContext() {
   return globalAudioContext;
 }
 
-// Token & Session Auth Manager (on-demand ephemeral token minting)
+// Token & Session Auth Manager
 const TokenManager = {
   assemblyAiToken: null,
   assemblyAiTokenTimestamp: null,
 
   async getAssemblyAiToken() {
-    // Re-use token if less than 8 minutes old (server mints with 600s TTL)
     if (this.assemblyAiToken && this.assemblyAiTokenTimestamp) {
       const ageSeconds = (Date.now() - this.assemblyAiTokenTimestamp) / 1000;
       if (ageSeconds < 480) {
@@ -87,7 +86,6 @@ const TokenManager = {
 
   async getDeepgramToken() {
     try {
-      // Ephemeral grant token (~30s TTL) minted on-demand for immediate WebSocket connection
       const res = await fetch("/api/deepgram-token", { signal: AbortSignal.timeout(6000) });
       if (!res.ok) throw new Error(`Deepgram token endpoint returned ${res.status}`);
       const data = await res.json();
@@ -99,7 +97,7 @@ const TokenManager = {
   }
 };
 
-// Microphone Capture & AudioWorklet pipeline
+// Microphone & AudioWorklet pipeline
 function createMicrophone() {
   let stream = null;
   let audioContext = null;
@@ -177,13 +175,11 @@ function mergeBuffers(lhs, rhs) {
   return merged;
 }
 
-// UI State & Toast Feedback
+// Toast Feedback
 function showToast(message) {
   const toastText = document.getElementById('toastText');
   if (toastText) {
     toastText.textContent = message;
-  } else if (copyFeedback) {
-    copyFeedback.textContent = message;
   }
   if (copyFeedback) {
     copyFeedback.classList.add('show');
@@ -199,8 +195,8 @@ function updateStats() {
   const words = fullText ? fullText.split(/\s+/).filter(Boolean).length : 0;
   const chars = fullText.length;
   
-  if (wordCountEl) wordCountEl.textContent = `${words} word${words === 1 ? '' : 's'}`;
-  if (charCountEl) charCountEl.textContent = `${chars} character${chars === 1 ? '' : 's'}`;
+  if (wordCountEl) wordCountEl.textContent = `${words} WORD${words === 1 ? '' : 'S'}`;
+  if (charCountEl) charCountEl.textContent = `${chars} CHARACTER${chars === 1 ? '' : 'S'}`;
 }
 
 function scrollToBottomSmart() {
@@ -211,7 +207,7 @@ function scrollToBottomSmart() {
   }
 }
 
-// Render interim and committed text
+// Render Transcript with Live Word Highlight
 function renderTranscript() {
   if (!messageEl) return;
   let liveSpan = document.getElementById('liveTurnSpan');
@@ -221,7 +217,7 @@ function renderTranscript() {
     if (!liveSpan) {
       liveSpan = document.createElement('span');
       liveSpan.id = 'liveTurnSpan';
-      liveSpan.className = 'live-turn';
+      liveSpan.className = 'live-turn-span';
       liveSpan.setAttribute('aria-live', 'polite');
       
       if (messageEl.childNodes.length > 0) {
@@ -274,7 +270,29 @@ function onEditorInput() {
   updateStats();
 }
 
-// Dropdown & Model Switcher
+// Dual Theme Switcher (Dark Mode / Light Mode)
+function toggleDualMode() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('luminote_theme', next);
+
+  const modeIcon = document.getElementById('modeIcon');
+  const modeLabel = document.getElementById('modeLabel');
+
+  if (next === 'dark') {
+    if (modeIcon) modeIcon.textContent = '☀️';
+    if (modeLabel) modeLabel.textContent = 'Light Mode';
+    showToast('RodeX Obsidian Dark Activated');
+  } else {
+    if (modeIcon) modeIcon.textContent = '🌙';
+    if (modeLabel) modeLabel.textContent = 'Dark Mode';
+    showToast('Wabi-Sabi Silk Light Activated');
+  }
+}
+
+// Model Switcher
 function toggleModelDropdown(event) {
   if (event) event.stopPropagation();
   if (customModelSwitcher) {
@@ -304,7 +322,7 @@ async function selectCustomModel(value, label, element) {
   
   if (selectedModelLabel) selectedModelLabel.textContent = label;
 
-  const options = document.querySelectorAll('.model-option');
+  const options = document.querySelectorAll('.engine-opt');
   options.forEach(opt => {
     opt.classList.remove('active');
     opt.setAttribute('aria-selected', 'false');
@@ -319,13 +337,8 @@ async function selectCustomModel(value, label, element) {
   if (isRecording) {
     if (switchTimer) clearTimeout(switchTimer);
 
-    let modelName = "Deepgram Nova-3";
-    if (value === "universal-streaming-english") modelName = "AssemblyAI Fast";
-    if (value === "universal-3-5-pro") modelName = "AssemblyAI 3.5 Pro";
+    updateRecordingState(true, true, `SWITCHING...`);
 
-    updateRecordingState(true, true, `Switching to ${modelName}...`);
-
-    // Cleanly stop existing pipeline before launching new stream
     stopAudioAndWebSocket();
 
     switchTimer = setTimeout(async () => {
@@ -355,10 +368,9 @@ function stopAudioAndWebSocket() {
   }
 }
 
-// Recording Controls & Lifecycle
+// Recording Controls & State Updates
 function updateRecordingState(recording, connected = false, customStatus = null) {
   isRecording = recording;
-
   document.body.classList.toggle('is-recording', recording);
 
   if (recordButton) {
@@ -368,49 +380,24 @@ function updateRecordingState(recording, connected = false, customStatus = null)
   }
 
   if (buttonText) {
-    buttonText.textContent = recording ? 'Stop Recording' : 'Start Recording';
-  }
-
-  if (buttonIcon) {
-    if (recording) {
-      buttonIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>`;
-    } else {
-      buttonIcon.innerHTML = `<svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`;
-    }
+    buttonText.textContent = recording ? 'Stop Dictating' : 'Start Dictating';
   }
 
   if (clearButton) {
     clearButton.disabled = recording;
   }
 
-  if (statusIndicator) {
-    statusIndicator.classList.toggle('recording', recording);
-    statusIndicator.classList.toggle('connected', !recording && connected);
-  }
-
-  let modelLabel = "Deepgram Nova-3";
-  if (selectedModel === "universal-streaming-english") modelLabel = "AssemblyAI Fast";
-  if (selectedModel === "universal-3-5-pro") modelLabel = "AssemblyAI 3.5 Pro";
-
-  if (statusText) {
+  if (statusStamp) {
+    statusStamp.classList.toggle('recording', recording);
     if (customStatus) {
-      statusText.textContent = customStatus;
+      statusStamp.textContent = customStatus;
     } else if (recording) {
-      statusText.textContent = `Recording (${modelLabel})`;
+      statusStamp.textContent = 'TRANSMITTING';
     } else if (connected) {
-      statusText.textContent = 'Connected';
+      statusStamp.textContent = 'LINKED';
     } else {
-      statusText.textContent = 'Ready';
+      statusStamp.textContent = 'READY';
     }
-  }
-
-  if (typeof anime !== 'undefined' && recordButton && statusIndicator) {
-    anime({
-      targets: [recordButton, statusIndicator],
-      scale: [0.95, 1],
-      duration: 350,
-      easing: 'easeOutElastic(1, .8)'
-    });
   }
 }
 
@@ -422,11 +409,7 @@ async function toggleRecording() {
     stopRecording();
   } else {
     if (recordButton) recordButton.disabled = true;
-    let modelName = "Deepgram Nova-3";
-    if (selectedModel === "universal-streaming-english") modelName = "AssemblyAI Fast";
-    if (selectedModel === "universal-3-5-pro") modelName = "AssemblyAI 3.5 Pro";
-
-    updateRecordingState(false, true, `Connecting (${modelName})...`);
+    updateRecordingState(false, true, `CONNECTING...`);
     await startRecording();
   }
 }
@@ -443,7 +426,7 @@ async function startRecording() {
     if (selectedModel === 'deepgram-nova-3') {
       const dgToken = await TokenManager.getDeepgramToken();
       if (!dgToken) {
-        showToast("Unable to authenticate with Deepgram. Check API credentials.");
+        showToast("Unable to authenticate with Deepgram. Check credentials.");
         updateRecordingState(false);
         return;
       }
@@ -459,6 +442,7 @@ async function startRecording() {
             }
           });
           updateRecordingState(true, true);
+          showToast("Acoustic Stream Engaged (150ms)");
         } catch (micErr) {
           console.error("Mic initialization failed:", micErr);
           showToast("Microphone access denied or unavailable");
@@ -497,10 +481,10 @@ async function startRecording() {
       };
 
     } else {
-      // AssemblyAI Realtime Engine
+      // AssemblyAI Engine
       const token = await TokenManager.getAssemblyAiToken();
       if (!token) {
-        showToast("Unable to authenticate with AssemblyAI. Check API credentials.");
+        showToast("Unable to authenticate with AssemblyAI.");
         updateRecordingState(false);
         return;
       }
@@ -516,6 +500,7 @@ async function startRecording() {
             }
           });
           updateRecordingState(true, true);
+          showToast("Acoustic Stream Engaged (AssemblyAI)");
         } catch (micErr) {
           console.error("Mic initialization failed:", micErr);
           showToast("Microphone access denied or unavailable");
@@ -576,6 +561,7 @@ function stopRecording() {
   commitActiveTurn();
   currentTurnOrder = null;
   updateRecordingState(false);
+  showToast("Stream Committed");
 }
 
 // Utility Actions: Grammar, Copy, Download, Clear
@@ -584,7 +570,7 @@ async function fixGrammar() {
   const text = messageEl.innerText.trim();
 
   if (!text) {
-    showToast('No text to fix!');
+    showToast('No text to polish!');
     return;
   }
 
@@ -608,9 +594,9 @@ async function fixGrammar() {
       const liveSpan = document.getElementById('liveTurnSpan');
       if (liveSpan) liveSpan.remove();
       updateStats();
-      showToast('✨ Grammar polished & corrected!');
+      showToast('✨ Vāk Sanskāra (Grammar Polished)');
     } else {
-      showToast('Grammar check complete!');
+      showToast('Grammar check complete');
     }
   } catch (err) {
     console.error('Grammar check error:', err);
@@ -639,17 +625,8 @@ async function copyToClipboard() {
       if (copyIcon && tickIcon) {
         copyIcon.style.display = 'none';
         tickIcon.style.display = 'inline-block';
-        showToast('Copied to clipboard!');
+        showToast('Copied to clipboard [⌘C]');
         
-        if (typeof anime !== 'undefined') {
-          anime({
-            targets: tickIcon,
-            scale: [0.8, 1],
-            duration: 300,
-            easing: 'easeOutQuad'
-          });
-        }
-
         setTimeout(() => {
           copyIcon.style.display = 'inline-block';
           tickIcon.style.display = 'none';
@@ -673,11 +650,12 @@ function downloadTranscript() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `LumiNote-Transcript-${new Date().toISOString().slice(0, 10)}.txt`;
+  a.download = `LumiNote-Vak-Transcript-${new Date().toISOString().slice(0, 10)}.txt`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  showToast('Transcript Exported');
 }
 
 function clearTranscription() {
@@ -690,12 +668,24 @@ function clearTranscription() {
     const liveSpan = document.getElementById('liveTurnSpan');
     if (liveSpan) liveSpan.remove();
     updateStats();
-    showToast('Cleared');
+    showToast('Canvas Purged');
   }
 }
 
-// Bind DOM event listeners (unobtrusive JS)
+// Bind DOM Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+  // Restore saved theme
+  const savedTheme = localStorage.getItem('luminote_theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    const modeIcon = document.getElementById('modeIcon');
+    const modeLabel = document.getElementById('modeLabel');
+    if (savedTheme === 'light') {
+      if (modeIcon) modeIcon.textContent = '🌙';
+      if (modeLabel) modeLabel.textContent = 'Dark Mode';
+    }
+  }
+
   updateRecordingState(false);
   
   if (messageEl) {
@@ -704,6 +694,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (recordButton) {
     recordButton.addEventListener('click', toggleRecording);
+  }
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', toggleDualMode);
   }
 
   if (grammarButton) {
@@ -726,17 +720,15 @@ document.addEventListener('DOMContentLoaded', () => {
     modelSwitcherTrigger.addEventListener('click', toggleModelDropdown);
   }
 
-  // Model option selection
-  const modelOptions = document.querySelectorAll('.model-option');
+  const modelOptions = document.querySelectorAll('.engine-opt');
   modelOptions.forEach((opt) => {
     opt.addEventListener('click', (e) => {
       const val = opt.getAttribute('data-value');
-      const label = opt.textContent.trim();
+      const label = opt.querySelector('.opt-title').textContent.trim();
       selectCustomModel(val, label, opt);
     });
   });
 
-  // Global click listener to close custom dropdown
   document.addEventListener('click', (e) => {
     if (customModelSwitcher && !customModelSwitcher.contains(e.target)) {
       closeModelDropdown();
@@ -754,7 +746,6 @@ window.addEventListener('beforeunload', (e) => {
     globalAudioContext.close();
   }
   if (messageEl && messageEl.innerText.trim().length > 50) {
-    // Standard prompt to guard unsaved content
     e.preventDefault();
     e.returnValue = '';
   }

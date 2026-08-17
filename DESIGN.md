@@ -1,11 +1,32 @@
-# LumiNote: Design System & Visual Authority
+# LumiNote: Design System & Visual Authority (v03)
 
 ## Mode
-**Operate Mode:** Dark, distraction-free speech intelligence studio.
+**Operate Mode:** High-precision speech intelligence studio fusing RodeX technical specimen architecture, Neo-Mirai Wabi-Sabi grid balance, and ancient Sanskrit acoustic philosophy (*Vāk & Nāda*).
 
-## Design Philosophy
-1. **Fluid Voice Reactivity:** Audio is tactile and kinetic. Live transcription feels instant and grounded.
-2. **True Neutral Dark Foundation:** Deep obsidian zinc canvas (`#090a0f`, `#12151e`) with purposeful violet/cyan luminescent accents.
-3. **Typographic Rhythm:** Clean geometric grotesque typography for the interface (`Outfit` / `Syne` / `Cabinet Grotesk`), paired with highly legible, optimized text editing (`Plus Jakarta Sans` or customized `Inter` with optical sizing).
-4. **Physical Controls:** Buttons have depth, smooth spring physics, subtle ambient inner shadows, and clear status lighting.
-5. **No AI Slop:** No gratuitous neon gradients, no useless generic sparklines, no floating blurred blobs that add visual noise without utility.
+## Visual Identity & Sacred Principles
+
+### 1. Dual-World Chromatic Strategy
+- **🌙 Dark Mode ("RodeX Obsidian & Brushed Brass"):**
+  - Base: `#0a0c0f` deep carbon with 31px subtle structural gridlines.
+  - Chassis & Panels: `#13161c` and `#0d0f14` with milled borders (`#232832`).
+  - Accents: Technical brushed brass gold (`#d9b64a`), signal vermilion red (`#e8452c`), and sacred emerald (`#10b981`).
+- **☀️ Light Mode ("Wabi-Sabi Silk & Red Lacquer Seal"):**
+  - Base: `#f4efe6` warm textured washi paper.
+  - Ink & Text: `#1c1814` rich sumi ink.
+  - Accents: Red lacquer seals (`#b91c1c`) with solid tactile drop shadows (`6px 6px #2b2621`).
+
+### 2. Typographic Hierarchy
+- **Technical Display & Numerals:** `JetBrains Mono` & `Chakra Petch` for telemetry, status stamps, and model selectors.
+- **Classical Speech Inscription:** `Martel` for the central live drafting canvas.
+- **Sacred Inscriptions:** `Yatra One` for Sanskrit glyphs (*ॐ*, *वाक्*, *नादब्रह्म*).
+
+### 3. Iconic Visual Artifacts
+- **Acoustic Yantra Logo:** Custom SVG monogram combining technical calipers, diamond Yantra geometry, and the soundwave origin Bindu.
+- **Devanagari Telemetry Pillar:** Vertical side rail reading *नादब्रह्म* (Sound is the Divine Vibration).
+- **RodeX Packet Seal:** Top corner verification stamp (`SPEC v03 • VERIFIED`).
+- **Live Nāda Wave Visualizer:** Kinetic audio frequency bars animating live with microphone input.
+
+### 4. Zero-Slop Execution
+- 0 warnings on the Impeccable design detector.
+- Seamless, persistent Theme Toggle between Dark and Light mode (`localStorage`).
+- Fully responsive on mobile with `100dvh` viewport lock.

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 2 - Viewfinder HUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --hud-bg: #050608;
+      --hud-green: #22c55e;
+      --hud-amber: #f59e0b;
+      --hud-red: #ef4444;
+      --hud-dim: rgba(255,255,255,0.4);
+      --hud-border: rgba(255,255,255,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--hud-bg);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Viewfinder Corner Framing Brackets */
+    .bracket-tl { position: absolute; top: 1.5rem; left: 1.5rem; width: 30px; height: 30px; border-top: 3px solid #fff; border-left: 3px solid #fff; pointer-events: none; }
+    .bracket-tr { position: absolute; top: 1.5rem; right: 1.5rem; width: 30px; height: 30px; border-top: 3px solid #fff; border-right: 3px solid #fff; pointer-events: none; }
+    .bracket-bl { position: absolute; bottom: 1.5rem; left: 1.5rem; width: 30px; height: 30px; border-bottom: 3px solid #fff; border-left: 3px solid #fff; pointer-events: none; }
+    .bracket-br { position: absolute; bottom: 1.5rem; right: 1.5rem; width: 30px; height: 30px; border-bottom: 3px solid #fff; border-right: 3px solid #fff; pointer-events: none; }
+
+    /* Top HUD Readout */
+    .hud-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px dashed var(--hud-border);
+      font-size: 0.8rem;
+    }
+    .rec-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--hud-red);
+      font-weight: 800;
+    }
+    .rec-dot { width: 10px; height: 10px; background: var(--hud-red); border-radius: 50%; animation: flash 1s infinite; }
+    @keyframes flash { 50% { opacity: 0.2; } }
+
+    .timecode { font-size: 0.95rem; font-weight: 800; color: #fff; letter-spacing: 0.08em; }
+
+    /* Main Center Frame */
+    .viewfinder-content {
+      flex: 1;
+      margin: 1.5rem 0;
+      border: 1px solid var(--hud-border);
+      background: rgba(255,255,255,0.02);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .center-crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      pointer-events: none;
+      opacity: 0.15;
+    }
+    .center-crosshair::before { content:''; position:absolute; top:50%; left:0; width:100%; height:1px; background:#fff; }
+    .center-crosshair::after { content:''; position:absolute; top:0; left:50%; width:1px; height:100%; background:#fff; }
+
+    .hud-editor {
+      flex: 1;
+      padding: 2rem;
+      font-size: 1.25rem;
+      line-height: 1.8;
+      outline: none;
+      color: #fff;
+      overflow-y: auto;
+      z-index: 10;
+    }
+    .tracking-tag {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--hud-green);
+      border: 1px solid var(--hud-green);
+      padding: 0.1rem 0.4rem;
+      border-radius: 2px;
+    }
+
+    /* Bottom Control Telemetry */
+    .hud-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-top: 1px dashed var(--hud-border);
+    }
+    .hud-btn {
+      background: transparent;
+      border: 1px solid var(--hud-border);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .hud-btn:hover {
+      background: #fff;
+      color: #000;
+    }
+    .shutter-btn {
+      background: var(--hud-red);
+      color: #fff;
+      border: 1px solid var(--hud-red);
+      padding: 0.75rem 2rem;
+      font-weight: 800;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="bracket-tl"></div>
+  <div class="bracket-tr"></div>
+  <div class="bracket-bl"></div>
+  <div class="bracket-br"></div>
+
+  <header class="hud-header">
+    <div class="rec-indicator">
+      <div class="rec-dot"></div>
+      <span>STBY / LIVE OSD</span>
+    </div>
+    <div class="timecode">TC 00:04:12:18</div>
+    <div>FREQ: 16.0 kHz • 16-BIT PCM</div>
+  </header>
+
+  <main class="viewfinder-content">
+    <div class="center-crosshair"></div>
+    <div class="hud-editor" contenteditable="true">
+      LumiNote Viewfinder Mode frames your spoken ideas with optical precision. <span class="tracking-tag">TRACKING: NOVA-3 150MS</span> Capturing audio in ultra-high resolution.
+    </div>
+  </main>
+
+  <footer class="hud-footer">
+    <div style="display:flex; gap:0.6rem;">
+      <button class="hud-btn">CLEAR</button>
+      <button class="hud-btn">POLISH [AI]</button>
+      <button class="hud-btn">EXPORT</button>
+    </div>
+    <button class="shutter-btn">TRIGGER CAPTURE</button>
+  </footer>
+</body>
+</html>

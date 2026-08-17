@@ -4,154 +4,171 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>LumiNote | Real-Time Voice Intelligence</title>
-    <meta name="description" content="LumiNote - Ultra-fast real-time speech intelligence & voice dictation studio." />
-    <meta name="theme-color" content="#090a0f" />
+    <title>LumiNote | VĀK & NĀDA Speech Intelligence Studio</title>
+    <meta name="description" content="LumiNote - Production-grade real-time AI speech intelligence fusing ancient Sanskrit acoustics with RodeX technical precision." />
+    <meta name="theme-color" content="#0a0c0f" />
     <link rel="icon" type="image/svg+xml" href="logo.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=General+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Martel:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&family=Yatra+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="reset.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!--
+      THESIS: LumiNote fuses ancient Sanskrit acoustic philosophy (Vāk & Nāda) with RodeX technical precision and Neo-Mirai Wabi-Sabi grid architecture.
+      OWN-WORLD: Palette of deep obsidian carbon (#0a0c0f), technical brushed brass gold (#d9b64a), signal red (#e8452c), and washi paper (#f4efe6).
+      STORY: Users dictate and edit streaming speech in real-time with tactile physical controls and dual-world Dark/Light mode.
+      FIRST VIEWPORT: Full-screen 100dvh broadcast console with Yantra telemetry, live acoustic waveform visualizer, and master transmit deck.
+      FORM: RodeX x Neo-Mirai x Sanskrit Acoustic Fusion (Seed Key: de69ad98).
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
+
     <noscript>
       <div class="noscript-banner">
-        JavaScript is required to use LumiNote real-time voice dictation. Please enable JavaScript in your browser.
+        JavaScript is required to operate LumiNote real-time speech intelligence. Please enable JavaScript in your browser.
       </div>
     </noscript>
 
     <div class="container">
-      <header class="app-header">
-        <div class="logo" role="banner">
-          <img src="logo.svg" alt="LumiNote Logo" class="logo-image">
-          <div class="logo-title-group">
-            <h1 class="logo-text">LumiNote</h1>
-            <span class="model-badge">v03</span>
+      <!-- Sacred Devanagari & Telemetry Side Pillar -->
+      <aside class="sacred-telemetry-pillar" aria-hidden="true">
+        <div class="yantra-hanko-box">ॐ</div>
+        <div class="pillar-sanskrit-text">नादब्रह्म</div>
+        <div class="dashed-pillar-line"></div>
+        <div class="pillar-year">VĀK 2026</div>
+      </aside>
+
+      <!-- Top Technical Chassis Header -->
+      <header class="chassis-header" role="banner">
+        <div class="packet-seal" aria-hidden="true">SPEC v03 • VERIFIED</div>
+
+        <div class="brand-identity">
+          <img src="logo.svg" alt="LumiNote Yantra Logo" class="brand-logo-img">
+          <div class="brand-title-wrap">
+            <h1 class="brand-name">Lumi<em>Note</em></h1>
+            <span class="fuse-badge">VĀK • NĀDA // 16kHz PCM</span>
           </div>
         </div>
 
-        <div class="header-right">
-          <div class="custom-model-switcher" id="customModelSwitcher">
-            <button type="button" class="model-switcher-btn" id="modelSwitcherTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Select AI Speech Model">
-              <span class="model-led-dot"></span>
-              <span id="selectedModelLabel">AssemblyAI Universal-3.5 Pro</span>
-              <svg class="chevron-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        <div class="header-instruments">
+          <!-- Engine Selector Dropdown -->
+          <div class="engine-switcher-wrap" id="customModelSwitcher">
+            <button type="button" class="engine-trigger-btn" id="modelSwitcherTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Select AI Speech Model">
+              <span class="engine-pulse-dot" aria-hidden="true"></span>
+              <span id="selectedModelLabel">Deepgram Nova-3 • 150ms</span>
+              <svg class="chevron-icon" aria-hidden="true" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
             </button>
-            
-            <div class="model-dropdown-menu" id="modelDropdownMenu" role="listbox" aria-label="Speech Models">
-              <div class="model-option active" role="option" aria-selected="true" data-value="universal-3-5-pro" tabindex="0">
-                <div class="option-indicator"></div>
-                <div class="option-details">
-                  <span class="option-title">AssemblyAI Universal-3.5 Pro</span>
-                  <span class="option-desc">Deep contextual intelligence • High accuracy</span>
+
+            <div class="engine-dropdown" id="modelDropdownMenu" role="listbox" aria-label="Speech Intelligence Models">
+              <div class="engine-opt active" role="option" aria-selected="true" data-value="deepgram-nova-3" tabindex="0">
+                <div class="opt-text-group">
+                  <span class="opt-title">Deepgram Nova-3</span>
+                  <span class="opt-sub">Ultra-fast ~150ms real-time latency</span>
                 </div>
-                <svg class="check-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span class="check-mark" aria-hidden="true">✓</span>
               </div>
 
-              <div class="model-option" role="option" aria-selected="false" data-value="deepgram-nova-3" tabindex="0">
-                <div class="option-indicator"></div>
-                <div class="option-details">
-                  <span class="option-title">Deepgram Nova-3</span>
-                  <span class="option-desc">Ultra-fast ~150ms stream latency</span>
+              <div class="engine-opt" role="option" aria-selected="false" data-value="universal-3-5-pro" tabindex="0">
+                <div class="opt-text-group">
+                  <span class="opt-title">AssemblyAI Universal-3.5 Pro</span>
+                  <span class="opt-sub">Deep voice contextual reasoning</span>
                 </div>
-                <svg class="check-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span class="check-mark" aria-hidden="true">✓</span>
               </div>
 
-              <div class="model-option" role="option" aria-selected="false" data-value="universal-streaming-english" tabindex="0">
-                <div class="option-indicator"></div>
-                <div class="option-details">
-                  <span class="option-title">AssemblyAI Fast Realtime</span>
-                  <span class="option-desc">Sub-200ms lightweight stream</span>
+              <div class="engine-opt" role="option" aria-selected="false" data-value="universal-streaming-english" tabindex="0">
+                <div class="opt-text-group">
+                  <span class="opt-title">AssemblyAI Fast Realtime</span>
+                  <span class="opt-sub">Sub-200ms lightweight stream</span>
                 </div>
-                <svg class="check-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span class="check-mark" aria-hidden="true">✓</span>
               </div>
             </div>
           </div>
 
-          <div class="status-indicator-container" id="statusContainer">
-            <div class="status-radar-ring">
-              <div class="status-indicator" id="statusIndicator" aria-hidden="true"></div>
-            </div>
-            <span id="statusText" aria-live="polite">Ready</span>
-          </div>
+          <!-- Dual Mode Switcher (Dark: RodeX Obsidian / Light: Wabi-Sabi Silk) -->
+          <button type="button" class="mode-switch-btn" id="themeToggleBtn" aria-label="Toggle Dark and Light Mode" title="Toggle Mode">
+            <span id="modeIcon" aria-hidden="true">☀️</span>
+            <span id="modeLabel">Light Mode</span>
+          </button>
+
+          <!-- Telemetry Status Stamp -->
+          <div class="status-stamp" id="statusStamp" aria-live="polite">READY</div>
         </div>
       </header>
 
-      <main class="transcription-interface">
-        <div class="editor-header">
-          <div class="editor-title">
-            <svg class="editor-title-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-            <span>Live Workspace</span>
+      <!-- Central Fusion Transcription Workspace -->
+      <main class="fusion-workspace" role="main">
+        <div class="workspace-top-bar">
+          <div class="telemetry-left">
+            <span>PCM S16LE • 16.0 kHz LOSSLESS</span>
+            <div class="waveform-rack" id="audioVisualizer" aria-hidden="true">
+              <span class="w-bar wb1"></span>
+              <span class="w-bar wb2"></span>
+              <span class="w-bar wb3"></span>
+              <span class="w-bar wb4"></span>
+              <span class="w-bar wb5"></span>
+            </div>
           </div>
-
-          <div class="editor-header-right">
-            <div class="audio-visualizer-bar" id="audioVisualizer" aria-hidden="true">
-              <span class="v-bar v1"></span>
-              <span class="v-bar v2"></span>
-              <span class="v-bar v3"></span>
-              <span class="v-bar v4"></span>
-              <span class="v-bar v5"></span>
-            </div>
-            <div class="edit-badge">
-              <span class="edit-dot" aria-hidden="true"></span>
-              <span>Interactive Stream</span>
-            </div>
+          <div class="live-stream-badge" aria-live="polite">
+            <span class="badge-bindu-pulse" aria-hidden="true"></span>
+            <span>नाद प्रवाह • LIVE ACOUSTIC CHANNEL</span>
           </div>
         </div>
 
-        <div id="message" class="transcription-output" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Transcript editor content" data-placeholder="Speak naturally or type your draft... Edit any phrase in real-time as words stream in."></div>
-        
-        <div class="editor-footer">
+        <div id="message" class="transcription-output" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Live Transcript Editor Canvas" data-placeholder="वाचं वदति यथार्थम्... Speak naturally. Spoken words stream in real-time with flawless acoustic precision. Edit any phrase freely as you dictate."></div>
+
+        <div class="workspace-bottom-bar">
           <div class="stats-counter" id="statsCounter" aria-live="polite">
-            <span id="wordCount">0 words</span>
-            <span class="dot-separator" aria-hidden="true">•</span>
-            <span id="charCount">0 characters</span>
+            <span id="wordCount">0 WORDS</span>
+            <span class="dot-sep" aria-hidden="true">•</span>
+            <span id="charCount">0 CHARACTERS</span>
           </div>
-
-          <div class="editor-hotkey-hint">
-            <span>Press <kbd>Space</kbd> or click to dictate</span>
+          <span class="cell-tag" aria-hidden="true">NODE: WEBSOCKET_ACTIVE • PROTOCOL: V3</span>
+          <div class="hotkey-hint">
+            <span>PRESS <kbd>SPACE</kbd> OR CLICK TO TRANSMIT</span>
           </div>
-        </div>
-
-        <div class="copy-feedback" id="copyFeedback" role="status" aria-live="polite">
-          <span class="toast-dot" aria-hidden="true"></span>
-          <span id="toastText">Copied to clipboard!</span>
-        </div>
-
-        <div class="controls">
-          <div class="utility-buttons">
-            <button id="clearButton" class="control-button clear-button" type="button" title="Clear canvas">
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-              <span>Clear</span>
-            </button>
-            <button id="copyButton" class="control-button copy-button" type="button" title="Copy text">
-              <svg class="copy-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-              <svg class="tick-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <span>Copy</span>
-            </button>
-            <button id="downloadButton" class="control-button download-button" type="button" title="Export .txt">
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-              <span>Export</span>
-            </button>
-            <button id="grammarButton" class="control-button grammar-button" type="button" title="Refine grammar & clarity">
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-              <span>Polish</span>
-            </button>
-          </div>
-
-          <button id="recordButton" class="record-button" type="button" aria-pressed="false" aria-label="Toggle voice recording">
-            <span class="record-glow-aura" aria-hidden="true"></span>
-            <span class="icon-container" id="buttonIcon">
-              <svg class="mic-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
-            </span>
-            <span id="buttonText">Start Dictating</span>
-          </button>
         </div>
       </main>
 
-      <footer class="app-footer">
-        <p>&copy; 2026 LumiNote • Voice Intelligence Engine</p>
+      <!-- Bottom Tactile Transport Deck -->
+      <footer class="controls-deck" role="toolbar" aria-label="Audio controls">
+        <div class="tool-group">
+          <button id="clearButton" class="tool-btn" type="button" title="Purge canvas">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+            <span>Clear</span>
+          </button>
+          <button id="grammarButton" class="tool-btn grammar-btn" type="button" title="Polish grammar and clarity">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            <span>Polish AI</span>
+          </button>
+          <button id="copyButton" class="tool-btn" type="button" title="Copy transcript">
+            <svg class="copy-icon" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            <svg class="tick-icon" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:none; color:var(--emerald);"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Copy [⌘C]</span>
+          </button>
+          <button id="downloadButton" class="tool-btn" type="button" title="Export text">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Export</span>
+          </button>
+        </div>
+
+        <button id="recordButton" class="master-transmit-btn" type="button" aria-pressed="false" aria-label="Toggle real-time voice dictation">
+          <span class="tally-dot" aria-hidden="true"></span>
+          <span id="buttonText">Start Dictating</span>
+        </button>
+      </footer>
+
+      <!-- Telemetry Toast -->
+      <div class="copy-toast" id="copyFeedback" role="status" aria-live="polite">
+        <span class="toast-indicator-dot" aria-hidden="true"></span>
+        <span id="toastText">Copied to clipboard!</span>
+      </div>
+
+      <!-- App Footer -->
+      <footer class="app-footer" role="contentinfo">
+        <p>&copy; 2026 LumiNote • Vāk & Nāda Speech Intelligence Studio</p>
       </footer>
     </div>
 

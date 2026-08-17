@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option C: Cyberpunk HUD Glass Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cyber-bg: #030408;
+      --neon-cyan: #00f0ff;
+      --neon-pink: #ff0055;
+      --neon-amber: #ffaa00;
+      --glass-panel: rgba(10, 15, 28, 0.75);
+      --glass-border: rgba(0, 240, 255, 0.2);
+      --font-brand: 'Orbitron', sans-serif;
+      --font-body: 'Chakra Petch', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--cyber-bg);
+      color: #e6f1ff;
+      font-family: var(--font-body);
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem 2rem;
+      background-image: 
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      overflow: hidden;
+    }
+
+    /* Cyber Matrix Header */
+    .cyber-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 1.5rem;
+      background: var(--glass-panel);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(16px);
+      border-radius: 12px;
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.1);
+    }
+    .cyber-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .cyber-title {
+      font-family: var(--font-brand);
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, #fff 0%, var(--neon-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .cyber-badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--neon-pink);
+      border: 1px solid var(--neon-pink);
+      padding: 0.15rem 0.5rem;
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(255, 0, 85, 0.4);
+    }
+
+    /* Stream Matrix Core */
+    .matrix-workspace {
+      flex: 1;
+      margin: 1.25rem 0;
+      background: var(--glass-panel);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 0 30px rgba(0, 240, 255, 0.05);
+      position: relative;
+    }
+    .matrix-top-rail {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--neon-cyan);
+    }
+    .cyber-editor {
+      flex: 1;
+      padding: 2rem;
+      font-size: 1.35rem;
+      line-height: 1.8;
+      color: #fff;
+      outline: none;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .cyber-editor:empty::before {
+      content: "CYBER LINK READY. INITIATE STREAM TO TRANSCRIBE VOICE...";
+      color: rgba(255,255,255,0.2);
+    }
+    .neon-token {
+      color: var(--neon-pink);
+      text-shadow: 0 0 8px var(--neon-pink);
+      border-bottom: 1px solid var(--neon-pink);
+    }
+
+    /* Cyber Transport Bar */
+    .cyber-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      background: var(--glass-panel);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+    }
+    .cyber-btn-group {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .cyber-btn {
+      background: rgba(0, 240, 255, 0.05);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.65rem 1.25rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cyber-btn:hover {
+      background: var(--neon-cyan);
+      color: #000;
+      box-shadow: 0 0 15px var(--neon-cyan);
+    }
+    .cyber-rec-btn {
+      background: linear-gradient(135deg, var(--neon-pink) 0%, #a800ff 100%);
+      border: none;
+      color: #fff;
+      font-family: var(--font-brand);
+      font-size: 0.95rem;
+      font-weight: 800;
+      padding: 0.8rem 2.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 0 25px rgba(255, 0, 85, 0.5);
+      transition: all 0.2s;
+    }
+    .cyber-rec-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 35px rgba(255, 0, 85, 0.8);
+    }
+  </style>
+</head>
+<body>
+  <header class="cyber-header">
+    <div class="cyber-logo">
+      <div class="cyber-title">LUMINOTE</div>
+      <span class="cyber-badge">NEO // v03</span>
+    </div>
+    <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--neon-cyan);">
+      NEURAL LINK: 150MS • DEEPGRAM NOVA-3
+    </div>
+  </header>
+
+  <main class="matrix-workspace">
+    <div class="matrix-top-rail">
+      <span>LATENCY: 150MS</span>
+      <span>BUFFER: 16-BIT 16kHz</span>
+      <span>STREAM: SYNCHRONIZED</span>
+    </div>
+
+    <div class="cyber-editor" contenteditable="true">
+      LumiNote Cyber Matrix active. <span class="neon-token">Real-time speech neural streaming engaged.</span> Your voice renders instantly in holographic glass.
+    </div>
+  </main>
+
+  <footer class="cyber-footer">
+    <div class="cyber-btn-group">
+      <button class="cyber-btn">PURGE</button>
+      <button class="cyber-btn">POLISH AI</button>
+      <button class="cyber-btn">COPY CLIP</button>
+      <button class="cyber-btn">DUMP .TXT</button>
+    </div>
+
+    <button class="cyber-rec-btn">ENGAGE MIC</button>
+  </footer>
+</body>
+</html>
