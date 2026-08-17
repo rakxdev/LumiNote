@@ -137,22 +137,51 @@ function renderOscilloscopeFrame() {
       ctx.lineWidth = 1.5;
       ctx.stroke();
     } else {
+      let isSynthetic = false;
+      
+      if (liveAnalyser) {
+        liveAnalyser.getByteFrequencyData(liveDataArray);
+        // Check if there is actual audio energy coming through
+        let totalEnergy = 0;
+        for (let i = 0; i < liveDataArray.length; i++) {
+          totalEnergy += liveDataArray[i];
+        }
+        if (totalEnergy < 10) {
+          isSynthetic = true; // Fallback to synthetic if hardware muted/silenced
+        }
+      } else {
+        isSynthetic = true;
+      }
+
       const numBars = 16;
       const barWidth = Math.max(2, (headerCanvas.width / numBars) - 2);
       const time = Date.now() * 0.005;
 
       for (let i = 0; i < numBars; i++) {
-        // Synthetic organic audio wave simulation
-        // Creates a fluid, believable frequency dance using layered sine waves
-        const noise = Math.random() * 0.15;
-        const wave1 = Math.sin(time * 1.5 + i * 0.3) * 0.5 + 0.5;
-        const wave2 = Math.sin(time * 0.8 - i * 0.5) * 0.5 + 0.5;
-        const pulse = Math.sin(time * 0.2) * 0.3 + 0.7; // Global volume swell
+        let norm = 0.05; // Base height
         
-        const syntheticNorm = ((wave1 * 0.6 + wave2 * 0.4) * pulse) + noise;
-        const norm = Math.min(1, Math.max(0.05, syntheticNorm));
+        if (isSynthetic) {
+          // Synthetic organic audio wave simulation
+          const noise = Math.random() * 0.15;
+          const wave1 = Math.sin(time * 1.5 + i * 0.3) * 0.5 + 0.5;
+          const wave2 = Math.sin(time * 0.8 - i * 0.5) * 0.5 + 0.5;
+          const pulse = Math.sin(time * 0.2) * 0.3 + 0.7; 
+          const syntheticNorm = ((wave1 * 0.6 + wave2 * 0.4) * pulse) + noise;
+          norm = Math.min(1, Math.max(0.05, syntheticNorm));
+        } else {
+          // Hardware Analyser rendering
+          const step = Math.floor(liveDataArray.length / numBars);
+          let sum = 0;
+          for (let j = 0; j < step; j++) {
+            sum += liveDataArray[i * step + j] || 0;
+          }
+          const val = sum / step;
+          const targetNorm = val / 255;
+          // Boost sensitivity for better visualizer response
+          norm = Math.min(1, targetNorm * 1.8 + 0.05);
+        }
         
-        // Responsive bar height (always has a visible base, bounces dynamically)
+        // Responsive bar height
         const barHeight = Math.max(2, norm * (headerCanvas.height - 2));
         const x = i * (barWidth + 2);
         const y = headerCanvas.height - barHeight;
@@ -189,29 +218,53 @@ function renderOscilloscopeFrame() {
     bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
 
     if (isRecording) {
-      const time = Date.now() * 0.003;
-      // Synthetic macro amplitude swell
-      const amplitude = (Math.sin(time * 0.5) * 0.5 + 0.5) * 60 + 20;
-
       bgCtx.beginPath();
       bgCtx.lineWidth = 1.5;
-      bgCtx.strokeStyle = isLight ? 'rgba(185, 28, 28, 0.25)' : 'rgba(217, 182, 74, 0.25)';
+      bgCtx.strokeStyle = isLight ? 'rgba(185, 28, 28, 0.4)' : 'rgba(217, 182, 74, 0.35)';
 
-      const sliceWidth = bgCanvas.width / 128;
-      let x = 0;
+      let isSyntheticBg = false;
+      let timeDomainData = null;
 
-      for (let i = 0; i < 128; i++) {
-        // Synthetic smooth background wave
-        const wave = Math.sin(i * 0.1 + time * 2) * Math.cos(i * 0.05 - time);
-        const y = (bgCanvas.height / 2) + (wave * amplitude);
-
-        if (i === 0) {
-          bgCtx.moveTo(x, y);
-        } else {
-          bgCtx.lineTo(x, y);
+      if (liveAnalyser) {
+        timeDomainData = new Uint8Array(liveAnalyser.fftSize);
+        liveAnalyser.getByteTimeDomainData(timeDomainData);
+        // Check if flatlined (128 is center)
+        let hasEnergy = false;
+        for (let i = 0; i < timeDomainData.length; i++) {
+          if (Math.abs(timeDomainData[i] - 128) > 2) {
+            hasEnergy = true; break;
+          }
         }
+        if (!hasEnergy) isSyntheticBg = true;
+      } else {
+        isSyntheticBg = true;
+      }
 
-        x += sliceWidth;
+      if (isSyntheticBg) {
+        // Synthetic wave
+        const time = Date.now() * 0.003;
+        const amplitude = (Math.sin(time * 0.5) * 0.5 + 0.5) * 60 + 20;
+        const sliceWidth = bgCanvas.width / 128;
+        let x = 0;
+        for (let i = 0; i < 128; i++) {
+          const wave = Math.sin(i * 0.1 + time * 2) * Math.cos(i * 0.05 - time);
+          const y = (bgCanvas.height / 2) + (wave * amplitude);
+          if (i === 0) bgCtx.moveTo(x, y);
+          else bgCtx.lineTo(x, y);
+          x += sliceWidth;
+        }
+      } else {
+        // Hardware waveform
+        const sliceWidth = bgCanvas.width / timeDomainData.length;
+        let x = 0;
+        for (let i = 0; i < timeDomainData.length; i++) {
+          // Amplify the waveform slightly for visibility
+          const v = ((timeDomainData[i] - 128) * 1.5 + 128) / 128.0; 
+          const y = (v * bgCanvas.height) / 2;
+          if (i === 0) bgCtx.moveTo(x, y);
+          else bgCtx.lineTo(x, y);
+          x += sliceWidth;
+        }
       }
 
       bgCtx.stroke();
