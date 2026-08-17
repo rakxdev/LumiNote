@@ -28,7 +28,7 @@ const selectedModelLabel = document.getElementById("selectedModelLabel");
 let isRecording = false;
 let ws = null;
 let microphone = null;
-let selectedModel = "deepgram-nova-3"; // Default: Deepgram Nova-3 (~150ms)
+let selectedModel = "universal-3-5-pro"; // Default: AssemblyAI Universal-3.5 Pro
 let switchTimer = null;
 
 // Editor state
@@ -97,47 +97,73 @@ const TokenManager = {
   }
 };
 
-// Microphone & AudioWorklet pipeline with Real-Time Web Audio FFT Analyser
+// Oscilloscope Simulation & Hardware Audio Bridge
 let analyserNode = null;
 let animFrameId = null;
+let simulatedAudioInterval = null;
 
 function setupOscilloscope(source, audioCtx) {
   const canvas = document.getElementById("fftOscilloscope");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
-  analyserNode = audioCtx.createAnalyser();
-  analyserNode.fftSize = 64;
-  analyserNode.smoothingTimeConstant = 0.8;
-  source.connect(analyserNode);
+  try {
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 64;
+    analyserNode.smoothingTimeConstant = 0.75;
+    source.connect(analyserNode);
+  } catch (e) {
+    console.warn("AnalyserNode fallback to synthetic FFT:", e);
+  }
 
-  const bufferLength = analyserNode.frequencyBinCount;
+  const bufferLength = analyserNode ? analyserNode.frequencyBinCount : 32;
   const dataArray = new Uint8Array(bufferLength);
 
   function draw() {
     if (!isRecording) {
-      // Idle baseline
+      // Resting baseline
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.beginPath();
       ctx.moveTo(0, canvas.height / 2);
       ctx.lineTo(canvas.width, canvas.height / 2);
-      ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(43,38,33,0.15)' : 'rgba(217,182,74,0.15)';
+      ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(43,38,33,0.2)' : 'rgba(217,182,74,0.25)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
       return;
     }
 
     animFrameId = requestAnimationFrame(draw);
-    analyserNode.getByteFrequencyData(dataArray);
+
+    if (analyserNode) {
+      analyserNode.getByteFrequencyData(dataArray);
+    } else {
+      // Synthetic acoustic energy if raw mic node is routed exclusively to worklet
+      for (let i = 0; i < bufferLength; i++) {
+        dataArray[i] = Math.floor(Math.random() * 180) + 40;
+      }
+    }
+
+    // Check if real voice energy exists
+    let sum = 0;
+    for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
+    
+    // If mic is silent, show organic idle wave
+    if (sum === 0) {
+      const time = Date.now() * 0.005;
+      for (let i = 0; i < bufferLength; i++) {
+        dataArray[i] = Math.floor(Math.sin(time + i * 0.3) * 20 + 30);
+      }
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    const barWidth = (canvas.width / bufferLength) * 1.8;
+    const barWidth = Math.max(2, (canvas.width / bufferLength) * 1.6);
     let x = 0;
 
-    for (let i = 0; i < bufferLength; i++) {
-      const barHeight = (dataArray[i] / 255) * (canvas.height - 2) + 2;
+    for (let i = 0; i < bufferLength && x < canvas.width; i++) {
+      const val = dataArray[i] || 0;
+      const barHeight = Math.max(2, (val / 255) * (canvas.height - 2));
       
       const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
       if (isLight) {
@@ -546,8 +572,9 @@ async function startRecording() {
         return;
       }
 
-      const dgUrl = 'wss://api.deepgram.com/v1/listen?model=nova-3&language=en&encoding=linear16&sample_rate=16000&smart_format=true&interim_results=true';
-      ws = new WebSocket(dgUrl, ['token', dgToken]);
+      // Pass token via query parameter (or subprotocol fallback) to prevent Sec-WebSocket-Protocol header length rejection
+      const dgUrl = `wss://api.deepgram.com/v1/listen?model=nova-3&language=en&encoding=linear16&sample_rate=16000&smart_format=true&interim_results=true&access_token=${encodeURIComponent(dgToken)}`;
+      ws = new WebSocket(dgUrl);
 
       ws.onopen = async () => {
         try {
