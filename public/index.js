@@ -149,8 +149,10 @@ function renderOscilloscopeFrame() {
         for (let j = 0; j < step; j++) {
           sum += liveDataArray[i * step + j] || 0;
         }
-        const val = sum / step; // 0..255
-        const norm = val / 255;
+        // Smooth responsiveness (fast attack, smooth decay)
+        const targetNorm = val / 255;
+        // Keep a minimum height for the visualizer to feel alive, boost the signal slightly
+        const norm = Math.min(1, targetNorm * 1.5 + 0.05);
         
         // Responsive bar height (always has a visible 2px base, expands with real voice pitch/volume)
         const barHeight = Math.max(2, norm * (headerCanvas.height - 2));
