@@ -102,7 +102,7 @@ let liveAnalyser = null;
 let liveDataArray = null;
 let animFrameId = null;
 
-function setupLiveAnalyser(sourceNode, audioCtx) {
+function setupLiveAnalyser(audioCtx) {
   try {
     liveAnalyser = audioCtx.createAnalyser();
     liveAnalyser.fftSize = 128;
@@ -110,12 +110,11 @@ function setupLiveAnalyser(sourceNode, audioCtx) {
     liveAnalyser.minDecibels = -90;
     liveAnalyser.maxDecibels = -10;
     
-    // Connect microphone source directly to AnalyserNode
-    sourceNode.connect(liveAnalyser);
-    
     liveDataArray = new Uint8Array(liveAnalyser.frequencyBinCount);
+    return liveAnalyser;
   } catch (err) {
     console.error("Failed to setup Live Web Audio Analyser:", err);
+    return null;
   }
 }
 
@@ -149,7 +148,9 @@ function renderOscilloscopeFrame() {
         for (let j = 0; j < step; j++) {
           sum += liveDataArray[i * step + j] || 0;
         }
-        // Smooth responsiveness (fast attack, smooth decay)
+        
+        // Compute average frequency energy
+        const val = sum / step;
         const targetNorm = val / 255;
         // Keep a minimum height for the visualizer to feel alive, boost the signal slightly
         const norm = Math.min(1, targetNorm * 1.5 + 0.05);
@@ -268,12 +269,21 @@ function createMicrophone() {
       source = audioContext.createMediaStreamSource(stream);
 
       // Connect standard Web Audio Analyser directly to microphone input stream
-      setupLiveAnalyser(source, audioContext);
+      const analyser = setupLiveAnalyser(audioContext);
 
       await audioContext.audioWorklet.addModule('audio-processor.js');
 
       audioWorkletNode = new AudioWorkletNode(audioContext, 'audio-processor');
-      source.connect(audioWorkletNode);
+
+      // The critical fix: ensure the AnalyserNode is fully connected in the active graph path
+      // source -> analyser -> worklet -> destination
+      if (analyser) {
+        source.connect(analyser);
+        analyser.connect(audioWorkletNode);
+      } else {
+        source.connect(audioWorkletNode);
+      }
+      
       audioWorkletNode.connect(audioContext.destination);
 
       startOscilloscope();
