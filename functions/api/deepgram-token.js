@@ -21,17 +21,13 @@ export async function onRequest(context) {
   }
 
   try {
-    // Mint short-lived grant token via Deepgram Auth API
-    const response = await fetch('https://api.deepgram.com/v1/auth/token', {
+    // Mint short-lived grant token via Deepgram Auth API (POST /v1/auth/grant)
+    const response = await fetch('https://api.deepgram.com/v1/auth/grant', {
       method: 'POST',
       headers: {
         'Authorization': `Token ${DEEPGRAM_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        // Default TTL is short (~30s), suitable for immediate WebSocket handshake
-        comment: 'LumiNote temporary streaming session token'
-      }),
       signal: AbortSignal.timeout(5000)
     });
 
@@ -48,7 +44,7 @@ export async function onRequest(context) {
     }
 
     const data = await response.json();
-    return new Response(JSON.stringify({ token: data.key || data.token }), {
+    return new Response(JSON.stringify({ token: data.access_token || data.token }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
