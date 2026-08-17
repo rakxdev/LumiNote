@@ -116,12 +116,16 @@ html, body {
   font-size: 0.8rem;
 }
 
-/* Scaled Responsive Container (Dynamically Adapts to 100% of any Browser Screen) */
+/* Dynamic Full-Bleed Container: adapts smoothly to 100% of any screen width and height */
 .container {
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 0.75rem 1.25rem;
+  padding: clamp(0.5rem, 1.5vw, 1.25rem) clamp(0.75rem, 2.5vw, 2.5rem);
+  padding-top: max(clamp(0.5rem, 1.5vw, 1.25rem), env(safe-area-inset-top));
+  padding-bottom: max(clamp(0.5rem, 1.5vw, 1.25rem), env(safe-area-inset-bottom));
+  padding-left: max(clamp(0.75rem, 2.5vw, 2.5rem), env(safe-area-inset-left));
+  padding-right: max(clamp(0.75rem, 2.5vw, 2.5rem), env(safe-area-inset-right));
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -133,10 +137,10 @@ html, body {
   gap: 0.65rem;
 }
 
-/* Sacred Devanagari & Telemetry Side Pillar */
+/* Sacred Devanagari & Telemetry Side Pillar (Desktop only) */
 .sacred-telemetry-pillar {
   position: absolute;
-  left: 0.65rem;
+  left: max(0.5rem, env(safe-area-inset-left));
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -741,70 +745,144 @@ html, body {
 }
 
 /* ==========================================================================
-   📱 Precise Mobile & Small Screen Breakpoints
+   📱 Fluid Responsive & Multi-Screen Adaptation Rules
    ========================================================================== */
 
-@media (max-width: 880px) {
-  .container { padding: 0.5rem 0.75rem; gap: 0.45rem; }
-  .sacred-telemetry-pillar { display: none; }
-  .chassis-header, .fusion-workspace, .controls-deck, .app-footer { margin-left: 0; }
-  .header-instruments { margin-right: 0; }
-  .packet-seal { display: none; }
-  
+/* Large Desktops & 4K Displays: Fill horizontal space comfortably without stretched distortion */
+@media (min-width: 1440px) {
+  .fusion-workspace {
+    padding: 1.5rem 2rem;
+  }
+  .transcription-output {
+    font-size: 1.45rem;
+    line-height: 1.9;
+  }
+}
+
+/* Tablet & Intermediate Screens (768px - 1024px) */
+@media (max-width: 1024px) {
+  .container {
+    padding: 0.65rem 1rem;
+  }
+  .chassis-header, .fusion-workspace, .controls-deck, .app-footer {
+    margin-left: 0;
+  }
+  .sacred-telemetry-pillar {
+    display: none;
+  }
+  .header-instruments {
+    margin-right: 0;
+  }
+  .packet-seal {
+    display: none;
+  }
+}
+
+/* Mobile Devices (<= 767px) */
+@media (max-width: 767px) {
+  .container {
+    padding: 0.45rem 0.65rem;
+    gap: 0.45rem;
+  }
+
+  .chassis-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .header-instruments {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+
+  .engine-switcher-wrap {
+    flex: 1;
+  }
+  .engine-trigger-btn {
+    width: 100%;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    padding: 0.35rem 0.55rem;
+  }
+  .engine-dropdown {
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
+
+  .mode-switch-btn {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.65rem;
+  }
+  .status-stamp {
+    font-size: 7.5px;
+    padding: 2px 6px;
+  }
+
+  /* Workspace on Mobile */
+  .fusion-workspace {
+    padding: 0.6rem 0.75rem;
+  }
+  .workspace-top-bar {
+    font-size: 0.625rem;
+    padding-bottom: 0.4rem;
+  }
+  .fft-oscilloscope {
+    width: 90px;
+    height: 16px;
+  }
+  .live-stream-badge {
+    font-size: 0.625rem;
+  }
+
+  .transcription-output {
+    padding: 0.85rem 1rem;
+    font-size: 1.15rem;
+    line-height: 1.65;
+  }
+
+  .workspace-bottom-bar {
+    font-size: 0.625rem;
+    padding-top: 0.4rem;
+  }
+  .cell-tag, .hotkey-hint {
+    display: none;
+  }
+
+  /* Controls on Mobile: 2x2 Utility Grid + Full Width Transmit Key */
   .controls-deck {
     flex-direction: column-reverse;
     align-items: stretch;
-    gap: 0.5rem;
+    gap: 0.45rem;
   }
+
   .tool-group {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     width: 100%;
     gap: 0.35rem;
   }
+
   .tool-btn {
     justify-content: center;
-    padding: 0.6rem 0.4rem;
+    padding: 0.55rem 0.4rem;
     font-size: 0.675rem;
   }
+
   .master-transmit-btn {
     justify-content: center;
     width: 100%;
     padding: 0.75rem 1rem;
     font-size: 0.85rem;
   }
-}
 
-@media (max-width: 600px) {
-  .container { padding: 0.4rem 0.6rem; gap: 0.4rem; }
-  .chassis-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-  }
-  .header-instruments {
-    width: 100%;
-    justify-content: space-between;
-    gap: 0.4rem;
-  }
-  .engine-switcher-wrap { flex: 1; }
-  .engine-trigger-btn { width: 100%; justify-content: space-between; }
-  .engine-dropdown { left: 0; right: 0; width: 100%; }
-  
-  .transcription-output {
-    padding: 1rem 1.15rem;
-    font-size: 1.15rem;
-    line-height: 1.65;
-  }
-  .cell-tag, .hotkey-hint { display: none; }
-  .fft-oscilloscope { width: 80px; height: 16px; }
-  
-  .tool-group {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.4rem;
-  }
-  .tool-btn {
-    padding: 0.55rem 0.5rem;
+  .app-footer {
+    font-size: 0.6rem;
+    padding-top: 0.25rem;
   }
 }
