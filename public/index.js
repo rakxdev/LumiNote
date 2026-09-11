@@ -24,7 +24,6 @@ const clearButton = document.getElementById("clearButton");
 const themeToggleBtn = document.getElementById("themeToggleBtn");
 const customModelSwitcher = document.getElementById("customModelSwitcher");
 const modelSwitcherTrigger = document.getElementById("modelSwitcherTrigger");
-const modelDropdownMenu = document.getElementById("modelDropdownMenu");
 const selectedModelLabel = document.getElementById("selectedModelLabel");
 
 // Link Mode elements
@@ -1352,7 +1351,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const modelOptions = document.querySelectorAll('.engine-opt');
   modelOptions.forEach((opt) => {
-    opt.addEventListener('click', (e) => {
+    opt.addEventListener('click', () => {
       const val = opt.getAttribute('data-value');
       const label = opt.querySelector('.opt-title').textContent.trim();
       selectCustomModel(val, label, opt);
