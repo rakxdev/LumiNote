@@ -45,6 +45,7 @@ export class SyncRoom {
       return jsonResponse({ error: 'room is full' }, 429);
     }
 
+    const url = new URL(request.url);
     const role = parseRole(url.searchParams.get('role'));
     const device = { role, joinedAt: Date.now() };
 
