@@ -35,10 +35,9 @@ export class SyncRoom {
   }
 
   async fetch(request) {
-    const url = new URL(request.url);
-    if (url.pathname !== '/join') {
-      return jsonResponse({ error: 'not found' }, 404);
-    }
+    // Path routing is the caller's job (Pages Function or the worker router
+    // both validate /join paths before proxying); the DO only cares about
+    // the upgrade itself.
     if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
       return jsonResponse({ error: 'expected WebSocket upgrade' }, 426);
     }
