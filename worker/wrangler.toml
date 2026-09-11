@@ -1,0 +1,16 @@
+name = "luminote-sync"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+
+# One Durable Object instance per room code. SQLite-backed storage is
+# required for new DOs on the free plan.
+# Declared via the `exports` field per
+# https://developers.cloudflare.com/durable-objects/reference/durable-objects-migrations/
+
+[[durable_objects.bindings]]
+name = "SYNC_ROOM"
+class_name = "SyncRoom"
+
+[exports.SyncRoom]
+type = "durable-object"
+storage = "sqlite"

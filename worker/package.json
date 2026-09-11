@@ -1,0 +1,8 @@
+{
+  "name": "luminote-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LumiNote Link Mode sync worker: SyncRoom Durable Object for cross-device relay",
+  "type": "module",
+  "main": "src/index.js"
+}
