@@ -88,6 +88,16 @@
             </div>
           </div>
 
+          <!-- Link Mode: Cross-Device Pairing -->
+          <button type="button" class="mode-switch-btn" id="linkToggleBtn" aria-haspopup="dialog" aria-expanded="false" aria-label="Link another device" title="Link Device">
+            <span class="theme-icon-slot">
+              <svg class="theme-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </span>
+          </button>
+
           <!-- Dual Mode Switcher (Dark: RodeX Obsidian / Light: Wabi-Sabi Silk) -->
           <button type="button" class="mode-switch-btn" id="themeToggleBtn" aria-label="Toggle Dark and Light Mode" title="Toggle Theme">
             <span class="theme-icon-slot" id="themeIconSlot">
@@ -173,6 +183,62 @@
           <span id="buttonText">Start Dictating</span>
         </button>
       </footer>
+
+      <!-- Link Mode Pairing Dialog -->
+      <div class="link-overlay" id="linkOverlay" hidden>
+        <div class="link-modal" role="dialog" aria-modal="true" aria-labelledby="linkModalTitle">
+          <div class="link-modal-head">
+            <h2 class="link-modal-title" id="linkModalTitle">LINK DEVICE</h2>
+            <button type="button" class="link-close-btn" id="linkCloseBtn" aria-label="Close link dialog">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+
+          <div class="link-section">
+            <p class="link-hint" id="linkHostHint">Open LumiNote on your other device and enter this code — or scan it there.</p>
+            <div class="link-code-row">
+              <span class="link-code" id="linkRoomCode">······</span>
+              <button type="button" class="tool-btn link-copy-code" id="linkCopyCodeBtn" title="Copy room code">
+                <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                <span>Copy</span>
+              </button>
+            </div>
+            <div class="link-qr-wrap" id="linkQrWrap" aria-label="Room QR code"></div>
+          </div>
+
+          <div class="link-section">
+            <label class="link-join-label" for="linkJoinInput">Join another room</label>
+            <div class="link-join-row">
+              <input class="link-join-input" id="linkJoinInput" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="12" placeholder="ENTER CODE" aria-describedby="linkJoinHint">
+              <button type="button" class="tool-btn" id="linkJoinBtn">Join</button>
+            </div>
+            <p class="link-join-hint" id="linkJoinHint">6-character code shown on the other device</p>
+          </div>
+
+          <div class="link-section link-status-row">
+            <span class="link-status-dot" id="linkStatusDot" aria-hidden="true"></span>
+            <span class="link-status-text" id="linkStatusText">Offline</span>
+            <span class="link-devices" id="linkDevices" aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remote Clipboard Tray -->
+      <div class="clipboard-tray" id="clipboardTray" hidden role="region" aria-label="Remote clipboard">
+        <div class="tray-head">
+          <span class="tray-title">REMOTE CLIPBOARD</span>
+          <button type="button" class="link-close-btn tray-dismiss" id="trayDismissBtn" aria-label="Dismiss remote clipboard">
+            <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <p class="tray-text" id="trayText"></p>
+        <div class="tray-actions">
+          <button type="button" class="tool-btn" id="trayCopyBtn">
+            <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+      </div>
 
       <!-- App Footer -->
       <footer class="app-footer" role="contentinfo">

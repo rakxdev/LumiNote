@@ -1,6 +1,7 @@
 /* global anime */
 
 import { appendPcmChunk } from './audio-processor.js';
+import { generateRoomCode, sanitizeRoomCode, isValidRoomCode } from './link-protocol.js';
 
 /**
  * LumiNote v03 Client Engine
@@ -25,6 +26,19 @@ const customModelSwitcher = document.getElementById("customModelSwitcher");
 const modelSwitcherTrigger = document.getElementById("modelSwitcherTrigger");
 const modelDropdownMenu = document.getElementById("modelDropdownMenu");
 const selectedModelLabel = document.getElementById("selectedModelLabel");
+
+// Link Mode elements
+const linkToggleBtn = document.getElementById("linkToggleBtn");
+const linkOverlay = document.getElementById("linkOverlay");
+const linkCloseBtn = document.getElementById("linkCloseBtn");
+const linkRoomCodeEl = document.getElementById("linkRoomCode");
+const linkCopyCodeBtn = document.getElementById("linkCopyCodeBtn");
+const linkQrWrap = document.getElementById("linkQrWrap");
+const linkJoinInput = document.getElementById("linkJoinInput");
+const linkJoinBtn = document.getElementById("linkJoinBtn");
+const linkStatusDot = document.getElementById("linkStatusDot");
+const linkStatusText = document.getElementById("linkStatusText");
+const linkDevicesEl = document.getElementById("linkDevices");
 
 // Session state
 let isRecording = false;
@@ -600,6 +614,182 @@ async function selectCustomModel(value, label, element) {
   }
 }
 
+// Link Mode: Cross-Device Pairing & Relay
+/* global qrcode */
+const LinkManager = {
+  room: null,
+  role: "desktop",
+  ws: null,
+  devices: [],
+  intentionalClose: false,
+  reconnectAttempts: 0,
+  reconnectTimer: null,
+
+  detectRole() {
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const small = window.matchMedia("(max-width: 820px)").matches;
+    return coarse && small ? "phone" : "desktop";
+  },
+
+  hostRoom() {
+    const code = generateRoomCode();
+    this.role = this.detectRole();
+    this.room = code;
+    if (linkRoomCodeEl) linkRoomCodeEl.textContent = code.split("").join(" ");
+    this.renderQr(`${location.origin}/?join=${code}`);
+    this.connect(code);
+  },
+
+  joinRoom(input) {
+    const code = sanitizeRoomCode(input);
+    if (!isValidRoomCode(code)) {
+      showToast("Enter the 6-character room code");
+      return;
+    }
+    clearTimeout(this.reconnectTimer);
+    this.reconnectAttempts = 0;
+    this.role = this.detectRole();
+    this.room = code;
+    if (linkRoomCodeEl) linkRoomCodeEl.textContent = code.split("").join(" ");
+    this.renderQr(`${location.origin}/?join=${code}`);
+    this.connect(code);
+  },
+
+  renderQr(text) {
+    if (!linkQrWrap) return;
+    if (typeof qrcode === "undefined") {
+      linkQrWrap.textContent = "Scan unavailable — type the code instead.";
+      return;
+    }
+    try {
+      const qr = qrcode(0, "M");
+      qr.addData(text);
+      qr.make();
+      linkQrWrap.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    } catch (e) {
+      linkQrWrap.textContent = "QR rendering failed — type the code instead.";
+    }
+  },
+
+  connect(code) {
+    this.closeSocket(true);
+    const scheme = location.protocol === "https:" ? "wss" : "ws";
+    const url = `${scheme}://${location.host}/api/link/ws?room=${encodeURIComponent(code)}&role=${this.role}`;
+    this.updateStatus("linking", "Linking…");
+    try {
+      this.ws = new WebSocket(url);
+    } catch (e) {
+      this.updateStatus("error", "Link failed");
+      return;
+    }
+    this.ws.onopen = () => {
+      this.reconnectAttempts = 0;
+    };
+    this.ws.onmessage = (event) => this.handleMessage(event);
+    this.ws.onclose = () => {
+      if (this.intentionalClose) {
+        this.intentionalClose = false;
+        return;
+      }
+      this.updateStatus("error", "Reconnecting…");
+      this.scheduleReconnect();
+    };
+    this.ws.onerror = () => {};
+  },
+
+  scheduleReconnect() {
+    if (!this.room) return;
+    const delay = Math.min(10000, 1000 * 2 ** this.reconnectAttempts);
+    this.reconnectAttempts++;
+    clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = setTimeout(() => this.connect(this.room), delay);
+  },
+
+  closeSocket(intentional) {
+    this.intentionalClose = intentional;
+    if (this.ws) {
+      try {
+        this.ws.close();
+      } catch (e) {}
+      this.ws = null;
+    }
+  },
+
+  disconnect() {
+    clearTimeout(this.reconnectTimer);
+    this.closeSocket(true);
+    this.room = null;
+    this.devices = [];
+    this.renderDeviceList();
+    this.updateStatus("off", "Offline");
+  },
+
+  send(obj) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(obj));
+      return true;
+    }
+    return false;
+  },
+
+  handleMessage(event) {
+    let msg;
+    try {
+      msg = JSON.parse(event.data);
+    } catch (e) {
+      return;
+    }
+    switch (msg.type) {
+      case "init":
+        this.devices = Array.isArray(msg.devices) ? msg.devices : [];
+        this.renderDeviceList();
+        this.updateStatus("linked", "Linked");
+        showToast("Link established");
+        break;
+      case "device_joined":
+        if (msg.device?.role) {
+          this.devices = [...this.devices, msg.device];
+          this.renderDeviceList();
+          showToast("Device linked");
+        }
+        break;
+      case "device_left":
+        this.devices = this.devices.filter((d) => d.role !== msg.device?.role);
+        this.renderDeviceList();
+        break;
+      case "error":
+        showToast(`Link: ${msg.message}`);
+        break;
+      default:
+        break; // relay events are handled from Task 5 onward
+    }
+  },
+
+  renderDeviceList() {
+    if (linkDevicesEl) {
+      linkDevicesEl.textContent = this.devices.map((d) => d.role.toUpperCase()).join(" • ");
+    }
+  },
+
+  updateStatus(state, text) {
+    if (linkStatusDot) linkStatusDot.className = `link-status-dot ${state}`;
+    if (linkStatusText) linkStatusText.textContent = text;
+  },
+
+  openModal() {
+    if (!this.room && !this.ws) this.hostRoom();
+    if (linkOverlay) linkOverlay.hidden = false;
+    if (linkToggleBtn) linkToggleBtn.setAttribute("aria-expanded", "true");
+    if (linkCloseBtn) linkCloseBtn.focus();
+  },
+
+  closeModal() {
+    if (linkOverlay) linkOverlay.hidden = true;
+    if (linkToggleBtn) linkToggleBtn.setAttribute("aria-expanded", "false");
+    if (linkToggleBtn) linkToggleBtn.focus();
+  },
+};
+
 function stopAudioAndWebSocket() {
   if (ws) {
     try {
@@ -982,6 +1172,55 @@ document.addEventListener('DOMContentLoaded', () => {
     modelSwitcherTrigger.addEventListener('click', toggleModelDropdown);
   }
 
+  if (linkToggleBtn) {
+    linkToggleBtn.addEventListener('click', () => {
+      if (linkOverlay && linkOverlay.hidden) {
+        LinkManager.openModal();
+      } else {
+        LinkManager.closeModal();
+      }
+    });
+  }
+
+  if (linkCloseBtn) {
+    linkCloseBtn.addEventListener('click', () => LinkManager.closeModal());
+  }
+
+  if (linkOverlay) {
+    linkOverlay.addEventListener('click', (e) => {
+      if (e.target === linkOverlay) LinkManager.closeModal();
+    });
+  }
+
+  if (linkJoinBtn) {
+    linkJoinBtn.addEventListener('click', () => {
+      LinkManager.joinRoom(linkJoinInput ? linkJoinInput.value : '');
+      if (linkJoinInput) linkJoinInput.value = '';
+    });
+  }
+
+  if (linkJoinInput) {
+    linkJoinInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        LinkManager.joinRoom(linkJoinInput.value);
+        linkJoinInput.value = '';
+      }
+    });
+  }
+
+  if (linkCopyCodeBtn) {
+    linkCopyCodeBtn.addEventListener('click', async () => {
+      if (!LinkManager.room) return;
+      try {
+        await navigator.clipboard.writeText(LinkManager.room);
+        showToast('Room code copied');
+      } catch (e) {
+        showToast('Failed to copy code');
+      }
+    });
+  }
+
   const modelOptions = document.querySelectorAll('.engine-opt');
   modelOptions.forEach((opt) => {
     opt.addEventListener('click', (e) => {
@@ -997,20 +1236,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Global Keyboard Shortcuts (Space to dictate, Escape to close dropdown)
+  // Global Keyboard Shortcuts (Space to dictate, Escape to close dropdown/dialog)
   document.addEventListener('keydown', (e) => {
-    // Escape key closes dropdown
+    // Escape key closes the link dialog and the model dropdown
     if (e.key === 'Escape') {
+      if (linkOverlay && !linkOverlay.hidden) {
+        LinkManager.closeModal();
+      }
       closeModelDropdown();
       return;
     }
 
-    // Space key toggles recording when not actively typing inside the editor
-    if (e.code === 'Space' && document.activeElement !== messageEl) {
+    const typingInField =
+      document.activeElement instanceof HTMLInputElement ||
+      document.activeElement instanceof HTMLTextAreaElement;
+
+    // Space key toggles recording when not actively typing inside the editor or a form field
+    if (e.code === 'Space' && document.activeElement !== messageEl && !typingInField) {
       e.preventDefault();
       toggleRecording();
     }
   });
+
+  // Deep link: /?join=CODE pairs this device immediately
+  const joinParam = sanitizeRoomCode(new URLSearchParams(location.search).get('join') || '');
+  if (joinParam) {
+    history.replaceState(null, '', location.pathname);
+    LinkManager.joinRoom(joinParam);
+  }
 
   restoreDraftFromStorage();
   updateStats();

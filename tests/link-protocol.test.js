@@ -8,6 +8,8 @@ import {
   validateClientMessage,
   serverEvent,
 } from '../worker/src/protocol.js';
+import * as pagesRoomProtocol from '../functions/api/link/room-protocol.js';
+import * as clientRoomProtocol from '../public/link-protocol.js';
 
 describe('room codes', () => {
   it('generates codes that match the unambiguous alphabet pattern', () => {
@@ -33,6 +35,40 @@ describe('room codes', () => {
     assert.equal(isValidRoomCode('ABCDEF0'), false);
     assert.equal(isValidRoomCode('abcdef'), false);
     assert.equal(isValidRoomCode(123456), false);
+  });
+
+  it('keeps the Pages Function room-code copy in sync with the worker module', () => {
+    assert.equal(pagesRoomProtocol.ROOM_ALPHABET, 'ABCDEFGHJKMNPQRSTUVWXYZ23456789');
+    const codes = ['ABCDEF', 'ABCDE', 'ABCDEF0', 'abcdef', '', 123456];
+    for (const code of codes) {
+      assert.equal(
+        pagesRoomProtocol.isValidRoomCode(code),
+        isValidRoomCode(code),
+        `divergent isValidRoomCode for ${JSON.stringify(code)}`
+      );
+    }
+    const inputs = [' abc-def ', 'ab0cd1', 'o0il1', 'WXY9Z8'];
+    for (const input of inputs) {
+      assert.equal(
+        pagesRoomProtocol.sanitizeRoomCode(input),
+        sanitizeRoomCode(input),
+        `divergent sanitizeRoomCode for ${JSON.stringify(input)}`
+      );
+    }
+  });
+
+  it('keeps the browser client room-code copy in sync with the worker module', () => {
+    assert.equal(clientRoomProtocol.ROOM_ALPHABET, 'ABCDEFGHJKMNPQRSTUVWXYZ23456789');
+    for (let i = 0; i < 20; i++) {
+      assert.ok(isValidRoomCode(clientRoomProtocol.generateRoomCode()));
+    }
+    const codes = ['ABCDEF', 'ABCDE', 'ABCDEF0', 'abcdef', ''];
+    for (const code of codes) {
+      assert.equal(clientRoomProtocol.isValidRoomCode(code), isValidRoomCode(code));
+    }
+    for (const input of [' ab-cd-ef ', 'ab0cd1']) {
+      assert.equal(clientRoomProtocol.sanitizeRoomCode(input), sanitizeRoomCode(input));
+    }
   });
 });
 
