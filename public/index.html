@@ -135,6 +135,9 @@
             <span id="toastText">Ready</span>
           </div>
 
+          <!-- Remote dictation interim preview (Link Mode) -->
+          <span class="remote-interim" id="remoteInterim" hidden aria-live="polite"></span>
+
           <div class="live-stream-badge" aria-live="polite">
             <span class="badge-bindu-pulse" aria-hidden="true"></span>
             <span>नाद प्रवाह • LIVE ACOUSTIC CHANNEL</span>
@@ -175,6 +178,10 @@
           <button id="downloadButton" class="tool-btn" type="button" title="Export text">
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             <span>Export</span>
+          </button>
+          <button id="pushButton" class="tool-btn" type="button" title="Push transcript to linked device">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            <span>Push</span>
           </button>
         </div>
 

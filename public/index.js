@@ -39,6 +39,11 @@ const linkJoinBtn = document.getElementById("linkJoinBtn");
 const linkStatusDot = document.getElementById("linkStatusDot");
 const linkStatusText = document.getElementById("linkStatusText");
 const linkDevicesEl = document.getElementById("linkDevices");
+const clipboardTray = document.getElementById("clipboardTray");
+const trayText = document.getElementById("trayText");
+const trayCopyBtn = document.getElementById("trayCopyBtn");
+const trayDismissBtn = document.getElementById("trayDismissBtn");
+const pushButton = document.getElementById("pushButton");
 
 // Session state
 let isRecording = false;
@@ -431,10 +436,19 @@ function scrollToBottomSmart() {
 }
 
 // Render Transcript with Live Word Highlight
+let lastInterimSent = 0;
+
 function renderTranscript() {
   if (!messageEl) return;
   let liveSpan = document.getElementById('liveTurnSpan');
   const cleanTurn = activeTurnText.trim();
+
+  // Throttled live preview for linked devices
+  const now = Date.now();
+  if (cleanTurn && now - lastInterimSent > 150) {
+    lastInterimSent = now;
+    LinkManager.send({ type: "interim", text: cleanTurn });
+  }
 
   if (cleanTurn) {
     if (!liveSpan) {
@@ -470,6 +484,8 @@ function commitActiveTurn() {
     if (turnText) {
       const textNode = document.createTextNode((messageEl.textContent.trim() ? " " : "") + turnText);
       liveSpan.replaceWith(textNode);
+      // Relay the committed turn to linked devices
+      LinkManager.send({ type: "turn", text: turnText });
     } else {
       liveSpan.remove();
     }
@@ -478,6 +494,76 @@ function commitActiveTurn() {
   activeTurnText = "";
   updateStats();
   saveDraftToStorage();
+}
+
+// Link Mode relay: remote events into the local editor
+let remoteInterimTimer = null;
+
+function appendRemoteTurn(text) {
+  if (!messageEl || !text || !text.trim()) return;
+  const liveSpan = document.getElementById('liveTurnSpan');
+  const prefix = messageEl.textContent.trim() ? " " : "";
+  const node = document.createTextNode(prefix + text.trim());
+  if (liveSpan) {
+    messageEl.insertBefore(node, liveSpan);
+  } else {
+    messageEl.appendChild(node);
+  }
+  hideRemoteInterim();
+  updateStats();
+  saveDraftToStorage();
+  scrollToBottomSmart();
+}
+
+function showRemoteInterim(text) {
+  const el = document.getElementById('remoteInterim');
+  if (!el) return;
+  if (!text || !text.trim()) {
+    hideRemoteInterim();
+    return;
+  }
+  el.textContent = `◉ ${text.trim()}`;
+  el.hidden = false;
+  clearTimeout(remoteInterimTimer);
+  remoteInterimTimer = setTimeout(hideRemoteInterim, 2500);
+}
+
+function hideRemoteInterim() {
+  const el = document.getElementById('remoteInterim');
+  if (el) el.hidden = true;
+  clearTimeout(remoteInterimTimer);
+}
+
+let lastRemoteClipboard = "";
+
+function showRemoteClipboard(text) {
+  if (!text || !text.trim()) return;
+  lastRemoteClipboard = text;
+  if (trayText) trayText.textContent = text;
+  if (clipboardTray) clipboardTray.hidden = false;
+  // Auto-copy is best-effort: browsers require a user gesture (Safari) or a
+  // focused document; the tray's Copy button is the guaranteed fallback.
+  if (document.hasFocus() && navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(
+      () => showToast('Remote clipboard ready & copied'),
+      () => showToast('Remote clipboard received — tap Copy')
+    );
+  } else {
+    showToast('Remote clipboard received — tap Copy');
+  }
+}
+
+async function pushToLinkedDevices() {
+  const text = messageEl ? messageEl.innerText.trim() : '';
+  if (!text) {
+    showToast('No text to push!');
+    return;
+  }
+  if (!LinkManager.send({ type: "clipboard", text })) {
+    showToast('Link a device first');
+    return;
+  }
+  showToast('Pushed to linked device');
 }
 
 // Autosave & Local Draft Recovery
@@ -745,6 +831,7 @@ const LinkManager = {
         this.renderDeviceList();
         this.updateStatus("linked", "Linked");
         showToast("Link established");
+        this.applySnapshot(msg.snapshot);
         break;
       case "device_joined":
         if (msg.device?.role) {
@@ -757,11 +844,31 @@ const LinkManager = {
         this.devices = this.devices.filter((d) => d.role !== msg.device?.role);
         this.renderDeviceList();
         break;
+      case "turn":
+        appendRemoteTurn(msg.text);
+        break;
+      case "interim":
+        showRemoteInterim(msg.text);
+        break;
+      case "clipboard":
+        showRemoteClipboard(msg.text);
+        break;
       case "error":
         showToast(`Link: ${msg.message}`);
         break;
       default:
-        break; // relay events are handled from Task 5 onward
+        break;
+    }
+  },
+
+  applySnapshot(snapshot) {
+    if (!snapshot) return;
+    // Catch-up text only lands in an empty editor so local drafts are never clobbered.
+    if (snapshot.text && messageEl && !messageEl.innerText.trim()) {
+      appendRemoteTurn(snapshot.text);
+    }
+    if (snapshot.clipboard?.text) {
+      showRemoteClipboard(snapshot.clipboard.text);
     }
   },
 
@@ -1219,6 +1326,28 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Failed to copy code');
       }
     });
+  }
+
+  if (trayCopyBtn) {
+    trayCopyBtn.addEventListener('click', async () => {
+      if (!lastRemoteClipboard) return;
+      try {
+        await navigator.clipboard.writeText(lastRemoteClipboard);
+        showToast('Copied to clipboard [⌘C]');
+      } catch (e) {
+        showToast('Failed to copy');
+      }
+    });
+  }
+
+  if (trayDismissBtn) {
+    trayDismissBtn.addEventListener('click', () => {
+      if (clipboardTray) clipboardTray.hidden = true;
+    });
+  }
+
+  if (pushButton) {
+    pushButton.addEventListener('click', pushToLinkedDevices);
   }
 
   const modelOptions = document.querySelectorAll('.engine-opt');

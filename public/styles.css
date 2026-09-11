@@ -1221,3 +1221,24 @@ html[data-theme="light"] .link-join-input:focus-visible {
     animation: none;
   }
 }
+
+/* Remote dictation interim preview */
+.remote-interim {
+  max-width: 30%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: var(--gold, #d9b64a);
+}
+
+html[data-theme="light"] .remote-interim {
+  color: var(--live-ink-color, #b91c1c);
+}
+
+.remote-interim[hidden] {
+  display: none;
+}
