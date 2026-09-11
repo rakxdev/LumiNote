@@ -11,6 +11,7 @@ LumiNote is a production-hardened, browser-native real-time speech intelligence 
 - 🕉️ **Vāk & Nāda Fusion Design:** A highly distinctive UI fusing RodeX technical precision with ancient Sanskrit acoustic philosophy. Features a seamless **Dark Mode (Obsidian & Brass)** and **Light Mode (Silk & Red Lacquer)** toggle.
 - 🌊 **Kinetic Acoustic Visualizers:** Dual real-time audio oscilloscopes (header spectrum bars and background time-domain waveforms) that respond dynamically to voice activity at 60fps.
 - 🔒 **Zero-Trust Ephemeral Auth:** No master API keys are exposed to the client. Cloudflare Functions securely mint on-demand temporary JWT grant tokens (~30s TTL) for WebSocket handshakes.
+- 🔗 **Link Mode (v04):** Cross-device pairing — dictate on your phone and watch the text appear instantly on your desktop (or vice versa), with a Remote Clipboard tray for one-tap push between devices. Powered by a `SyncRoom` Durable Object with hibernating WebSockets (see `docs/decisions/ADR-003-link-mode-cross-device-sync.md`).
 - 🎙️ **Leak-Free Audio Lifecycle:** Complete AudioWorklet and `MediaStream` teardown on model switches, remote disconnects, and browser unloads to prevent memory leaks and ghost streams.
 - ✨ **Safe Grammar Engine:** Custom LanguageTool proxy with bespoke regex rules that preserve legitimate English (`like`, `had had`, `Node.js`, `ER`) while intelligently collapsing stuttered speech.
 - 💾 **Local Draft Resilience:** Real-time autosaving to `localStorage` ensures transcripts survive accidental tab closures and browser crashes.
@@ -44,6 +45,25 @@ Create a `.dev.vars` file for local development:
 ```ini
 ASSEMBLYAI_API_KEY=your_assemblyai_api_key
 DEEPGRAM_API_KEY=your_deepgram_api_key
+```
+
+### Link Mode (cross-device sync) local development
+
+The sync backend is a companion Worker (`worker/`) because Pages projects
+cannot define Durable Objects. Run both processes locally:
+
+```bash
+# Terminal 1: SyncRoom Durable Object
+npm run dev:sync
+
+# Terminal 2: Pages app + Functions
+npm run dev
+```
+
+Deploy order matters — the Worker must exist before the Pages binding resolves:
+```bash
+npm run deploy:sync   # SyncRoom Durable Object (luminote-sync)
+npm run deploy        # Pages app
 ```
 
 ---

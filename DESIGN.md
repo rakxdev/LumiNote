@@ -25,6 +25,8 @@
 - **Devanagari Telemetry Pillar:** Vertical side rail reading *नादब्रह्म* (Sound is the Divine Vibration).
 - **RodeX Packet Seal:** Top corner verification stamp (`SPEC v03 • VERIFIED`).
 - **Live Nāda Wave Visualizer:** Kinetic audio frequency bars animating live with microphone input.
+- **Link Pairing Chassis (v04):** Modal dialog with QR seal on white quiet-zone (scannable in both worlds), mono room code in brushed brass, sliding TTL status dot (amber linking → emerald linked → vermilion error).
+- **Remote Clipboard Tray (v04):** Fixed chassis card with emerald `REMOTE CLIPBOARD` stamp; incoming pushes surface here with one-tactile-copy.
 
 ### 4. Zero-Slop Execution
 - 0 warnings on the Impeccable design detector.
