@@ -17,6 +17,8 @@ import {
   validateClientMessage,
   serverEvent,
   parseRole,
+  sanitizeRoomCode,
+  isValidRoomCode,
 } from './protocol.js';
 
 const ROOM_TTL_MS = 12 * 60 * 60 * 1000; // sliding expiry of an inactive room
@@ -170,3 +172,27 @@ function jsonResponse(body, status) {
     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
   });
 }
+
+/**
+ * Direct /join router, mirroring the Pages Function validation. Lets the
+ * worker run standalone (`wrangler dev`, `npm run dev:sync`) and enables
+ * end-to-end testing without a Pages deployment in front.
+ */
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (url.pathname !== '/join') {
+      return jsonResponse({ error: 'not found' }, 404);
+    }
+    if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
+      return jsonResponse({ error: 'expected WebSocket upgrade' }, 426);
+    }
+    const room = sanitizeRoomCode(url.searchParams.get('room') || '');
+    if (!isValidRoomCode(room)) {
+      return jsonResponse({ error: 'invalid room code' }, 400);
+    }
+    const id = env.SYNC_ROOM.idFromName(room);
+    const stub = env.SYNC_ROOM.get(id);
+    return stub.fetch(request);
+  },
+};
