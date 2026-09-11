@@ -1,7 +1,7 @@
 {
   "name": "luminote",
-  "version": "3.0.0",
-  "description": "LumiNote v03 - Production-hardened real-time speech intelligence app",
+  "version": "3.1.0",
+  "description": "LumiNote v04 - Production-hardened real-time speech intelligence app with Link Mode cross-device sync",
   "type": "module",
   "scripts": {
     "dev": "wrangler pages dev public",
