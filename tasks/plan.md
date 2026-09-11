@@ -43,3 +43,58 @@
 - Verify `git grep` for leaked secrets.
 - Verify syntax and lint across all JS files.
 - Document deployment steps and `.dev.vars` usage in `README.md` and `CLOUDFLARE_DEPLOYMENT.md`.
+
+---
+
+# Implementation Plan: LumiNote v04 — Link Mode (Cross-Device Sync)
+
+*Appended 2026-09-12 on branch cloudflare-v04. The v03 plan above is complete-in-code
+(server.js retired, noscript present, 100dvh in styles, tests exist) though its checklist
+was never ticked; it is preserved as history.*
+
+## Overview
+Real-time cross-device relay: pair a desktop and a phone over the same site via a 6-char
+room code (QR + manual entry). Dictation committed on one device appears live in the other
+device's editor; a clipboard push button sends text to the paired device's Remote Clipboard
+tray. Audio still streams device→ASR directly; only small JSON messages flow through a
+Durable Object room.
+
+## Architecture Decisions
+- Cloudflare Durable Object `SyncRoom` in a companion Worker (`worker/`) — Pages cannot
+  define DOs (official docs); Pages Function `/api/link/ws` proxies the WS upgrade.
+- Hibernatable WebSockets + SQLite snapshot so idle rooms are free and late joiners catch up.
+- Room code generated client-side (the code IS the credential); 12h sliding TTL via DO alarm.
+- Clipboard: push-based; auto-copy attempted when document has focus, tray with one-click
+  copy is the guaranteed fallback (Safari gesture requirement).
+- QR via vendored MIT `qrcode-generator` (CSP allows 'self' scripts only).
+
+## Task List
+- [ ] Task 0: Local JS runtime for verification (Node 22) — `npm test` baseline passes.
+- [ ] Task 1 (TDD): Fix PCM batch duplication — extract `appendPcmChunk` into
+      audio-processor.js, test proves no double-sent tail, index.js uses it.
+- [ ] Task 2: SyncRoom DO worker (protocol validation, presence, snapshot, TTL alarm,
+      hibernatable WS) + protocol unit tests + `wrangler deploy --dry-run` check.
+- [ ] Task 3: `/api/link/ws` Pages Function proxy (upgrade guard, room-code validation,
+      stub passthrough) + DO binding in wrangler.toml.
+- [ ] Task 4: Client pairing UI (header LINK button, modal with QR + code, join input,
+      status pill, reconnect/backoff) + vendored QR lib.
+- [ ] Task 5: Live relay + Remote Clipboard tray (turn append via commit path, throttled
+      interim preview, clipboard push both directions, auto-copy attempt).
+- [ ] Task 6: Local end-to-end runtime verification (two-client fan-out through DO).
+- [ ] Task 7: ADR-003 + README/DESIGN + tasks docs update.
+- [ ] Task 8: Deploy (worker + Pages) + live verification (two-client fan-out against prod).
+
+## Checkpoints
+- After Task 1: full suite green, no regression in audio path.
+- After Tasks 2-3: DO + Function dry-runs pass, protocol tests green.
+- After Tasks 4-5: `node --check` on all client JS, suite green.
+- After Task 6: end-to-end local proof before any deploy.
+- After Task 8: live two-client fan-out proof.
+
+## Risks and Mitigations
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| No JS runtime in env | Blocks all verification | Install Node 22 locally to ~/tools (no sudo) |
+| No Cloudflare credentials | Blocks deploy/live-verify | Document blocker; deliver local-verified state |
+| DO binding cross-script on Pages | Feature broken in prod | Use script_name binding; verify via dry-run + docs |
+| QR lib vendoring fails | Pairing UX degraded | Manual code entry always available as fallback |

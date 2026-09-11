@@ -56,3 +56,39 @@
 - [ ] Task 4.1: Run complete test suite and syntax verification
   - Acceptance: 100% tests passing, zero lint/syntax errors, clean git status.
   - Verify: `npm test && npx eslint .`
+
+---
+
+# LumiNote v04 — Link Mode (2026-09-12, branch cloudflare-v04)
+
+## Phase A: Foundation
+- [ ] Task 0: Local Node runtime available; baseline `npm test` green.
+- [ ] Task 1: PCM batch duplication fixed with test (appendPcmChunk in audio-processor.js).
+  - Acceptance: batching never sends bytes beyond the consumed slice; suite green.
+  - Files: public/audio-processor.js, public/index.js, tests/audio-processor.test.js
+
+## Phase B: Realtime Backend
+- [ ] Task 2: SyncRoom Durable Object worker + protocol tests + dry-run deploy check.
+  - Acceptance: protocol unit tests pass; `wrangler deploy --dry-run` OK for worker.
+  - Files: worker/src/index.js, worker/wrangler.toml, worker/package.json, tests/link-protocol.test.js
+- [ ] Task 3: /api/link/ws Pages Function proxy + DO binding in wrangler.toml.
+  - Acceptance: validation tests pass; dry-run OK.
+  - Files: functions/api/link/ws.js, wrangler.toml
+
+## Checkpoint: Backend
+- [ ] Suite green; both deploy dry-runs pass.
+
+## Phase C: Client
+- [ ] Task 4: Pairing UI (LINK button, modal, QR, join, status, reconnect) + vendored QR lib.
+  - Acceptance: node --check passes on all client JS; suite green.
+  - Files: public/index.html, public/index.js, public/styles.css, public/vendor/
+- [ ] Task 5: Live relay + Remote Clipboard tray (turn/interim/clipboard handling, auto-copy).
+  - Acceptance: node --check passes; suite green.
+
+## Checkpoint: Client
+- [ ] Suite green; all client JS parses.
+
+## Phase D: Proof & Ship
+- [ ] Task 6: Local end-to-end two-client fan-out verification.
+- [ ] Task 7: ADR-003 + README/DESIGN docs.
+- [ ] Task 8: Deploy worker + Pages; live verification; final commit.
