@@ -15,6 +15,25 @@ export function convertFloat32ToInt16(float32Array) {
   return int16Array;
 }
 
+/**
+ * Append a PCM chunk to the queue and emit one fixed-size batch when enough
+ * samples have accumulated. The batch is a byte view of exactly totalSamples
+ * samples — never the whole underlying buffer — so the leftover tail stays
+ * queued exactly once and is never sent twice.
+ */
+export function appendPcmChunk(queue, chunk, totalSamples) {
+  const merged = new Int16Array(queue.length + chunk.length);
+  merged.set(queue, 0);
+  merged.set(chunk, queue.length);
+
+  if (merged.length < totalSamples) {
+    return { batch: null, queue: merged };
+  }
+
+  const batch = new Uint8Array(merged.buffer, 0, totalSamples * 2);
+  return { batch, queue: merged.slice(totalSamples) };
+}
+
 if (typeof AudioWorkletProcessor !== 'undefined') {
   class AudioProcessor extends AudioWorkletProcessor {
     process(inputs) {

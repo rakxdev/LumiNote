@@ -1,5 +1,7 @@
 /* global anime */
 
+import { appendPcmChunk } from './audio-processor.js';
+
 /**
  * LumiNote v03 Client Engine
  * Real-time voice intelligence streaming with AssemblyAI v3 & Deepgram Nova-3
@@ -343,20 +345,14 @@ function createMicrophone() {
 
       startOscilloscope();
 
+      const batchSamples = Math.floor(audioContext.sampleRate * 0.1);
       audioWorkletNode.port.onmessage = (event) => {
         const currentBuffer = new Int16Array(event.data.audio_data);
-        audioBufferQueue = mergeBuffers(audioBufferQueue, currentBuffer);
+        const result = appendPcmChunk(audioBufferQueue, currentBuffer, batchSamples);
+        audioBufferQueue = result.queue;
 
-        const bufferDuration = (audioBufferQueue.length / audioContext.sampleRate) * 1000;
-
-        if (bufferDuration >= 100) {
-          const totalSamples = Math.floor(audioContext.sampleRate * 0.1);
-          const finalBuffer = audioBufferQueue.subarray(0, totalSamples);
-          audioBufferQueue = audioBufferQueue.subarray(totalSamples);
-
-          if (onAudioCallback) {
-            onAudioCallback(new Uint8Array(finalBuffer.buffer));
-          }
+        if (result.batch && onAudioCallback) {
+          onAudioCallback(result.batch);
         }
       };
     },
@@ -386,13 +382,6 @@ function createMicrophone() {
       audioBufferQueue = new Int16Array(0);
     }
   };
-}
-
-function mergeBuffers(lhs, rhs) {
-  const merged = new Int16Array(lhs.length + rhs.length);
-  merged.set(lhs, 0);
-  merged.set(rhs, lhs.length);
-  return merged;
 }
 
 // Toast Feedback
