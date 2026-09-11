@@ -13,6 +13,13 @@ watch_dirs = []
 # Pages Functions configuration
 pages_build_output_dir = "public"
 
+# Link Mode: SyncRoom Durable Object lives in the separate `luminote-sync`
+# Worker (Pages projects cannot define Durable Objects).
+[[durable_objects.bindings]]
+name = "SYNC_ROOM"
+class_name = "SyncRoom"
+script_name = "luminote-sync"
+
 # For local development
 [env.development]
 vars = { }
