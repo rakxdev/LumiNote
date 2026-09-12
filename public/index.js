@@ -742,8 +742,14 @@ const LinkManager = {
 
   renderQr(text) {
     if (!linkQrWrap) return;
+    const showFallback = (message) => {
+      // Fallback text uses the page ink, which is light — on the white QR
+      // background it would be invisible, so drop the white panel too.
+      linkQrWrap.textContent = message;
+      linkQrWrap.classList.add("link-qr-fallback");
+    };
     if (typeof qrcode === "undefined") {
-      linkQrWrap.textContent = "Scan unavailable — type the code instead.";
+      showFallback("Scan unavailable — type the code instead.");
       return;
     }
     try {
@@ -751,8 +757,9 @@ const LinkManager = {
       qr.addData(text);
       qr.make();
       linkQrWrap.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+      linkQrWrap.classList.remove("link-qr-fallback");
     } catch (e) {
-      linkQrWrap.textContent = "QR rendering failed — type the code instead.";
+      showFallback("QR rendering failed — type the code instead.");
     }
   },
 

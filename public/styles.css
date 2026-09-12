@@ -1059,6 +1059,19 @@ html[data-theme="light"] .link-code {
   height: 144px;
 }
 
+/* QR library missing or render failed: show the hint in dim page ink on a
+   transparent panel instead of light text on the white QR background. */
+.link-qr-wrap.link-qr-fallback {
+  width: auto;
+  max-width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--ink-dim, #8c8172);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+}
+
 .link-join-label {
   display: block;
   margin-bottom: 0.45rem;
