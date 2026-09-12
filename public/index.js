@@ -1614,6 +1614,21 @@ document.addEventListener('DOMContentLoaded', () => {
   restoreDraftFromStorage();
   updateStats();
 
+  // Version seal: derived from changelog.json — the single version source
+  // that also drives /changelog. Falls back silently to the static label.
+  fetch('/changelog.json')
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+    .then((log) => {
+      const latest = log?.entries?.[0];
+      const [major, minor] = String(latest?.version ?? '').split('.').map(Number);
+      const seal = document.querySelector('.packet-seal');
+      if (!latest || !Number.isFinite(major) || !seal) return;
+      seal.textContent = minor > 0
+        ? `SPEC v${String(major).padStart(2, '0')}.${minor} • VERIFIED`
+        : `SPEC v${String(major).padStart(2, '0')} • VERIFIED`;
+    })
+    .catch(() => {});
+
   // The voice meter runs for the life of the page: breathing floor when
   // idle, live FFT while recording, streamed scalar when a peer is talking.
   requestAnimationFrame(vizLoop);

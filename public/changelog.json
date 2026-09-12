@@ -1,0 +1,81 @@
+{
+  "project": "LumiNote",
+  "format": "keep-a-changelog",
+  "updated": "2026-09-12",
+  "entries": [
+    {
+      "version": "4.2.0",
+      "date": "2026-09-12",
+      "status": "released",
+      "sections": {
+        "added": [
+          "Remote-voice meter: the pill on the second screen now follows the linked device's voice in real time via tiny loudness frames over the link.",
+          "A dedicated /changelog page (this one), driven by changelog.json — the same file that feeds the header version seal.",
+          "Self-hosted fonts and animation library: the app loads with zero third-party requests.",
+          "Always-revalidate cache headers, so browsers can no longer serve stale app files (the blank QR box and phantom line-number errors).",
+          "Push now lands in both places on the receiving device: the transcript editor and the clipboard tray."
+        ],
+        "changed": [
+          "Voice pill rebuilt: dB-mapped, log-spaced frequency bands with fast attack and slow release; silence shows a faint breathing floor instead of a fake wave.",
+          "The top-bar remote-dictation zone is permanently reserved and fades in with opacity, so the bar never reflows while words stream.",
+          "Dictation accuracy extras for quiet voices: voice-activity threshold, voice focus, and microphone auto-gain are configured per session."
+        ],
+        "fixed": [
+          "The last dictated sentence no longer waits for the next one before syncing to the linked device (the stream's end-of-turn signal is now honored).",
+          "Hindi and other languages no longer bleed into English dictation (sessions are pinned to English via language_codes).",
+          "The manual join input accepts exactly 6 characters, matching the room-code format.",
+          "Refreshing the page no longer drops the link session; the room is restored automatically for 12 hours.",
+          "Idle connections stay alive with a 25-second heartbeat and recover with jittered backoff and tap-to-retry.",
+          "The tail of audio left under one batch is flushed when recording stops, so final words are no longer clipped."
+        ]
+      }
+    },
+    {
+      "version": "4.1.0",
+      "date": "2026-09-12",
+      "status": "released",
+      "sections": {
+        "added": [
+          "Second AssemblyAI account key support: tokens are routed by the selected speech model."
+        ],
+        "changed": [
+          "Link Mode state is visible in the top bar and can be left explicitly.",
+          "Security headers (CSP, frame, referrer, permissions policies) are enabled site-wide."
+        ],
+        "fixed": [
+          "The Link Mode QR code renders reliably; the QR library is vendored locally.",
+          "Link pairing completes through the hello handshake even when sends queue at fetch time."
+        ]
+      }
+    },
+    {
+      "version": "4.0.0",
+      "date": "2026-09-12",
+      "status": "released",
+      "sections": {
+        "added": [
+          "Link Mode: pair devices with a 6-character room code or QR and relay live dictation and clipboard between them.",
+          "SyncRoom Durable Object: room relay with snapshot catch-up for late joiners, hibernation-safe state, and a 12-hour room lifetime.",
+          "A same-origin /api/link/ws proxy so browsers connect to relay rooms without cross-origin sockets."
+        ],
+        "fixed": [
+          "PCM batching no longer duplicates tail samples between batches."
+        ]
+      }
+    },
+    {
+      "version": "3.1.0",
+      "date": "2026-08-17",
+      "status": "released",
+      "sections": {
+        "added": [
+          "Local draft resilience: the transcript survives accidental reloads."
+        ],
+        "changed": [
+          "Resilient hybrid visualizer engine fusing live microphone data with synthetic harmonics.",
+          "Vāk & Nāda layout polish: side pillars, custom SVG theme icons, gold scrollbars, and a mid-rail toast slot."
+        ]
+      }
+    }
+  ]
+}
