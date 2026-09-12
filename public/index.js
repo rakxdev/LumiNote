@@ -539,14 +539,16 @@ function showRemoteInterim(text) {
     return;
   }
   el.textContent = `◉ ${text.trim()}`;
-  el.hidden = false;
+  // Fade the permanently-reserved zone in (opacity only, never display) so
+  // the bar height and its neighbours never shift while words stream in.
+  el.classList.add('show');
   clearTimeout(remoteInterimTimer);
   remoteInterimTimer = setTimeout(hideRemoteInterim, 2500);
 }
 
 function hideRemoteInterim() {
   const el = document.getElementById('remoteInterim');
-  if (el) el.hidden = true;
+  if (el) el.classList.remove('show');
   clearTimeout(remoteInterimTimer);
 }
 

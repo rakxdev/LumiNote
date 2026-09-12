@@ -135,8 +135,10 @@
             <span id="toastText">Ready</span>
           </div>
 
-          <!-- Remote dictation interim preview (Link Mode) -->
-          <span class="remote-interim" id="remoteInterim" hidden aria-live="polite"></span>
+          <!-- Remote dictation interim preview (Link Mode). The zone is
+               permanently reserved; .show fades the text in so the bar
+               never reflows while words stream. -->
+          <span class="remote-interim" id="remoteInterim" aria-live="polite"></span>
 
           <div class="live-stream-badge" aria-live="polite">
             <span class="badge-bindu-pulse" aria-hidden="true"></span>

@@ -1266,9 +1266,12 @@ html[data-theme="light"] .link-join-input:focus-visible {
   }
 }
 
-/* Remote dictation interim preview */
+/* Remote dictation interim preview. The zone is permanently reserved in the
+   bar (flex-basis) and only its opacity toggles, so the bar height, the
+   toast, and the live badge never shift while remote words stream in. */
 .remote-interim {
-  max-width: 30%;
+  flex: 0 1 240px;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1277,12 +1280,22 @@ html[data-theme="light"] .link-join-input:focus-visible {
   font-style: italic;
   letter-spacing: 0.04em;
   color: var(--gold, #d9b64a);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  contain: layout paint;
+}
+
+.remote-interim.show {
+  opacity: 1;
 }
 
 html[data-theme="light"] .remote-interim {
   color: var(--live-ink-color, #b91c1c);
 }
 
-.remote-interim[hidden] {
-  display: none;
+@media (max-width: 640px) {
+  .remote-interim {
+    flex: 0 1 130px;
+    min-width: 60px;
+  }
 }
