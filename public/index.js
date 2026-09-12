@@ -386,6 +386,16 @@ function createMicrophone() {
       audioBufferQueue = new Int16Array(0);
     },
 
+    // Return whatever is left of the batch queue (less than one batch) as
+    // a byte view, so the caller can send it before the stream closes and
+    // the tail of the last word is not clipped at the batch boundary.
+    flushRemaining() {
+      const remaining = audioBufferQueue;
+      audioBufferQueue = new Int16Array(0);
+      if (remaining.length === 0) return null;
+      return new Uint8Array(remaining.buffer, 0, remaining.length * 2);
+    },
+
     stopRecording() {
       stopOscilloscope();
 
@@ -1154,6 +1164,12 @@ function handleStreamEnded() {
 }
 
 function stopRecording() {
+  // Flush the sub-batch audio tail before closing the stream so the final
+  // word is not clipped at the 100ms batch boundary.
+  if (microphone && ws && ws.readyState === WebSocket.OPEN) {
+    const tail = microphone.flushRemaining();
+    if (tail) ws.send(tail);
+  }
   stopAudioAndWebSocket();
   commitActiveTurn();
   currentTurnOrder = null;
