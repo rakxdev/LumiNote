@@ -1043,7 +1043,7 @@ function showLinkAuthGate() {
 }
 
 async function submitLinkAuth() {
-  if (!linkAuthInput || !linkAuthResolve) return;
+  if (!linkAuthInput) return;
   const code = linkAuthInput.value.trim();
   if (!/^\d{6}$/.test(code)) {
     if (linkAuthError) linkAuthError.textContent = 'Enter the 6-digit code from your authenticator';
@@ -1058,9 +1058,15 @@ async function submitLinkAuth() {
     }
     if (linkAuthGate) linkAuthGate.hidden = true;
     if (linkAuthActive) linkAuthActive.hidden = false;
-    const resolve = linkAuthResolve;
-    linkAuthResolve = null;
-    resolve(true);
+    // Either a pending connect is waiting on this code, or the session was
+    // paused earlier (e.g. page reloaded mid-prompt): resume it either way.
+    if (linkAuthResolve) {
+      const resolve = linkAuthResolve;
+      linkAuthResolve = null;
+      resolve(true);
+    } else if (LinkManager.room) {
+      LinkManager.retry();
+    }
   } catch (e) {
     if (linkAuthError) linkAuthError.textContent = 'Verification failed — try again';
   } finally {
