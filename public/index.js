@@ -727,6 +727,14 @@ async function selectCustomModel(value, label, element) {
 // CONNECTING state; ephemeral interim previews are never queued.
 const LINK_OUTBOX_MAX = 50;
 
+// Client keepalive cadence. Well under the ~100s Cloudflare edge idle
+// timeout, so a quiet pair (both devices finished talking) is not killed.
+const LINK_PING_INTERVAL_MS = 25000;
+
+// Consecutive failed reconnects before giving up and asking the user to
+// tap the link button to retry manually.
+const MAX_RECONNECT_ATTEMPTS = 10;
+
 const LinkManager = {
   room: null,
   role: "desktop",
@@ -736,6 +744,8 @@ const LinkManager = {
   intentionalClose: false,
   reconnectAttempts: 0,
   reconnectTimer: null,
+  heartbeatTimer: null,
+  exhausted: false,
 
   detectRole() {
     const coarse = window.matchMedia("(pointer: coarse)").matches;
@@ -794,6 +804,7 @@ const LinkManager = {
 
   connect(code) {
     this.closeSocket(true);
+    this.exhausted = false;
     const scheme = location.protocol === "https:" ? "wss" : "ws";
     const url = `${scheme}://${location.host}/api/link/ws?room=${encodeURIComponent(code)}&role=${this.role}`;
     this.updateStatus("linking", `Linking to ${code}…`);
@@ -810,9 +821,11 @@ const LinkManager = {
       // Trigger the server handshake: hello -> init + join broadcast
       this.send({ type: "hello" });
       this.flushOutbox();
+      this.startHeartbeat();
     };
     this.ws.onmessage = (event) => this.handleMessage(event);
     this.ws.onclose = () => {
+      this.stopHeartbeat();
       if (this.intentionalClose) {
         this.intentionalClose = false;
         return;
@@ -825,14 +838,51 @@ const LinkManager = {
 
   scheduleReconnect() {
     if (!this.room) return;
-    const delay = Math.min(10000, 1000 * 2 ** this.reconnectAttempts);
+    if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      this.exhausted = true;
+      this.updateStatus("error", "Reconnect failed — tap to retry");
+      return;
+    }
+    const base = Math.min(10000, 1000 * 2 ** this.reconnectAttempts);
+    // Jitter the upper half of the backoff window so two devices that drop
+    // at the same moment do not retry in lockstep.
+    const delay = base / 2 + Math.random() * (base / 2);
     this.reconnectAttempts++;
     clearTimeout(this.reconnectTimer);
     this.reconnectTimer = setTimeout(() => this.connect(this.room), delay);
   },
 
+  // Manual recovery once auto-reconnect is exhausted (or from the
+  // background-resume hooks): immediate rejoin of the current room.
+  retry() {
+    if (!this.room) return;
+    this.reconnectAttempts = 0;
+    this.exhausted = false;
+    clearTimeout(this.reconnectTimer);
+    this.connect(this.room);
+  },
+
+  startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        // The Durable Object auto-responds to "ping" without waking, so the
+        // keepalive costs the room no compute.
+        this.ws.send(JSON.stringify({ type: "ping" }));
+      }
+    }, LINK_PING_INTERVAL_MS);
+  },
+
+  stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+  },
+
   closeSocket(intentional) {
     this.intentionalClose = intentional;
+    this.stopHeartbeat();
     if (this.ws) {
       try {
         this.ws.close();
@@ -1376,6 +1426,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (linkToggleBtn) {
     linkToggleBtn.addEventListener('click', () => {
+      // Tapping the link button while auto-reconnect is exhausted is the
+      // manual retry path.
+      if (LinkManager.exhausted) LinkManager.retry();
       if (linkOverlay && linkOverlay.hidden) {
         LinkManager.openModal();
       } else {
@@ -1495,6 +1548,29 @@ document.addEventListener('DOMContentLoaded', () => {
     history.replaceState(null, '', location.pathname);
     LinkManager.joinRoom(joinParam);
   }
+
+  // Mobile browsers kill background WebSockets without a close frame, and
+  // phones drop sockets across screen-lock. Re-validate the link the moment
+  // the page is active again; if it is down, rejoin immediately.
+  const resumeLink = () => {
+    if (!LinkManager.room) return;
+    if (
+      LinkManager.ws &&
+      (LinkManager.ws.readyState === WebSocket.OPEN ||
+        LinkManager.ws.readyState === WebSocket.CONNECTING)
+    ) {
+      return;
+    }
+    LinkManager.reconnectAttempts = 0;
+    LinkManager.exhausted = false;
+    clearTimeout(LinkManager.reconnectTimer);
+    LinkManager.connect(LinkManager.room);
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) resumeLink();
+  });
+  window.addEventListener('focus', resumeLink);
+  window.addEventListener('online', resumeLink);
 
   restoreDraftFromStorage();
   updateStats();
