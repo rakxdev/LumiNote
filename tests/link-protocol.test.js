@@ -83,6 +83,21 @@ describe('client message validation', () => {
     assert.equal(validateClientMessage('{"type":"ping"}').ok, true);
   });
 
+  it('accepts level with a finite v and clamps it to 0..1', () => {
+    assert.deepEqual(
+      validateClientMessage(JSON.stringify({ type: 'level', v: 0.42 })).message,
+      { type: 'level', v: 0.42 }
+    );
+    assert.equal(validateClientMessage(JSON.stringify({ type: 'level', v: 7 })).message.v, 1);
+    assert.equal(validateClientMessage(JSON.stringify({ type: 'level', v: -2 })).message.v, 0);
+  });
+
+  it('rejects level with a missing or non-finite v', () => {
+    assert.equal(validateClientMessage('{"type":"level"}').ok, false);
+    assert.equal(validateClientMessage(JSON.stringify({ type: 'level', v: 'loud' })).ok, false);
+    assert.equal(validateClientMessage(JSON.stringify({ type: 'level', v: NaN })).ok, false);
+  });
+
   it('rejects binary input, oversized payloads, malformed JSON, unknown types, and missing text', () => {
     assert.equal(validateClientMessage(123).ok, false);
     assert.equal(validateClientMessage('x'.repeat(128 * 1024 + 1)).ok, false);

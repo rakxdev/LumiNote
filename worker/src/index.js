@@ -119,10 +119,12 @@ export class SyncRoom {
       await this.state.storage.put('snapshot', snapshot);
     }
 
-    this.broadcastExcept(
-      ws,
-      serverEvent(msg.type, { text: msg.text, from: device.role })
-    );
+    // Relay the validated payload: text frames carry text, level frames
+    // carry the v scalar. Never copy client-controlled envelope fields.
+    const relayFields = { from: device.role };
+    if (typeof msg.text === 'string') relayFields.text = msg.text;
+    if (msg.type === 'level') relayFields.v = msg.v;
+    this.broadcastExcept(ws, serverEvent(msg.type, relayFields));
     await this.touchTtl();
   }
 

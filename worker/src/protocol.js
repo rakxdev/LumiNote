@@ -11,7 +11,7 @@ export const ROOM_CODE_PATTERN = new RegExp(`^[${ROOM_ALPHABET}]{${ROOM_CODE_LEN
 export const MAX_TEXT_LENGTH = 100000;
 export const MAX_CLIENT_MESSAGE_BYTES = 128 * 1024;
 
-export const CLIENT_MESSAGE_TYPES = ['hello', 'turn', 'interim', 'clipboard', 'clear', 'ping'];
+export const CLIENT_MESSAGE_TYPES = ['hello', 'turn', 'interim', 'clipboard', 'clear', 'ping', 'level'];
 export const ROLES = ['desktop', 'phone'];
 
 /**
@@ -66,6 +66,13 @@ export function validateClientMessage(raw) {
   }
   if (msg.type === 'clear' || msg.type === 'ping' || msg.type === 'hello') {
     return { ok: true, message: { type: msg.type } };
+  }
+  if (msg.type === 'level') {
+    // Remote-voice meter: a normalized 0..1 scalar, no text payload.
+    if (typeof msg.v !== 'number' || !Number.isFinite(msg.v)) {
+      return { ok: false, error: 'level.v must be a finite number' };
+    }
+    return { ok: true, message: { type: 'level', v: Math.min(1, Math.max(0, msg.v)) } };
   }
   if (typeof msg.text !== 'string') {
     return { ok: false, error: 'missing text field' };

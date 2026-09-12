@@ -97,6 +97,13 @@ describe('Link Mode end-to-end (SyncRoom DO)', () => {
     const interim = await waitFor(desktop, 'interim');
     assert.equal(interim.text, 'typing');
 
+    // Remote-voice level (drives the receiver's meter) relays like other
+    // ephemeral frames and carries the sender's role.
+    phone.send(JSON.stringify({ type: 'level', v: 0.42 }));
+    const level = await waitFor(desktop, 'level');
+    assert.equal(level.v, 0.42);
+    assert.equal(level.from, 'phone');
+
     // Desktop pushes clipboard -> phone receives it
     desktop.send(JSON.stringify({ type: 'clipboard', text: 'clipboard payload' }));
     const clip = await waitFor(phone, 'clipboard');
