@@ -151,12 +151,13 @@ describe('wiring contract', () => {
     assert.match(wsFn, /status: 401/);
   });
 
-  it('the client checks status before connecting and challenges with the typed code', () => {
-    assert.match(indexJs, /async function ensureLinkAuth\(\)/);
-    assert.match(indexJs, /\/api\/auth\/status/);
+  it('the client checks room-scoped status before connecting and challenges with the typed code', () => {
+    assert.match(indexJs, /async function ensureLinkAuth\(code\)/);
+    assert.match(indexJs, /\/api\/auth\/status\$\{query\}/, 'status fetch must carry the room for the trust window');
+    assert.match(indexJs, /status\.room_authed\)/, 'an open room trust window must skip the gate');
     assert.match(indexJs, /\/api\/auth\/challenge/);
     assert.match(indexJs, /async connect\(code\)/, 'connect must be async so the gate can await it');
-    assert.match(indexJs, /if \(!\(await ensureLinkAuth\(\)\)\)/);
+    assert.match(indexJs, /if \(!\(await ensureLinkAuth\(code\)\)\)/);
   });
 
   it('the link modal ships the setup QR, confirm, and gate controls', () => {

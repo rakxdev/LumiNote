@@ -997,9 +997,10 @@ const MAX_RECONNECT_ATTEMPTS = 10;
 // ==========================================================================
 let linkAuthResolve = null;
 
-async function fetchAuthStatus() {
+async function fetchAuthStatus(room) {
   try {
-    const res = await fetch('/api/auth/status', { signal: AbortSignal.timeout(4000) });
+    const query = room ? `?room=${encodeURIComponent(room)}` : '';
+    const res = await fetch(`/api/auth/status${query}`, { signal: AbortSignal.timeout(4000) });
     return res.ok ? res.json() : null;
   } catch (e) {
     return null;
@@ -1018,12 +1019,14 @@ async function postAuthJson(path, body) {
 }
 
 // True when the link socket may be opened: login inactive, cookie still
-// valid, the status check failed (the server gate decides then), or the
-// user just verified a fresh code. Resolves false when the overlay closes
-// mid-prompt so the caller silently aborts connecting.
-async function ensureLinkAuth() {
-  const status = await fetchAuthStatus();
-  if (!status || !status.confirmed || status.auth_valid) return true;
+// valid, the ROOM is inside its trust window (a verified device — usually
+// the desktop — connected recently, so the phone needs no OTP), the status
+// check failed (the server gate decides then), or the user just verified a
+// fresh code. Resolves false when the overlay closes mid-prompt so the
+// caller silently aborts connecting.
+async function ensureLinkAuth(code) {
+  const status = await fetchAuthStatus(code);
+  if (!status || !status.confirmed || status.auth_valid || status.room_authed) return true;
   if (!linkAuthGate || !linkAuthInput) return true;
   if (linkOverlay) linkOverlay.hidden = false;
   showLinkAuthGate();
@@ -1074,15 +1077,17 @@ async function submitLinkAuth() {
   }
 }
 
-// Overlay opened: decide which login section to show, if any.
+// Overlay opened: decide which login section to show, if any. The gate is
+// NOT raised here — it belongs to the connect path (ensureLinkAuth), which
+// knows the room and its trust window.
 async function initTotpSection() {
   if (!linkAuthSection) return;
   const status = await fetchAuthStatus();
   if (status && status.confirmed) {
     if (linkAuthSetup) linkAuthSetup.hidden = true;
     if (linkAuthGate) linkAuthGate.hidden = true;
-    if (linkAuthActive) linkAuthActive.hidden = !status.auth_valid ? true : false;
-    if (!status.auth_valid && linkAuthGate) showLinkAuthGate();
+    if (linkAuthActive) linkAuthActive.hidden = !status.auth_valid;
+    linkAuthSection.hidden = !status.auth_valid;
     return;
   }
   if (linkAuthActive) linkAuthActive.hidden = true;
@@ -1260,10 +1265,10 @@ const LinkManager = {
   },
 
   async connect(code) {
-    // TOTP gate: when authenticator login is active, a fresh code may be
-    // required before the socket can be opened (the server enforces it too,
-    // so this is the UX path, not the security boundary).
-    if (!(await ensureLinkAuth())) {
+    // TOTP gate: when authenticator login is active and this room has no
+    // open trust window, a fresh code may be required before the socket can
+    // be opened (the server enforces it too — this is the UX path).
+    if (!(await ensureLinkAuth(code))) {
       this.updateStatus("error", "Link paused — verify your authenticator code");
       return;
     }
