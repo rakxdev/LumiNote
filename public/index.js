@@ -313,7 +313,10 @@ function createMicrophone() {
           channelCount: 1,
           sampleRate: 16000,
           echoCancellation: true,
-          noiseSuppression: true
+          noiseSuppression: true,
+          // Normalize quiet voices toward a healthy level before any model
+          // sees the audio (reported low-voice accuracy complaint).
+          autoGainControl: true
         }
       });
 
@@ -1237,7 +1240,10 @@ async function startRecording() {
       // silently ignored, leaving the model to code-switch across all 16
       // supported languages — observed Hindi bleed in English sessions).
       // language_detection reports the detected language per turn.
-      const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&language_codes=${encodeURIComponent(JSON.stringify(["en"]))}&language_detection=true&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
+      // vad_threshold below the default lets quiet speech register (the
+      // reported low-voice complaint), and voice_focus suppresses background
+      // audio before the model, keeping the lower VAD safe from noise.
+      const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&language_codes=${encodeURIComponent(JSON.stringify(["en"]))}&language_detection=true&vad_threshold=0.1&voice_focus=near-field&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
       ws = new WebSocket(endpoint);
 
       ws.onopen = async () => {

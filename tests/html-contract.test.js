@@ -55,6 +55,20 @@ describe('index.html script contract', () => {
     );
   });
 
+  it('configures quiet-voice accuracy params on the AssemblyAI session', () => {
+    // Reported complaint: dictation misses quiet speech. The official v3
+    // docs: lowering vad_threshold lets soft audio register as speech, and
+    // voice_focus suppresses background audio before the model (which keeps
+    // the lower VAD threshold safe from noise false-positives). Mic
+    // auto-gain normalizes quiet voices before any model sees the audio.
+    const js = readFileSync(join(publicDir, 'index.js'), 'utf8');
+    const endpoint = js.match(/const endpoint = `wss:\/\/streaming\.assemblyai\.com[^`]*`;/);
+    assert.ok(endpoint, 'AssemblyAI endpoint not found');
+    assert.match(endpoint[0], /vad_threshold=0\.1/, 'vad_threshold must be lowered so quiet speech registers');
+    assert.match(endpoint[0], /voice_focus=near-field/, 'voice_focus must suppress background before the model');
+    assert.match(js, /autoGainControl:\s*true/, 'mic auto-gain must be enabled for quiet voices');
+  });
+
   it('keeps the link overlay closed while the hidden attribute is set', () => {
     // The overlay element ships with the `hidden` attribute; any author
     // `display` rule on .link-overlay overrides the UA [hidden] rule, so a
