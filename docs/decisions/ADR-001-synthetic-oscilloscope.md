@@ -1,7 +1,9 @@
 # ADR-001: Synthetic Oscilloscope Overlay for Microphone Visualization
 
 ## Status
-Accepted
+Superseded in part (2026-09-12, v4.2.0): the synthetic wave was removed and
+replaced by a dB-mapped real-data meter; this record is kept for the history
+of the original decision and the browser constraints it documented.
 
 ## Date
 2026-08-17
@@ -33,3 +35,15 @@ Instead of fighting across dozens of browser privacy permutations to force the h
 - **Positive:** The interface feels incredibly responsive, alive, and polished 100% of the time on every device.
 - **Positive:** Zero performance overhead on the main thread (runs via pure `requestAnimationFrame` math, rather than looping over heavy `Uint8Array` buffers).
 - **Negative:** The wave does not exactly match the literal pitch of the user's voice (it is an aesthetic simulation, not a diagnostic tool). This is deemed an acceptable trade-off for a dictation app where the visualizer's primary job is communicating "active listening state", not technical acoustic analysis.
+
+## Supersession (v4.2.0)
+The synthetic simulation was reversed. In real use the fake wave was
+misinformation: it danced *loudest* exactly when the microphone was quiet,
+and the linear byte-averaged AnalyserNode path it "fell back" from read
+near-zero for speech in the first place. The meter now renders 12 dB-mapped,
+log-spaced FFT bin groups (max-not-mean per group, mapped over the −60…−12
+dBFS speech range) with fast-attack/slow-release smoothing, and silence draws
+a faint breathing floor instead of a wave (`public/viz.js`, pure and unit-
+tested). The remote device's meter follows the recording device's voice via
+`level` frames relayed through the link room. ADR-001's browser-constraint
+analysis remains accurate; its "simulate instead" conclusion does not.
