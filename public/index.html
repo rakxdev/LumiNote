@@ -244,6 +244,31 @@
             <p class="link-join-hint" id="linkJoinHint">6-character code shown on the other device</p>
           </div>
 
+          <div class="link-section" id="linkAuthSection" hidden>
+            <!-- Setup: scan the QR with an authenticator app, confirm once -->
+            <div id="linkAuthSetup" hidden>
+              <p class="link-join-hint">Protect linking with your authenticator app (Google Authenticator, etc.). Scan, then confirm with a current code.</p>
+              <button type="button" class="tool-btn" id="linkTotpSetupBtn">Enable Authenticator Login</button>
+              <div class="link-qr-wrap" id="linkTotpQrWrap" aria-label="Authenticator setup QR" hidden></div>
+              <code class="totp-secret" id="linkTotpSecret" hidden></code>
+              <div class="link-join-row" id="linkTotpConfirmRow" hidden>
+                <input class="link-join-input" id="linkTotpConfirmInput" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-label="Confirm with a current authenticator code">
+                <button type="button" class="tool-btn" id="linkTotpConfirmBtn">Confirm</button>
+              </div>
+              <div class="totp-recovery" id="linkTotpRecovery" hidden></div>
+            </div>
+            <!-- Gate: a confirmed login asks for a fresh code per device/12h -->
+            <div id="linkAuthGate" hidden>
+              <p class="link-join-hint">This account is login-protected. Enter the current code from your authenticator to link devices.</p>
+              <div class="link-join-row">
+                <input class="link-join-input" id="linkAuthInput" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-label="Authenticator code">
+                <button type="button" class="tool-btn" id="linkAuthBtn">Verify</button>
+              </div>
+              <p class="link-auth-error" id="linkAuthError" aria-live="polite"></p>
+            </div>
+            <p class="link-join-hint" id="linkAuthActive" hidden>Authenticator login is active on this account.</p>
+          </div>
+
           <div class="link-section link-status-row">
             <span class="link-status-dot" id="linkStatusDot" aria-hidden="true"></span>
             <span class="link-status-text" id="linkStatusText">Offline</span>

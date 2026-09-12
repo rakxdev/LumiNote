@@ -40,6 +40,21 @@ const linkStatusDot = document.getElementById("linkStatusDot");
 const linkStatusText = document.getElementById("linkStatusText");
 const linkDevicesEl = document.getElementById("linkDevices");
 const linkLeaveBtn = document.getElementById("linkLeaveBtn");
+// Authenticator login (TOTP) elements
+const linkAuthSection = document.getElementById("linkAuthSection");
+const linkAuthSetup = document.getElementById("linkAuthSetup");
+const linkTotpSetupBtn = document.getElementById("linkTotpSetupBtn");
+const linkTotpQrWrap = document.getElementById("linkTotpQrWrap");
+const linkTotpSecret = document.getElementById("linkTotpSecret");
+const linkTotpConfirmRow = document.getElementById("linkTotpConfirmRow");
+const linkTotpConfirmInput = document.getElementById("linkTotpConfirmInput");
+const linkTotpConfirmBtn = document.getElementById("linkTotpConfirmBtn");
+const linkTotpRecovery = document.getElementById("linkTotpRecovery");
+const linkAuthGate = document.getElementById("linkAuthGate");
+const linkAuthInput = document.getElementById("linkAuthInput");
+const linkAuthBtn = document.getElementById("linkAuthBtn");
+const linkAuthError = document.getElementById("linkAuthError");
+const linkAuthActive = document.getElementById("linkAuthActive");
 const clipboardTray = document.getElementById("clipboardTray");
 const trayText = document.getElementById("trayText");
 const trayCopyBtn = document.getElementById("trayCopyBtn");
@@ -975,6 +990,188 @@ const LINK_PING_INTERVAL_MS = 25000;
 // tap the link button to retry manually.
 const MAX_RECONNECT_ATTEMPTS = 10;
 
+// ==========================================================================
+// Authenticator login (TOTP). The server keeps the secret and issues a
+// signed 12h cookie after a valid code; this side only fetches status,
+// drives the setup UI, and asks for a fresh code when the cookie is gone.
+// ==========================================================================
+let linkAuthResolve = null;
+
+async function fetchAuthStatus() {
+  try {
+    const res = await fetch('/api/auth/status', { signal: AbortSignal.timeout(4000) });
+    return res.ok ? res.json() : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function postAuthJson(path, body) {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(6000),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, data };
+}
+
+// True when the link socket may be opened: login inactive, cookie still
+// valid, the status check failed (the server gate decides then), or the
+// user just verified a fresh code. Resolves false when the overlay closes
+// mid-prompt so the caller silently aborts connecting.
+async function ensureLinkAuth() {
+  const status = await fetchAuthStatus();
+  if (!status || !status.confirmed || status.auth_valid) return true;
+  if (!linkAuthGate || !linkAuthInput) return true;
+  if (linkOverlay) linkOverlay.hidden = false;
+  showLinkAuthGate();
+  return new Promise((resolve) => {
+    linkAuthResolve = resolve;
+  });
+}
+
+function showLinkAuthGate() {
+  if (linkAuthSection) linkAuthSection.hidden = false;
+  if (linkAuthSetup) linkAuthSetup.hidden = true;
+  if (linkAuthGate) linkAuthGate.hidden = false;
+  if (linkAuthActive) linkAuthActive.hidden = true;
+  if (linkAuthInput) linkAuthInput.value = '';
+  if (linkAuthError) linkAuthError.textContent = '';
+  setTimeout(() => linkAuthInput && linkAuthInput.focus(), 60);
+}
+
+async function submitLinkAuth() {
+  if (!linkAuthInput || !linkAuthResolve) return;
+  const code = linkAuthInput.value.trim();
+  if (!/^\d{6}$/.test(code)) {
+    if (linkAuthError) linkAuthError.textContent = 'Enter the 6-digit code from your authenticator';
+    return;
+  }
+  if (linkAuthBtn) linkAuthBtn.disabled = true;
+  try {
+    const { ok, data } = await postAuthJson('/api/auth/challenge', { code });
+    if (!ok) {
+      if (linkAuthError) linkAuthError.textContent = data.error || 'Wrong code';
+      return;
+    }
+    if (linkAuthGate) linkAuthGate.hidden = true;
+    if (linkAuthActive) linkAuthActive.hidden = false;
+    const resolve = linkAuthResolve;
+    linkAuthResolve = null;
+    resolve(true);
+  } catch (e) {
+    if (linkAuthError) linkAuthError.textContent = 'Verification failed — try again';
+  } finally {
+    if (linkAuthBtn) linkAuthBtn.disabled = false;
+  }
+}
+
+// Overlay opened: decide which login section to show, if any.
+async function initTotpSection() {
+  if (!linkAuthSection) return;
+  const status = await fetchAuthStatus();
+  if (status && status.confirmed) {
+    if (linkAuthSetup) linkAuthSetup.hidden = true;
+    if (linkAuthGate) linkAuthGate.hidden = true;
+    if (linkAuthActive) linkAuthActive.hidden = !status.auth_valid ? true : false;
+    if (!status.auth_valid && linkAuthGate) showLinkAuthGate();
+    return;
+  }
+  if (linkAuthActive) linkAuthActive.hidden = true;
+  if (linkAuthGate) linkAuthGate.hidden = true;
+  if (linkAuthSetup) linkAuthSetup.hidden = false;
+  if (linkAuthSection) linkAuthSection.hidden = false;
+}
+
+async function startTotpEnrollment() {
+  if (!linkTotpSetupBtn) return;
+  linkTotpSetupBtn.disabled = true;
+  try {
+    const { ok, data } = await postAuthJson('/api/auth/enroll', {});
+    if (!ok) {
+      showToast(data.error || 'Setup failed');
+      return;
+    }
+    renderQrInto(linkTotpQrWrap, data.otpauth_uri);
+    if (linkTotpQrWrap) linkTotpQrWrap.hidden = false;
+    if (linkTotpSecret) {
+      linkTotpSecret.textContent = data.secret;
+      linkTotpSecret.hidden = false;
+    }
+    if (linkTotpConfirmRow) linkTotpConfirmRow.hidden = false;
+    setTimeout(() => linkTotpConfirmInput && linkTotpConfirmInput.focus(), 60);
+  } finally {
+    linkTotpSetupBtn.disabled = false;
+  }
+}
+
+async function confirmTotpEnrollment() {
+  if (!linkTotpConfirmInput) return;
+  const code = linkTotpConfirmInput.value.trim();
+  if (!/^\d{6}$/.test(code)) {
+    showToast('Enter the current 6-digit code');
+    return;
+  }
+  if (linkTotpConfirmBtn) linkTotpConfirmBtn.disabled = true;
+  try {
+    const { ok, data } = await postAuthJson('/api/auth/confirm', { code });
+    if (!ok) {
+      showToast(data.error || 'That code was not valid');
+      return;
+    }
+    if (linkTotpQrWrap) linkTotpQrWrap.hidden = true;
+    if (linkTotpSecret) linkTotpSecret.hidden = true;
+    if (linkTotpConfirmRow) linkTotpConfirmRow.hidden = true;
+    if (linkTotpRecovery) {
+      linkTotpRecovery.replaceChildren();
+      const title = document.createElement('p');
+      title.className = 'totp-recovery-title';
+      title.textContent = 'Save these one-time recovery codes now — they are shown only once:';
+      linkTotpRecovery.appendChild(title);
+      const list = document.createElement('div');
+      list.className = 'totp-recovery-codes';
+      for (const rc of data.recovery_codes || []) {
+        const span = document.createElement('code');
+        span.textContent = rc;
+        list.appendChild(span);
+      }
+      linkTotpRecovery.appendChild(list);
+      linkTotpRecovery.hidden = false;
+    }
+    showToast('Authenticator login activated');
+  } finally {
+    if (linkTotpConfirmBtn) linkTotpConfirmBtn.disabled = false;
+  }
+}
+
+// Renders a QR (vendored qrcode-generator) into the given wrap element,
+// with a text fallback sized for the same slot. Used for both the room QR
+// and the authenticator setup QR.
+function renderQrInto(wrapEl, text) {
+  if (!wrapEl) return;
+  const showFallback = (message) => {
+    // Fallback text uses the page ink, which is light — on the white QR
+    // background it would be invisible, so drop the white panel too.
+    wrapEl.textContent = message;
+    wrapEl.classList.add("link-qr-fallback");
+  };
+  if (typeof qrcode === "undefined") {
+    showFallback("Scan unavailable — use the secret below instead.");
+    return;
+  }
+  try {
+    const qr = qrcode(0, "M");
+    qr.addData(text);
+    qr.make();
+    wrapEl.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    wrapEl.classList.remove("link-qr-fallback");
+  } catch (e) {
+    showFallback("QR rendering failed — use the secret below instead.");
+  }
+}
+
 const LinkManager = {
   room: null,
   role: "desktop",
@@ -1053,29 +1250,17 @@ const LinkManager = {
   },
 
   renderQr(text) {
-    if (!linkQrWrap) return;
-    const showFallback = (message) => {
-      // Fallback text uses the page ink, which is light — on the white QR
-      // background it would be invisible, so drop the white panel too.
-      linkQrWrap.textContent = message;
-      linkQrWrap.classList.add("link-qr-fallback");
-    };
-    if (typeof qrcode === "undefined") {
-      showFallback("Scan unavailable — type the code instead.");
-      return;
-    }
-    try {
-      const qr = qrcode(0, "M");
-      qr.addData(text);
-      qr.make();
-      linkQrWrap.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
-      linkQrWrap.classList.remove("link-qr-fallback");
-    } catch (e) {
-      showFallback("QR rendering failed — type the code instead.");
-    }
+    renderQrInto(linkQrWrap, text);
   },
 
-  connect(code) {
+  async connect(code) {
+    // TOTP gate: when authenticator login is active, a fresh code may be
+    // required before the socket can be opened (the server enforces it too,
+    // so this is the UX path, not the security boundary).
+    if (!(await ensureLinkAuth())) {
+      this.updateStatus("error", "Link paused — verify your authenticator code");
+      return;
+    }
     this.closeSocket(true);
     this.exhausted = false;
     const scheme = location.protocol === "https:" ? "wss" : "ws";
@@ -1306,12 +1491,20 @@ const LinkManager = {
     if (linkOverlay) linkOverlay.hidden = false;
     if (linkToggleBtn) linkToggleBtn.setAttribute("aria-expanded", "true");
     if (linkCloseBtn) linkCloseBtn.focus();
+    initTotpSection();
   },
 
   closeModal() {
     if (linkOverlay) linkOverlay.hidden = true;
     if (linkToggleBtn) linkToggleBtn.setAttribute("aria-expanded", "false");
     if (linkToggleBtn) linkToggleBtn.focus();
+    // Closing the modal while an authenticator prompt is pending aborts the
+    // connect that was waiting for the code.
+    if (linkAuthResolve) {
+      const resolve = linkAuthResolve;
+      linkAuthResolve = null;
+      resolve(false);
+    }
   },
 };
 
@@ -1770,6 +1963,32 @@ document.addEventListener('DOMContentLoaded', () => {
     linkLeaveBtn.addEventListener('click', () => {
       LinkManager.disconnect();
       LinkManager.closeModal();
+    });
+  }
+
+  if (linkAuthBtn) {
+    linkAuthBtn.addEventListener('click', () => submitLinkAuth());
+  }
+  if (linkAuthInput) {
+    linkAuthInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitLinkAuth();
+      }
+    });
+  }
+  if (linkTotpSetupBtn) {
+    linkTotpSetupBtn.addEventListener('click', () => startTotpEnrollment());
+  }
+  if (linkTotpConfirmBtn) {
+    linkTotpConfirmBtn.addEventListener('click', () => confirmTotpEnrollment());
+  }
+  if (linkTotpConfirmInput) {
+    linkTotpConfirmInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmTotpEnrollment();
+      }
     });
   }
 

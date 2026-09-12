@@ -1301,6 +1301,63 @@ html[data-theme="light"] .remote-interim {
 }
 
 /* ==========================================================================
+   Authenticator Login (TOTP) inside the Link modal
+   ========================================================================== */
+.totp-secret {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--gold, #d9b64a);
+  background: rgba(217, 182, 74, 0.06);
+  border: 1px dashed var(--panel-border);
+  border-radius: 3px;
+  user-select: all;
+  word-break: break-all;
+}
+
+.totp-recovery {
+  margin-top: 0.75rem;
+}
+
+.totp-recovery-title {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-dim);
+  margin-bottom: 0.4rem;
+}
+
+.totp-recovery-codes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.3rem 0.75rem;
+}
+
+.totp-recovery-codes code {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-primary);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+  padding: 0.25rem 0.4rem;
+}
+
+.link-auth-error {
+  margin-top: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  color: var(--red, #e8452c);
+  min-height: 1em;
+}
+
+
+/* ==========================================================================
    Library Navigation + Saved Library (hash-routed, D1-backed)
    ========================================================================== */
 .view-nav {
