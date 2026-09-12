@@ -739,8 +739,7 @@ html, body {
   box-shadow: 0 4px 18px rgba(217, 182, 74, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transition: all 0.2s var(--ease);
 }
-.master-transmit-btn:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.01);
+.master-transmit-btn:hover:not(:disabled) {  transform: translateY(-2px) scale(1.01);
   box-shadow: 0 8px 25px rgba(217, 182, 74, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 .master-transmit-btn:active:not(:disabled) {
@@ -770,6 +769,23 @@ html, body {
 .master-transmit-btn.recording .tally-dot {
   background: #ffffff;
   box-shadow: 0 0 8px #ffffff;
+}
+
+/* The LINKED device is dictating elsewhere: amber, clearly not a local mic. */
+.master-transmit-btn.peer-talking {
+  background: var(--panel-chassis) !important;
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 0 14px rgba(217, 164, 65, 0.25);
+}
+.master-transmit-btn.peer-talking .tally-dot {
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+  animation: peer-live 1.2s ease-in-out infinite;
+}
+@keyframes peer-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 /* Custom Scrollbar Inside Editor */
@@ -833,6 +849,17 @@ html, body {
   border-top: 1px solid var(--panel-border);
   margin-left: 1.5rem;
   flex-shrink: 0;
+}
+
+/* The changelog link must read as a link (reported as unstyled text). */
+.app-footer a {
+  color: var(--gold, #d9b64a);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.app-footer a:hover,
+.app-footer a:focus-visible {
+  color: var(--gold-deep, #b8952f);
 }
 
 /* Accessibility */
@@ -936,6 +963,10 @@ html, body {
   .workspace-top-bar {
     font-size: 0.625rem;
     padding-bottom: 0.4rem;
+    /* Reported mobile overlap around the live badge: let the bar wrap
+       instead of letting items collide on narrow screens. */
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
   }
   .fft-oscilloscope {
     width: 100px;

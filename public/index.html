@@ -226,7 +226,10 @@
             </button>
           </div>
 
-          <div class="link-section">
+          <!-- Pairing invite: only meaningful while the room waits for its
+               peer. Once linked, this hides (the connected state keeps just
+               the join-another-room option) per user-requested flow. -->
+          <div class="link-section" id="linkInviteSection">
             <p class="link-hint" id="linkHostHint">Open LumiNote on your other device and enter this code — or scan it there.</p>
             <div class="link-code-row">
               <span class="link-code" id="linkRoomCode">······</span>

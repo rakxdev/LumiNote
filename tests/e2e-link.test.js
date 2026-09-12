@@ -156,6 +156,33 @@ describe('Link Mode end-to-end (SyncRoom DO)', () => {
     desk.close();
   });
 
+  it('broadcasts an authoritative devices roster on join and leave', async () => {
+    // Client device lists previously diverged (a socket dying without a
+    // clean close left one side "Linked" and the other "Waiting"). The room
+    // now pushes the full roster so every client converges.
+    const room = generateRoomCode();
+    const desktop = await connectDevice(`?room=${room}&role=desktop`);
+    await waitFor(desktop, 'init');
+    const phone = await connectDevice(`?room=${room}&role=phone`);
+    await waitFor(phone, 'init');
+    // The desktop's own hello also emits a roster (itself only); wait for
+    // the post-join one that actually contains both roles.
+    let joined;
+    for (;;) {
+      joined = await waitFor(desktop, 'devices');
+      if (joined.devices.length === 2) break;
+    }
+    assert.ok(joined.devices.some((d) => d.role === 'phone'));
+    assert.ok(joined.devices.some((d) => d.role === 'desktop'));
+
+    const leftRosterP = waitFor(desktop, 'devices');
+    phone.close();
+    const left = await leftRosterP;
+    assert.equal(left.devices.length, 1);
+    assert.equal(left.devices[0].role, 'desktop');
+    desktop.close();
+  });
+
   it('serves the direct /join route only when LINK_DIRECT_JOIN is opted in', async () => {
     // Production leaves the variable unset: the direct route would bypass
     // the Pages Function's auth decision entirely.

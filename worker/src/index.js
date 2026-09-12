@@ -82,7 +82,10 @@ export class SyncRoom {
     }
 
     const liveCount = this.state.getWebSockets()
-      .filter((ws) => !ws.deserializeAttachment()?.replaced).length;
+      .filter((ws) => {
+        const a = ws.deserializeAttachment();
+        return !a?.replaced && !a?.detached;
+      }).length;
     if (liveCount >= MAX_DEVICES) {
       return jsonResponse({ error: 'room is full' }, 429);
     }
@@ -130,6 +133,10 @@ export class SyncRoom {
         ws.serializeAttachment(device);
         this.broadcastExcept(ws, serverEvent('device_joined', { device }));
       }
+      // Authoritative roster to everyone: heals divergence when a socket
+      // died without a clean close and a client still shows a stale list
+      // (the reported Waiting-on-desktop / Linked-on-phone split).
+      this.broadcastDevices();
       return;
     }
 
@@ -168,9 +175,25 @@ export class SyncRoom {
 
   async webSocketClose(ws) {
     // With web_socket_auto_reply_to_close (compat date >= 2026-04-07) the
-    // runtime replies to the Close frame; no manual ws.close() needed.
-    const device = ws.deserializeAttachment() || { role: 'unknown' };
+    // runtime replies to the Close frame; no manual ws.close() needed. The
+    // socket may still appear in getWebSockets() during this handler, so it
+    // is marked detached before the roster broadcasts (same determinism as
+    // the replacement mark).
+    const att = ws.deserializeAttachment();
+    const device = att || { role: 'unknown' };
+    if (att) {
+      att.detached = true;
+      ws.serializeAttachment(att);
+    }
     this.broadcastExcept(ws, serverEvent('device_left', { device }));
+    this.broadcastDevices();
+  }
+
+  // Full roster to every live socket, replacing per-client device lists.
+  broadcastDevices() {
+    this.listDevices().then((devices) => {
+      this.broadcastExcept(null, serverEvent('devices', { devices }));
+    });
   }
 
   async webSocketError() {
@@ -191,7 +214,10 @@ export class SyncRoom {
 
   async listDevices() {
     return this.state.getWebSockets()
-      .filter((ws) => !ws.deserializeAttachment()?.replaced)
+      .filter((ws) => {
+        const a = ws.deserializeAttachment();
+        return !a?.replaced && !a?.detached;
+      })
       .map((ws) => {
         const att = ws.deserializeAttachment();
         return { role: att?.role || 'unknown', joinedAt: att?.joinedAt || null };

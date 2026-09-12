@@ -4,6 +4,21 @@
   "updated": "2026-09-13",
   "entries": [
     {
+      "version": "4.5.0",
+      "date": "2026-09-13",
+      "status": "released",
+      "sections": {
+        "added": [
+          "Self-healing link: the room now broadcasts an authoritative device roster, and a phone whose socket silently died while backgrounded is probed with a ping on return and hard-reconnects — the desktop showing 'Waiting' while the phone showed 'Linked' is fixed at both ends.",
+          "While the linked device dictates, the local button shows an amber 'Peer Talking…' state instead of offering a second microphone.",
+          "The Link dialog adapts to state: once a peer is linked, the QR/room-code invite hides and only 'join another room' remains; a restored session renders its QR again (the blank white panel on desktop)."
+        ],
+        "changed": [
+          "Mobile top bar wraps instead of overlapping around the live-acoustic badge, and the footer changelog link now reads as a link."
+        ]
+      }
+    },
+    {
       "version": "4.4.1",
       "date": "2026-09-13",
       "status": "released",

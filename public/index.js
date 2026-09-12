@@ -507,6 +507,9 @@ function commitActiveTurn() {
 
 // Link Mode relay: remote events into the local editor
 let remoteInterimTimer = null;
+// Recency of ANY remote activity (interim words, turns, voice level) —
+// drives the local dictation button's "peer talking" state.
+let lastRemoteActivityAt = 0;
 
 function appendRemoteTurn(text) {
   if (!messageEl || !text || !text.trim()) return;
@@ -535,6 +538,7 @@ function showRemoteInterim(text) {
   // Fade the permanently-reserved zone in (opacity only, never display) so
   // the bar height and its neighbours never shift while words stream in.
   el.classList.add('show');
+  lastRemoteActivityAt = Date.now();
   clearTimeout(remoteInterimTimer);
   remoteInterimTimer = setTimeout(hideRemoteInterim, 2500);
 }
@@ -1190,6 +1194,7 @@ const LinkManager = {
   devices: [],
   outbox: [],
   intentionalClose: false,
+  pongPendingAt: 0,
   reconnectAttempts: 0,
   reconnectTimer: null,
   heartbeatTimer: null,
@@ -1240,6 +1245,9 @@ const LinkManager = {
     this.room = stored.code;
     this.outbox = [];
     if (linkRoomCodeEl) linkRoomCodeEl.textContent = stored.code.split("").join(" ");
+    // Restored sessions must show the QR too — this was the blank white
+    // panel in the Link dialog (only hostRoom/joinRoom rendered it).
+    this.renderQr(`${location.origin}/?join=${stored.code}`);
     this.updateStatus("linking", `Restoring link ${stored.code}…`);
     this.connect(stored.code);
   },
@@ -1461,6 +1469,16 @@ const LinkManager = {
         // the one recording, so the second screen follows the first voice.
         remoteLevelTarget = typeof msg.v === "number" ? msg.v : 0;
         lastRemoteLevelAt = Date.now();
+        lastRemoteActivityAt = lastRemoteLevelAt;
+        break;
+      case "devices":
+        // Authoritative roster from the room: heals any divergence from
+        // missed joined/left events (the reported Waiting-vs-Linked split).
+        this.devices = Array.isArray(msg.devices) ? msg.devices : [];
+        this.renderDeviceList();
+        break;
+      case "pong":
+        this.pongPendingAt = 0;
         break;
       case "clipboard":
         showRemoteClipboard(msg.text);
@@ -1515,10 +1533,17 @@ const LinkManager = {
       : state === "waiting"
         ? `Waiting for a device in room ${this.room}`
         : "Link another device";
+    // The invite (code + QR) is only meaningful while the room waits; once
+    // linked, the dialog keeps just the join-another-room option.
+    const invite = document.getElementById("linkInviteSection");
+    if (invite) invite.hidden = state === "linked";
   },
 
   openModal() {
     if (!this.room && !this.ws) this.hostRoom();
+    // Always render the current room's QR on open so a restored session
+    // never shows an empty invite panel.
+    if (this.room) this.renderQr(`${location.origin}/?join=${this.room}`);
     if (linkOverlay) linkOverlay.hidden = false;
     if (linkToggleBtn) linkToggleBtn.setAttribute("aria-expanded", "true");
     if (linkCloseBtn) linkCloseBtn.focus();
@@ -2106,13 +2131,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Mobile browsers kill background WebSockets without a close frame, and
   // phones drop sockets across screen-lock. Re-validate the link the moment
-  // the page is active again; if it is down, rejoin immediately.
+  // the page is active again; if it is down, rejoin immediately. An OPEN
+  // socket can still be a corpse (the phone's network vanished while the
+  // tab was frozen and the client never saw a close), so resume probes it
+  // with a ping and hard-reconnects when no pong answers.
   const resumeLink = () => {
     if (!LinkManager.room) return;
+    if (LinkManager.ws && LinkManager.ws.readyState === WebSocket.OPEN) {
+      if (LinkManager.pongPendingAt && Date.now() - LinkManager.pongPendingAt > 4000) {
+        // No pong to our probe: the socket is a corpse. Rebuild it.
+        LinkManager.pongPendingAt = 0;
+        LinkManager.reconnectAttempts = 0;
+        LinkManager.exhausted = false;
+        clearTimeout(LinkManager.reconnectTimer);
+        LinkManager.connect(LinkManager.room);
+        return;
+      }
+      if (!LinkManager.pongPendingAt) {
+        LinkManager.pongPendingAt = Date.now();
+        try {
+          LinkManager.ws.send(JSON.stringify({ type: "ping" }));
+        } catch (e) {}
+        setTimeout(() => {
+          if (!document.hidden && LinkManager.pongPendingAt) resumeLink();
+        }, 4500);
+      }
+      return;
+    }
     if (
       LinkManager.ws &&
-      (LinkManager.ws.readyState === WebSocket.OPEN ||
-        LinkManager.ws.readyState === WebSocket.CONNECTING)
+      LinkManager.ws.readyState === WebSocket.CONNECTING
     ) {
       return;
     }
@@ -2126,6 +2174,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   window.addEventListener('focus', resumeLink);
   window.addEventListener('online', resumeLink);
+
+  // While the LINKED device dictates, the local button says so instead of
+  // offering a second microphone (user-requested clarity for phone-as-mic).
+  setInterval(() => {
+    if (!buttonText || isRecording) return;
+    const peerTalking = Date.now() - lastRemoteActivityAt < 1600;
+    const wanted = peerTalking ? "Peer Talking…" : "Start Dictating";
+    if (buttonText.textContent !== wanted) buttonText.textContent = wanted;
+    if (recordButton) recordButton.classList.toggle("peer-talking", peerTalking);
+  }, 500);
 
   restoreDraftFromStorage();
   updateStats();
