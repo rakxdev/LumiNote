@@ -1071,7 +1071,11 @@ async function startRecording() {
         return;
       }
 
-      const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&language_code=en&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
+      // language_codes is the documented v3 steering param (language_code is
+      // silently ignored, leaving the model to code-switch across all 16
+      // supported languages — observed Hindi bleed in English sessions).
+      // language_detection reports the detected language per turn.
+      const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&language_codes=${encodeURIComponent(JSON.stringify(["en"]))}&language_detection=true&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
       ws = new WebSocket(endpoint);
 
       ws.onopen = async () => {
