@@ -8,6 +8,7 @@ import {
   sanitizeRoomCode,
   isValidRoomCode,
 } from './room-protocol.js';
+import { getSetting, AUTH_COOKIE, parseCookieHeader, verifyAuthCookie } from '../auth/totp.js';
 
 export async function onRequest(context) {
   const request = context.request;
@@ -26,6 +27,21 @@ export async function onRequest(context) {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  // TOTP gate: once authenticator login is confirmed, socket upgrades need
+  // the login cookie that /api/auth/challenge issues. While login is not
+  // set up, linking behaves exactly as before.
+  const totpSecret = context.env.DB ? await getSetting(context.env, 'totp_secret') : null;
+  if (totpSecret && (await getSetting(context.env, 'totp_confirmed')) === '1') {
+    const raw = parseCookieHeader(request.headers.get('Cookie'), AUTH_COOKIE);
+    const authorized = raw && (await verifyAuthCookie(totpSecret, raw));
+    if (!authorized) {
+      return new Response(JSON.stringify({ error: 'Login required — verify your authenticator code first' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
   }
 
   if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
