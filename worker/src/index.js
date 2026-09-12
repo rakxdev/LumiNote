@@ -41,13 +41,51 @@ export class SyncRoom {
     if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
       return jsonResponse({ error: 'expected WebSocket upgrade' }, 426);
     }
-    if (this.state.getWebSockets().length >= MAX_DEVICES) {
-      return jsonResponse({ error: 'room is full' }, 429);
+
+    // Room-scoped trust (ADR-005): the Pages Function owns the auth decision
+    // (it has the TOTP state) and tags the upgrade. x-ln-authed marks a
+    // verified browser and opens the room's 12h trust window; if a room is
+    // tagged x-ln-auth-required while that window is closed, the upgrade is
+    // refused here as defense in depth.
+    if (request.headers.get('x-ln-authed') === '1') {
+      await this.state.storage.put('authedAt', Date.now());
+    }
+    if (request.headers.get('x-ln-auth-required') === '1') {
+      const authedAt = (await this.state.storage.get('authedAt')) || 0;
+      if (Date.now() - authedAt > 12 * 60 * 60 * 1000) {
+        return jsonResponse({
+          error: 'Room not unlocked yet — the verified device must open Link Mode first, or verify with your authenticator',
+          code: 'auth_required',
+        }, 401);
+      }
     }
 
     const url = new URL(request.url);
     const role = parseRole(url.searchParams.get('role'));
     const device = { role, joinedAt: Date.now() };
+
+    // A device rejoining always takes over its role's slot. Mobile browsers
+    // rarely send a clean close, so a reloaded phone leaves hibernated
+    // sockets attached; without replacement those ghosts accumulate until
+    // getWebSockets() reads MAX_DEVICES and real devices are refused. The
+    // ghost's attachment is marked replaced immediately: close() detaches
+    // asynchronously, and every device list / slot count below filters on
+    // the mark so the ghost is gone deterministically.
+    for (const ghost of this.state.getWebSockets()) {
+      const att = ghost.deserializeAttachment();
+      if (att?.role === role && !att.replaced) {
+        att.replaced = true;
+        ghost.serializeAttachment(att);
+        try { ghost.close(1000, 'replaced by a newer session'); } catch {}
+        this.broadcastExcept(ghost, serverEvent('device_left', { device: att }));
+      }
+    }
+
+    const liveCount = this.state.getWebSockets()
+      .filter((ws) => !ws.deserializeAttachment()?.replaced).length;
+    if (liveCount >= MAX_DEVICES) {
+      return jsonResponse({ error: 'room is full' }, 429);
+    }
 
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
@@ -152,10 +190,12 @@ export class SyncRoom {
   }
 
   async listDevices() {
-    return this.state.getWebSockets().map((ws) => {
-      const att = ws.deserializeAttachment();
-      return { role: att?.role || 'unknown', joinedAt: att?.joinedAt || null };
-    });
+    return this.state.getWebSockets()
+      .filter((ws) => !ws.deserializeAttachment()?.replaced)
+      .map((ws) => {
+        const att = ws.deserializeAttachment();
+        return { role: att?.role || 'unknown', joinedAt: att?.joinedAt || null };
+      });
   }
 
   broadcastExcept(sender, data) {
@@ -200,6 +240,13 @@ export default {
     const url = new URL(request.url);
     if (url.pathname !== '/join') {
       return jsonResponse({ error: 'not found' }, 404);
+    }
+    // Production joins go through the Pages Function, which owns the auth
+    // decision; this direct route would bypass it entirely. It exists for
+    // standalone dev (`npm run dev:sync`) and the miniflare e2e suite, both
+    // of which opt in with LINK_DIRECT_JOIN=1. Never set it in production.
+    if (env?.LINK_DIRECT_JOIN !== '1') {
+      return jsonResponse({ error: 'direct join is disabled; connect via the app origin' }, 404);
     }
     if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
       return jsonResponse({ error: 'expected WebSocket upgrade' }, 426);

@@ -65,7 +65,15 @@ npx wrangler d1 execute luminote-db --local --file db/schema.sql
 ### Link Mode local development
 
 The sync backend is a companion Worker (`worker/`) because Pages projects
-cannot define Durable Objects. Run both processes locally:
+cannot define Durable Objects. The Worker's direct `/join` route is
+production-off (the Pages Function owns the auth decision), so standalone dev
+opts in via `worker/.dev.vars`:
+
+```ini
+LINK_DIRECT_JOIN=1
+```
+
+Run both processes locally:
 
 ```bash
 # Terminal 1: SyncRoom Durable Object

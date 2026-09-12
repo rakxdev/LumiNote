@@ -16,6 +16,9 @@ const mf = new Miniflare({
   modulesRules: [{ type: 'ESModule', include: ['**/*.js'] }],
   compatibilityDate: '2026-06-01',
   durableObjects: { SYNC_ROOM: 'SyncRoom' },
+  // The direct /join route is production-off (the Pages Function owns the
+  // auth decision); the e2e suite is one of the two sanctioned opt-ins.
+  bindings: { LINK_DIRECT_JOIN: '1' },
 });
 
 after(async () => {
@@ -109,20 +112,71 @@ describe('Link Mode end-to-end (SyncRoom DO)', () => {
     const clip = await waitFor(phone, 'clipboard');
     assert.equal(clip.text, 'clipboard payload');
 
-    // A late joiner catches up from the snapshot: committed text + clipboard
+    // A late joiner catches up from the snapshot: committed text + clipboard.
+    // The live phone frees its slot first — a rejoining device now replaces
+    // its role's slot, and this test does not need that collision.
+    phone.close();
+    await new Promise((r) => setTimeout(r, 100));
     const late = await connectDevice(`?room=${room}&role=phone`);
     const initLate = await waitFor(late, 'init');
     assert.equal(initLate.snapshot.text, 'hello from the phone');
     assert.equal(initLate.snapshot.clipboard.text, 'clipboard payload');
 
     // Invalid messages produce a server-side error event, not a crash
-    phone.send('not json');
-    const err = await waitFor(phone, 'error');
+    late.send('not json');
+    const err = await waitFor(late, 'error');
     assert.match(err.message, /invalid JSON/);
 
     desktop.close();
-    phone.close();
     late.close();
+  });
+
+  it('gives a rejoining device its role slot back so reload ghosts never fill the room', async () => {
+    const room = generateRoomCode();
+    const first = await connectDevice(`?room=${room}&role=phone`);
+    await waitFor(first, 'init');
+    const firstClosed = new Promise((resolve) => first.addEventListener('close', resolve, { once: true }));
+
+    // Second device with the SAME role: the ghost slot from the first is
+    // replaced instead of the room drifting toward "full" with dead sockets.
+    const second = await connectDevice(`?room=${room}&role=phone`);
+    const initSecond = await waitFor(second, 'init');
+    await firstClosed;
+    assert.equal(initSecond.devices.length, 1,
+      'exactly one phone remains — the replaced ghost is filtered from the device list');
+    assert.equal(initSecond.devices[0].role, 'phone');
+
+    // The room still admits a desktop afterwards — no starvation.
+    const desk = await connectDevice(`?room=${room}&role=desktop`);
+    const initDesk = await waitFor(desk, 'init');
+    assert.equal(initDesk.devices.filter((d) => d.role === 'phone').length, 1);
+    assert.equal(initDesk.devices.filter((d) => d.role === 'desktop').length, 1);
+
+    second.close();
+    desk.close();
+  });
+
+  it('serves the direct /join route only when LINK_DIRECT_JOIN is opted in', async () => {
+    // Production leaves the variable unset: the direct route would bypass
+    // the Pages Function's auth decision entirely.
+    const bare = new Miniflare({
+      scriptPath: 'worker/src/index.js',
+      modules: true,
+      modulesRules: [{ type: 'ESModule', include: ['**/*.js'] }],
+      compatibilityDate: '2026-06-01',
+      durableObjects: { SYNC_ROOM: 'SyncRoom' },
+    });
+    try {
+      const worker = await bare.getWorker();
+      const res = await worker.fetch('https://luminote.test/join?room=ABCDEF', {
+        headers: { Upgrade: 'websocket' },
+      });
+      assert.equal(res.status, 404);
+      const body = await res.json();
+      assert.match(body.error, /direct join is disabled/);
+    } finally {
+      await bare.dispose();
+    }
   });
 
   it('answers application-level pings so client heartbeats keep the link alive', async () => {
