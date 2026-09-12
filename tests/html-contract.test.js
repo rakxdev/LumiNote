@@ -28,6 +28,18 @@ describe('index.html script contract', () => {
     assert.ok(!tag[0].includes('type="module"'), 'qrcode.js is a UMD global script, not an ES module');
   });
 
+  it('limits the manual join-code input to the 6-character room code length', () => {
+    // Room codes are exactly 6 characters (ROOM_CODE_LENGTH in link-protocol.js),
+    // but the input previously allowed 12, so the field accepted "any length"
+    // of typing before the Join button rejected it (reported bug).
+    const tag = html.match(/<input[^>]*id="linkJoinInput"[^>]*>/);
+    assert.ok(tag, 'linkJoinInput element is missing');
+    assert.ok(
+      /maxlength="6"/.test(tag[0]),
+      'linkJoinInput must cap input at 6 characters to match ROOM_CODE_LENGTH'
+    );
+  });
+
   it('keeps the link overlay closed while the hidden attribute is set', () => {
     // The overlay element ships with the `hidden` attribute; any author
     // `display` rule on .link-overlay overrides the UA [hidden] rule, so a
