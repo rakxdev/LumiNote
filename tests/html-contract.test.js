@@ -28,6 +28,21 @@ describe('index.html script contract', () => {
     assert.ok(!tag[0].includes('type="module"'), 'qrcode.js is a UMD global script, not an ES module');
   });
 
+  it('commits the active turn on the AssemblyAI end_of_turn signal', () => {
+    // v3 turns are only relayed to linked devices when commitActiveTurn()
+    // runs, and it ran solely on a NEW turn_order arriving. The server's
+    // end_of_turn flag (official endpointing signal) was ignored, so the
+    // last finalized sentence never reached the second device (reported
+    // bug). The Turn handler must commit when end_of_turn is true.
+    const js = readFileSync(join(publicDir, 'index.js'), 'utf8');
+    const turnBranch = js.match(/if \(msg\.type === "Turn"\) \{[\s\S]*?\} else if \(msg\.type === "Termination"\)/);
+    assert.ok(turnBranch, 'AssemblyAI Turn handler not found');
+    assert.ok(
+      /end_of_turn[\s\S]{0,200}?commitActiveTurn\(\)/.test(turnBranch[0]),
+      'Turn handler must call commitActiveTurn() when msg.end_of_turn is true'
+    );
+  });
+
   it('limits the manual join-code input to the 6-character room code length', () => {
     // Room codes are exactly 6 characters (ROOM_CODE_LENGTH in link-protocol.js),
     // but the input previously allowed 12, so the field accepted "any length"

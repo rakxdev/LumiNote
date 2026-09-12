@@ -1109,6 +1109,13 @@ async function startRecording() {
             currentTurnOrder = turn_order;
             activeTurnText = transcript || "";
             renderTranscript();
+            // Official v3 endpointing signal: the server finalized this turn.
+            // Commit now so it relays to linked devices immediately instead
+            // of waiting for the next turn to start (the last sentence the
+            // user says otherwise never left this device).
+            if (msg.end_of_turn) {
+              commitActiveTurn();
+            }
           } else if (msg.type === "Termination") {
             handleStreamEnded();
           }
