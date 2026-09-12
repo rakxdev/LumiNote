@@ -769,6 +769,8 @@ const LinkManager = {
     }
     this.ws.onopen = () => {
       this.reconnectAttempts = 0;
+      // Trigger the server handshake: hello -> init + join broadcast
+      this.send({ type: "hello" });
     };
     this.ws.onmessage = (event) => this.handleMessage(event);
     this.ws.onclose = () => {

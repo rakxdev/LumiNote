@@ -35,6 +35,13 @@ async function connect(query) {
   return ws;
 }
 
+/** Complete the handshake: hello -> init (mirrors the browser client). */
+async function connectDevice(query) {
+  const ws = await connect(query);
+  ws.send(JSON.stringify({ type: 'hello' }));
+  return ws;
+}
+
 function waitFor(ws, type, timeoutMs = 4000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -62,7 +69,7 @@ describe('Link Mode end-to-end (SyncRoom DO)', () => {
   it('fans turns, interim, and clipboard out between two devices and snapshots for late joiners', async () => {
     const room = generateRoomCode();
 
-    const desktop = await connect(`?room=${room}&role=desktop`);
+    const desktop = await connectDevice(`?room=${room}&role=desktop`);
     const initDesktop = await waitFor(desktop, 'init');
     assert.equal(initDesktop.room, room);
     assert.deepEqual(initDesktop.snapshot, { text: '', clipboard: null });
@@ -71,7 +78,7 @@ describe('Link Mode end-to-end (SyncRoom DO)', () => {
     // broadcast fires inside the joining device's own fetch, so waiting on the
     // phone's init first would miss the event.
     const deviceJoinedP = waitFor(desktop, 'device_joined');
-    const phone = await connect(`?room=${room}&role=phone`);
+    const phone = await connectDevice(`?room=${room}&role=phone`);
     const initPhone = await waitFor(phone, 'init');
     assert.equal(initPhone.room, room);
     assert.ok(initPhone.devices.some((d) => d.role === 'desktop'));
@@ -96,7 +103,7 @@ describe('Link Mode end-to-end (SyncRoom DO)', () => {
     assert.equal(clip.text, 'clipboard payload');
 
     // A late joiner catches up from the snapshot: committed text + clipboard
-    const late = await connect(`?room=${room}&role=phone`);
+    const late = await connectDevice(`?room=${room}&role=phone`);
     const initLate = await waitFor(late, 'init');
     assert.equal(initLate.snapshot.text, 'hello from the phone');
     assert.equal(initLate.snapshot.clipboard.text, 'clipboard payload');

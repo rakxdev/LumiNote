@@ -54,18 +54,10 @@ export class SyncRoom {
     this.state.acceptWebSocket(server);
     server.serializeAttachment(device);
 
-    const snapshot = (await this.state.storage.get('snapshot')) || {
-      text: '',
-      clipboard: null,
-    };
-    server.send(
-      serverEvent('init', {
-        room: this.state.id.name || '',
-        devices: await this.listDevices(),
-        snapshot,
-      })
-    );
-    this.broadcastExcept(server, serverEvent('device_joined', { device }));
+    // Do NOT send anything here: fetch-time sends are queued until the
+    // client's first outbound message in production. The client sends
+    // {type:"hello"} on open, which triggers the init + join broadcast
+    // deterministically from webSocketMessage.
 
     await this.touchTtl();
     return new Response(null, { status: 101, webSocket: client });
@@ -77,8 +69,31 @@ export class SyncRoom {
       ws.send(serverEvent('error', { message: result.error }));
       return;
     }
-    const msg = result.message;
+    let msg = result.message;
     const device = ws.deserializeAttachment() || { role: 'unknown' };
+
+    // Handshake: first hello receives the room state and announces the
+    // device to the others. Repeated hellos re-send state but do not
+    // re-broadcast the join.
+    if (msg.type === 'hello') {
+      const snapshot = (await this.state.storage.get('snapshot')) || {
+        text: '',
+        clipboard: null,
+      };
+      ws.send(
+        serverEvent('init', {
+          room: this.state.id.name || '',
+          devices: await this.listDevices(),
+          snapshot,
+        })
+      );
+      if (!device.announced) {
+        device.announced = true;
+        ws.serializeAttachment(device);
+        this.broadcastExcept(ws, serverEvent('device_joined', { device }));
+      }
+      return;
+    }
 
     if (msg.type === 'ping') {
       ws.send(serverEvent('pong'));

@@ -11,7 +11,7 @@ export const ROOM_CODE_PATTERN = new RegExp(`^[${ROOM_ALPHABET}]{${ROOM_CODE_LEN
 export const MAX_TEXT_LENGTH = 100000;
 export const MAX_CLIENT_MESSAGE_BYTES = 128 * 1024;
 
-export const CLIENT_MESSAGE_TYPES = ['turn', 'interim', 'clipboard', 'clear', 'ping'];
+export const CLIENT_MESSAGE_TYPES = ['hello', 'turn', 'interim', 'clipboard', 'clear', 'ping'];
 export const ROLES = ['desktop', 'phone'];
 
 /**
@@ -64,7 +64,7 @@ export function validateClientMessage(raw) {
   if (!CLIENT_MESSAGE_TYPES.includes(msg.type)) {
     return { ok: false, error: 'unknown message type' };
   }
-  if (msg.type === 'clear' || msg.type === 'ping') {
+  if (msg.type === 'clear' || msg.type === 'ping' || msg.type === 'hello') {
     return { ok: true, message: { type: msg.type } };
   }
   if (typeof msg.text !== 'string') {
