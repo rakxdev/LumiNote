@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 // blank white box in production.
 const publicDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const html = readFileSync(join(publicDir, 'index.html'), 'utf8');
+const css = readFileSync(join(publicDir, 'styles.css'), 'utf8');
 
 describe('index.html script contract', () => {
   it('loads vendor/qrcode.js before the app module', () => {
@@ -25,5 +26,24 @@ describe('index.html script contract', () => {
     const tag = html.match(/<script[^>]*src="vendor\/qrcode\.js"[^>]*>/);
     assert.ok(tag, 'vendor/qrcode.js script tag is missing');
     assert.ok(!tag[0].includes('type="module"'), 'qrcode.js is a UMD global script, not an ES module');
+  });
+
+  it('keeps the link overlay closed while the hidden attribute is set', () => {
+    // The overlay element ships with the `hidden` attribute; any author
+    // `display` rule on .link-overlay overrides the UA [hidden] rule, so a
+    // matching [hidden] { display: none } re-assertion must exist. Without
+    // it the pairing modal renders open on every page load (reported bug).
+    assert.ok(
+      /<div[^>]*class="link-overlay"[^>]*hidden/.test(html) ||
+        /<div[^>]*hidden[^>]*class="link-overlay"/.test(html),
+      'linkOverlay element should start hidden'
+    );
+    const overlaySetsDisplay = /\.link-overlay\s*{[^}]*display\s*:/.test(css);
+    if (overlaySetsDisplay) {
+      assert.ok(
+        /\.link-overlay\[hidden\]\s*{[^}]*display\s*:\s*none/.test(css),
+        '.link-overlay[hidden] { display: none } is missing — the modal would be visible on every page load'
+      );
+    }
   });
 });

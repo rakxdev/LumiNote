@@ -962,6 +962,12 @@ html[data-theme="light"] .link-overlay {
   background: rgba(244, 239, 230, 0.8);
 }
 
+/* display:flex above overrides the UA [hidden] rule; re-assert it so the
+   modal is actually closed until LinkManager.openModal() runs. */
+.link-overlay[hidden] {
+  display: none;
+}
+
 .link-modal {
   width: min(420px, 100%);
   max-height: calc(100dvh - 2rem);
