@@ -11,3 +11,9 @@ pages_build_output_dir = "public"
 name = "SYNC_ROOM"
 class_name = "SyncRoom"
 script_name = "luminote-sync"
+
+# Durable storage for saved notes, clipboard clips, and transcript sessions.
+[[d1_databases]]
+binding = "DB"
+database_name = "luminote-db"
+database_id = "74510bdc-83f0-4f60-b55d-0f148442dc17"
