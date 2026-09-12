@@ -1,0 +1,6 @@
+# Cloudflare Pages local dev secrets. Copy to `.dev.vars` (gitignored) and fill in.
+# `.dev.vars` is what `wrangler pages dev` loads automatically — never commit it.
+ASSEMBLYAI_API_KEY=your_assemblyai_api_key
+# Optional second AssemblyAI key routed server-side for specific speech models.
+ASSEMBLYAI_API_KEY_2=
+DEEPGRAM_API_KEY=your_deepgram_api_key
