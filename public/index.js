@@ -1277,7 +1277,7 @@ const LinkManager = {
     const scheme = location.protocol === "https:" ? "wss" : "ws";
     const url = `${scheme}://${location.host}/api/link/ws?room=${encodeURIComponent(code)}&role=${this.role}`;
     this.updateStatus("linking", `Linking to ${code}…`);
-    this.setSessionBadge(true);
+    this.updateLinkBadge();
     if (linkLeaveBtn) linkLeaveBtn.hidden = false;
     try {
       this.ws = new WebSocket(url);
@@ -1372,7 +1372,7 @@ const LinkManager = {
     this.devices = [];
     this.renderDeviceList();
     this.updateStatus("off", "Offline");
-    this.setSessionBadge(false);
+    this.updateLinkBadge();
     if (linkLeaveBtn) linkLeaveBtn.hidden = true;
     // Reset the pairing panel so a stale code/QR never lingers after leaving.
     if (linkRoomCodeEl) linkRoomCodeEl.textContent = "······";
@@ -1421,11 +1421,14 @@ const LinkManager = {
       return;
     }
     switch (msg.type) {
-      case "init":
+      case "init": {
         this.devices = Array.isArray(msg.devices) ? msg.devices : [];
         this.renderDeviceList();
-        this.updateStatus("linked", `Linked to ${this.room}`);
-        showToast("Link established");
+        const peers = msg.devices?.length ?? 0;
+        this.updateStatus(peers > 1 ? "linked" : "linking", peers > 1
+          ? `Linked to ${this.room}`
+          : `Waiting for a device — room ${this.room}`);
+        showToast(peers > 1 ? "Link established" : "Room ready — waiting for a device");
         this.applySnapshot(msg.snapshot);
         // Persist the room so a page refresh can rejoin it automatically.
         try {
@@ -1435,6 +1438,7 @@ const LinkManager = {
           );
         } catch (e) {}
         break;
+      }
       case "device_joined":
         if (msg.device?.role) {
           this.devices = [...this.devices, msg.device];
@@ -1484,6 +1488,7 @@ const LinkManager = {
     if (linkDevicesEl) {
       linkDevicesEl.textContent = this.devices.map((d) => d.role.toUpperCase()).join(" • ");
     }
+    this.updateLinkBadge();
   },
 
   updateStatus(state, text) {
@@ -1491,10 +1496,25 @@ const LinkManager = {
     if (linkStatusText) linkStatusText.textContent = text;
   },
 
-  // Ambient indicator: a live link session stays visible in the header even
-  // when the pairing modal is closed.
-  setSessionBadge(active) {
-    if (linkToggleBtn) linkToggleBtn.classList.toggle("link-active", !!active);
+  // Ambient header indicator, driven by PRESENCE, not socket state: a room
+  // with no peer is "Waiting" (amber), a room with a peer is "Linked"
+  // (emerald), no room is plain "Link". Socket-to-room alone never reads as
+  // connected — reported as misleading while dictating alone.
+  updateLinkBadge() {
+    if (!linkToggleBtn) return;
+    const peers = this.devices?.length ?? 0;
+    const state = !this.room && !this.ws ? "idle" : peers > 1 ? "linked" : "waiting";
+    linkToggleBtn.classList.toggle("link-active", state === "linked");
+    linkToggleBtn.classList.toggle("link-waiting", state === "waiting");
+    const label = document.getElementById("linkBtnLabel");
+    if (label) {
+      label.textContent = state === "linked" ? "Linked" : state === "waiting" ? "Waiting" : "Link";
+    }
+    linkToggleBtn.title = state === "linked"
+      ? `Linked — ${peers} devices in room ${this.room}`
+      : state === "waiting"
+        ? `Waiting for a device in room ${this.room}`
+        : "Link another device";
   },
 
   openModal() {

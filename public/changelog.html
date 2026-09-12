@@ -38,7 +38,10 @@
         align-items: center;
         padding: 2.5rem 1rem 4rem;
       }
-      .cl-shell { width: 100%; max-width: 46rem; }
+      /* Full-fluid like the studio: no narrow centered column — the page
+         spans the viewport with the same fluid gutters (user request). */
+      .cl-shell { width: 100%; max-width: none; }
+      body { padding: 2.5rem clamp(0.75rem, 2.5vw, 2.5rem) 4rem; }
       header.cl-top {
         display: flex; align-items: baseline; justify-content: space-between;
         gap: 1rem; border-bottom: 1px dashed rgba(217, 182, 74, 0.25);

@@ -428,6 +428,35 @@ html, body {
   box-shadow: 0 0 6px var(--emerald);
 }
 
+/* Waiting = room open but no peer yet: amber state, never reads as linked. */
+.mode-switch-btn.link-waiting {
+  border-color: var(--amber);
+}
+.mode-switch-btn.link-waiting .theme-icon-slot {
+  color: var(--amber);
+}
+.mode-switch-btn.link-waiting::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  animation: link-waiting-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes link-waiting-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 5px var(--amber); }
+  50% { opacity: 0.35; box-shadow: 0 0 1px var(--amber); }
+}
+
+/* The Link button carries a state label (Link / Waiting / Linked). */
+.link-toggle .link-btn-label {
+  white-space: nowrap;
+}
+
 .theme-icon-slot {
   display: flex;
   align-items: center;
@@ -1363,7 +1392,10 @@ html[data-theme="light"] .remote-interim {
 .view-nav {
   display: flex;
   gap: 1.1rem;
-  padding: 0.45rem 0.2rem;
+  /* Left edge aligned to the editor panel (its 1.5rem offset), tabs to the
+     panel's inner content line — reported as drifting too far left. */
+  margin-left: 1.5rem;
+  padding: 0.45rem 1rem;
   border-bottom: 1px dashed var(--dashed-line);
   font-family: var(--font-mono);
   font-size: 0.62rem;
