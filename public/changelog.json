@@ -1,8 +1,20 @@
 {
   "project": "LumiNote",
   "format": "keep-a-changelog",
-  "updated": "2026-09-12",
+  "updated": "2026-09-13",
   "entries": [
+    {
+      "version": "4.4.0",
+      "date": "2026-09-13",
+      "status": "released",
+      "sections": {
+        "added": [
+          "Authenticator login: optionally protect device linking with a 6-digit code from Google/Microsoft Authenticator or any TOTP app, set up by scanning a QR code in the Link dialog.",
+          "Eight one-time recovery codes are shown once at setup, in case the authenticator is unavailable.",
+          "A verified login is remembered per browser for 12 hours; the link socket itself refuses connections without it."
+        ]
+      }
+    },
     {
       "version": "4.3.0",
       "date": "2026-09-13",
