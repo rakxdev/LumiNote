@@ -4,7 +4,7 @@ import { appendPcmChunk } from './audio-processor.js';
 import { generateRoomCode, sanitizeRoomCode, isValidRoomCode } from './link-protocol.js';
 
 /**
- * LumiNote v03 Client Engine
+ * LumiNote v04 Client Engine
  * Real-time voice intelligence streaming with AssemblyAI v3 & Deepgram Nova-3
  * Dual-World Mode (RodeX Obsidian & Wabi-Sabi Silk)
  */
@@ -573,7 +573,8 @@ async function pushToLinkedDevices() {
 }
 
 // Autosave & Local Draft Recovery
-const DRAFT_STORAGE_KEY = "luminote_v03_saved_draft";
+const DRAFT_STORAGE_KEY = "luminote_v04_saved_draft";
+const LEGACY_DRAFT_STORAGE_KEY = "luminote_v03_saved_draft";
 
 function saveDraftToStorage() {
   if (!messageEl) return;
@@ -592,7 +593,10 @@ function saveDraftToStorage() {
 function restoreDraftFromStorage() {
   if (!messageEl) return;
   try {
-    const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+    // Read-through migration: v03 drafts carry over to the v04 key on first load.
+    const saved =
+      localStorage.getItem(DRAFT_STORAGE_KEY) ||
+      localStorage.getItem(LEGACY_DRAFT_STORAGE_KEY);
     if (saved && saved.trim().length > 0 && messageEl.innerText.trim().length === 0) {
       messageEl.innerText = saved;
       baseText = saved;
