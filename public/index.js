@@ -76,25 +76,31 @@ function getAudioContext() {
 }
 
 // Token & Session Auth Manager
+// Tokens are cached per model slug: different models may be minted by
+// different AssemblyAI account keys, so a cached token is only reusable for
+// the model it was issued under.
 const TokenManager = {
-  assemblyAiToken: null,
-  assemblyAiTokenTimestamp: null,
+  assemblyAiTokens: new Map(), // model slug -> { token, timestamp }
 
   async getAssemblyAiToken() {
-    if (this.assemblyAiToken && this.assemblyAiTokenTimestamp) {
-      const ageSeconds = (Date.now() - this.assemblyAiTokenTimestamp) / 1000;
+    const model = selectedModel;
+    const cached = this.assemblyAiTokens.get(model);
+    if (cached) {
+      const ageSeconds = (Date.now() - cached.timestamp) / 1000;
       if (ageSeconds < 480) {
-        return this.assemblyAiToken;
+        return cached.token;
       }
     }
 
     try {
-      const res = await fetch("/api/token", { signal: AbortSignal.timeout(6000) });
+      const res = await fetch(
+        `/api/token?model=${encodeURIComponent(model)}`,
+        { signal: AbortSignal.timeout(6000) }
+      );
       if (!res.ok) throw new Error(`Token endpoint returned ${res.status}`);
       const data = await res.json();
       if (data.token) {
-        this.assemblyAiToken = data.token;
-        this.assemblyAiTokenTimestamp = Date.now();
+        this.assemblyAiTokens.set(model, { token: data.token, timestamp: Date.now() });
         return data.token;
       }
       return null;

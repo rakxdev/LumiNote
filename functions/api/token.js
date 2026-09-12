@@ -1,4 +1,21 @@
 // Cloudflare Pages Function to generate AssemblyAI token
+//
+// Key routing: the app runs on two AssemblyAI accounts. The primary key
+// (ASSEMBLYAI_API_KEY) serves the default model. Models whose slugs appear
+// in ALT_KEY_MODELS are served by the second account key
+// (ASSEMBLYAI_API_KEY_2), falling back to the primary key if the second
+// secret is not configured. The client sends the selected model slug; the
+// allowlist is server-side so a client can never probe which keys exist.
+// When the alternate model is chosen, add its slug to this set.
+const ALT_KEY_MODELS = new Set();
+
+function selectKey(model, env) {
+  if (ALT_KEY_MODELS.has(model) && env.ASSEMBLYAI_API_KEY_2) {
+    return env.ASSEMBLYAI_API_KEY_2;
+  }
+  return env.ASSEMBLYAI_API_KEY;
+}
+
 export async function onRequest(context) {
   // Method guard
   if (context.request.method !== 'GET') {
@@ -8,7 +25,8 @@ export async function onRequest(context) {
     });
   }
 
-  const ASSEMBLYAI_API_KEY = context.env.ASSEMBLYAI_API_KEY;
+  const model = new URL(context.request.url).searchParams.get('model') || '';
+  const ASSEMBLYAI_API_KEY = selectKey(model, context.env);
   
   if (!ASSEMBLYAI_API_KEY) {
     return new Response(JSON.stringify({ 
