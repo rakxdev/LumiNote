@@ -1299,3 +1299,200 @@ html[data-theme="light"] .remote-interim {
     min-width: 60px;
   }
 }
+
+/* ==========================================================================
+   Library Navigation + Saved Library (hash-routed, D1-backed)
+   ========================================================================== */
+.view-nav {
+  display: flex;
+  gap: 1.1rem;
+  padding: 0.45rem 0.2rem;
+  border-bottom: 1px dashed var(--dashed-line);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 5;
+}
+
+.view-nav a {
+  color: var(--ink-dim);
+  text-decoration: none;
+  padding: 0.15rem 0.1rem;
+  border-bottom: 1px solid transparent;
+}
+
+.view-nav a:hover,
+.view-nav a:focus-visible {
+  color: var(--gold);
+}
+
+.view-nav a.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold-deep);
+}
+
+.library-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0.75rem 0.2rem 0.5rem;
+}
+
+.library-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+}
+
+.library-title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.library-ghost-btn {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+}
+
+.library-ghost-btn:hover,
+.library-ghost-btn:focus-visible {
+  color: var(--gold);
+  border-color: var(--gold-deep);
+}
+
+.library-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 0.25rem;
+}
+
+.library-item {
+  background: var(--panel-inner, rgba(0, 0, 0, 0.2));
+  border: 1px solid var(--panel-border);
+  border-left: 3px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 0.5rem 0.7rem;
+}
+
+.library-item.pinned {
+  border-left-color: var(--gold);
+}
+
+.item-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--ink-muted);
+  letter-spacing: 0.05em;
+}
+
+.item-kind {
+  color: var(--amber, #d9a441);
+  text-transform: uppercase;
+}
+
+.item-source {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.item-act-btn {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 2px;
+  padding: 0.12rem 0.4rem;
+  cursor: pointer;
+}
+
+.item-act-btn:hover,
+.item-act-btn:focus-visible {
+  color: var(--gold);
+  border-color: var(--gold-deep);
+}
+
+.item-act-btn.act-delete:hover,
+.item-act-btn.act-delete:focus-visible {
+  color: var(--red, #e8452c);
+  border-color: var(--red, #e8452c);
+}
+
+.library-item details {
+  margin-top: 0.3rem;
+}
+
+.library-item summary {
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ink-primary);
+  list-style: none;
+}
+
+.library-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.library-item .item-body {
+  margin-top: 0.4rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--ink-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.library-empty {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  border: 1px dashed var(--panel-border);
+  border-radius: 4px;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .view-nav {
+    gap: 0.8rem;
+    font-size: 0.58rem;
+  }
+  .item-actions {
+    gap: 0.25rem;
+  }
+}

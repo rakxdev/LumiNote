@@ -4,6 +4,19 @@
   "updated": "2026-09-12",
   "entries": [
     {
+      "version": "4.3.0",
+      "date": "2026-09-13",
+      "status": "released",
+      "sections": {
+        "added": [
+          "A durable library: notes, clipboard clips, and transcript sessions are stored server-side and survive any refresh or device swap.",
+          "Notes / Clips / Transcripts views in a hash-routed navigation — dictation keeps running while you browse the library.",
+          "Pin, copy, and delete actions on every library entry; pinned entries stay on top.",
+          "A Save button that stores the current transcript as a note. Every clipboard push or receipt is captured as a clip automatically, and finishing a dictation session saves its transcript."
+        ]
+      }
+    },
+    {
       "version": "4.2.0",
       "date": "2026-09-12",
       "status": "released",

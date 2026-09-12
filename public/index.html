@@ -115,6 +115,14 @@
         </div>
       </header>
 
+      <!-- Library Navigation (hash-routed; the recorder stays alive) -->
+      <nav class="view-nav" aria-label="App views">
+        <a href="#/" data-route="/">Studio</a>
+        <a href="#/notes" data-route="/notes">Notes</a>
+        <a href="#/clips" data-route="/clips">Clips</a>
+        <a href="#/transcripts" data-route="/transcripts">Transcripts</a>
+      </nav>
+
       <!-- Central Fusion Transcription Workspace -->
       <main class="fusion-workspace" role="main">
         <!-- Live Full-Canvas Waveform Oscilloscope Layer -->
@@ -157,6 +165,16 @@
             <span>PRESS <kbd>SPACE</kbd> OR CLICK TO TRANSMIT</span>
           </div>
         </div>
+
+        <!-- Saved Library (D1-backed notes, clips, transcript sessions) -->
+        <section class="library-view" id="libraryView" hidden aria-label="Saved library">
+          <div class="library-head">
+            <h2 class="library-title" id="libraryTitle">Notes</h2>
+            <button id="libraryRefresh" class="library-ghost-btn" type="button">Refresh</button>
+          </div>
+          <div class="library-list" id="libraryList" role="list"></div>
+          <p class="library-empty" id="libraryEmpty" hidden>Nothing saved yet.</p>
+        </section>
       </main>
 
       <!-- Bottom Tactile Transport Deck -->
@@ -182,6 +200,10 @@
           <button id="pushButton" class="tool-btn" type="button" title="Push transcript to linked device">
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
             <span>Push</span>
+          </button>
+          <button id="saveButton" class="tool-btn" type="button" title="Save transcript to your library">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Save</span>
           </button>
         </div>
 

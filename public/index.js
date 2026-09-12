@@ -561,7 +561,10 @@ function showRemoteClipboard(text, { replay = false } = {}) {
   if (clipboardTray) clipboardTray.hidden = false;
   // Fresh pushes flow into the editor too; snapshot replays (reconnect
   // catch-up) must not duplicate the same payload there.
-  if (!replay) appendRemoteClipboardToEditor(text);
+  if (!replay) {
+    appendRemoteClipboardToEditor(text);
+    saveClip(text, 'receive');
+  }
   // Auto-copy is best-effort: browsers require a user gesture (Safari) or a
   // focused document; the tray's Copy button is the guaranteed fallback.
   if (document.hasFocus() && navigator.clipboard) {
@@ -584,7 +587,236 @@ async function pushToLinkedDevices() {
     showToast('Link a device first');
     return;
   }
+  saveClip(text, 'push');
   showToast('Pushed to linked device');
+}
+
+// ==========================================================================
+// Saved Library (D1-backed) + hash router. The recorder is a singleton on
+// this page: hash navigation swaps views without unloading the audio graph.
+// ==========================================================================
+const LIBRARY_ROUTES = {
+  '/notes': { kind: 'note', title: 'Notes' },
+  '/clips': { kind: 'clip', title: 'Clips' },
+  '/transcripts': { kind: 'transcript', title: 'Transcripts' },
+};
+
+let currentLibraryRoute = null;
+
+function currentRoute() {
+  return window.location.hash.replace(/^#/, '') || '/';
+}
+
+// POST one entry to /api/notes. Shared by the Save button, clip capture,
+// and transcript auto-save. Silent failures toast the error text.
+async function saveEntry(kind, text, sourceDevice = null) {
+  const trimmed = (text || '').trim();
+  if (!trimmed) return false;
+  try {
+    const res = await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind, text: trimmed, source_device: sourceDevice }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    return true;
+  } catch (err) {
+    console.error(`Saving ${kind} failed:`, err);
+    showToast(`Could not save ${kind}`);
+    return false;
+  }
+}
+
+async function saveCurrentNote() {
+  const text = messageEl ? messageEl.innerText.trim() : '';
+  if (!text) {
+    showToast('Nothing to save yet!');
+    return;
+  }
+  if (await saveEntry('note', text)) showToast('Saved to Notes');
+}
+
+// Every clipboard push/receipt becomes a durable clip, so the clip history
+// survives refreshes and device swaps.
+function saveClip(text, source) {
+  saveEntry('clip', text, source);
+}
+
+// One transcript entry per dictation session (fires after the final turn
+// commits on stop).
+function saveTranscriptSession() {
+  const text = messageEl ? messageEl.innerText.trim() : '';
+  if (text) saveEntry('transcript', text);
+}
+
+function renderLibraryError(message) {
+  const list = document.getElementById('libraryList');
+  const empty = document.getElementById('libraryEmpty');
+  if (list) list.textContent = '';
+  if (empty) {
+    empty.hidden = false;
+    empty.textContent = message;
+  }
+}
+
+function formatEntryTime(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso || '';
+  return d.toLocaleString(undefined, {
+    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+// Library rows are built with createElement/textContent only — entry text
+// is user content and must never hit innerHTML.
+function buildLibraryItem(note) {
+  const item = document.createElement('article');
+  item.className = 'library-item';
+  item.dataset.id = note.id;
+  if (note.pinned) item.classList.add('pinned');
+
+  const meta = document.createElement('div');
+  meta.className = 'item-meta';
+
+  const time = document.createElement('time');
+  time.textContent = formatEntryTime(note.created_at);
+  meta.appendChild(time);
+
+  const kind = document.createElement('span');
+  kind.className = 'item-kind';
+  kind.textContent = note.kind;
+  meta.appendChild(kind);
+
+  const source = note.source_device ? ` • ${note.source_device}` : '';
+  if (source) {
+    const src = document.createElement('span');
+    src.className = 'item-source';
+    src.textContent = source;
+    meta.appendChild(src);
+  }
+
+  const actions = document.createElement('span');
+  actions.className = 'item-actions';
+  for (const [act, label] of [['pin', note.pinned ? 'Unpin' : 'Pin'], ['copy', 'Copy'], ['delete', 'Delete']]) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `item-act-btn act-${act}`;
+    btn.textContent = label;
+    btn.dataset.act = act;
+    actions.appendChild(btn);
+  }
+  meta.appendChild(actions);
+  item.appendChild(meta);
+
+  const details = document.createElement('details');
+  const summary = document.createElement('summary');
+  const preview = note.text.replace(/\s+/g, ' ').trim();
+  summary.textContent = preview.length > 160 ? `${preview.slice(0, 160)}…` : preview;
+  details.appendChild(summary);
+  const body = document.createElement('p');
+  body.className = 'item-body';
+  body.textContent = note.text;
+  details.appendChild(body);
+  item.appendChild(details);
+
+  return item;
+}
+
+async function loadLibrary(route) {
+  const lib = LIBRARY_ROUTES[route];
+  const title = document.getElementById('libraryTitle');
+  const list = document.getElementById('libraryList');
+  const empty = document.getElementById('libraryEmpty');
+  if (!lib || !list) return;
+  if (title) title.textContent = lib.title;
+  list.textContent = '';
+  if (empty) { empty.hidden = true; empty.textContent = 'Nothing saved yet.'; }
+  currentLibraryRoute = route;
+
+  try {
+    const res = await fetch(`/api/notes?kind=${lib.kind}&limit=100`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const data = await res.json();
+    if (currentLibraryRoute !== route) return; // user navigated away mid-fetch
+    const notes = data.notes || [];
+    if (empty) empty.hidden = notes.length > 0;
+    for (const note of notes) list.appendChild(buildLibraryItem(note));
+  } catch (err) {
+    console.error('Loading library failed:', err);
+    renderLibraryError('Could not load the library. Try Refresh.');
+  }
+}
+
+async function handleLibraryAction(item, action) {
+  const id = item.dataset.id;
+  if (!id) return;
+  if (action === 'delete') {
+    try {
+      const res = await fetch(`/api/notes/${id}`, { method: 'DELETE', signal: AbortSignal.timeout(8000) });
+      if (!res.ok && res.status !== 404) throw new Error(`status ${res.status}`);
+      item.remove();
+      const list = document.getElementById('libraryList');
+      const empty = document.getElementById('libraryEmpty');
+      if (list && !list.children.length && empty) empty.hidden = false;
+      showToast('Deleted');
+    } catch (err) {
+      console.error('Delete failed:', err);
+      showToast('Could not delete');
+    }
+    return;
+  }
+  if (action === 'copy') {
+    const body = item.querySelector('.item-body');
+    if (body && navigator.clipboard) {
+      await navigator.clipboard.writeText(body.textContent || '');
+      showToast('Copied');
+    }
+    return;
+  }
+  if (action === 'pin') {
+    const pinned = !item.classList.contains('pinned');
+    try {
+      const res = await fetch(`/api/notes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinned }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      item.classList.toggle('pinned', pinned);
+      const pinBtn = item.querySelector('.act-pin');
+      if (pinBtn) pinBtn.textContent = pinned ? 'Unpin' : 'Pin';
+      showToast(pinned ? 'Pinned' : 'Unpinned');
+    } catch (err) {
+      console.error('Pin failed:', err);
+      showToast('Could not pin');
+    }
+  }
+}
+
+// Swap the studio panels for the library view. The transport deck stays
+// visible in both, so dictation keeps working while browsing the library.
+function renderRoute() {
+  const route = currentRoute();
+  const libraryRoute = LIBRARY_ROUTES[route] ? route : null;
+  const isLibrary = !!libraryRoute;
+
+  const workspaceMain = document.querySelector('.fusion-workspace');
+  if (workspaceMain) {
+    for (const sel of ['.workspace-top-bar', '#message', '.workspace-bottom-bar']) {
+      const panel = workspaceMain.querySelector(sel);
+      if (panel) panel.hidden = isLibrary;
+    }
+  }
+  const libraryView = document.getElementById('libraryView');
+  if (libraryView) libraryView.hidden = !isLibrary;
+
+  for (const link of document.querySelectorAll('.view-nav a[data-route]')) {
+    link.classList.toggle('active', link.dataset.route === route);
+  }
+
+  if (isLibrary && libraryRoute !== currentLibraryRoute) loadLibrary(libraryRoute);
 }
 
 // Autosave & Local Draft Recovery
@@ -1324,6 +1556,9 @@ function stopRecording() {
   commitActiveTurn();
   currentTurnOrder = null;
   updateRecordingState(false);
+  // Durable history: one transcript entry per dictation session, saved
+  // after the final turn commits so it includes the last sentence.
+  saveTranscriptSession();
   showToast("Stream Committed");
 }
 
@@ -1663,6 +1898,31 @@ document.addEventListener('DOMContentLoaded', () => {
   // The voice meter runs for the life of the page: breathing floor when
   // idle, live FFT while recording, streamed scalar when a peer is talking.
   requestAnimationFrame(vizLoop);
+
+  // Library wiring: Save button, refresh, row actions, hash router.
+  const saveButton = document.getElementById('saveButton');
+  if (saveButton) saveButton.addEventListener('click', saveCurrentNote);
+
+  const libraryRefresh = document.getElementById('libraryRefresh');
+  if (libraryRefresh) {
+    libraryRefresh.addEventListener('click', () => {
+      const route = currentRoute();
+      if (LIBRARY_ROUTES[route]) loadLibrary(route);
+    });
+  }
+
+  const libraryList = document.getElementById('libraryList');
+  if (libraryList) {
+    libraryList.addEventListener('click', (event) => {
+      const btn = event.target.closest('button[data-act]');
+      if (!btn) return;
+      const item = btn.closest('.library-item');
+      if (item) handleLibraryAction(item, btn.dataset.act);
+    });
+  }
+
+  window.addEventListener('hashchange', renderRoute);
+  renderRoute();
 });
 
 window.addEventListener('beforeunload', (e) => {

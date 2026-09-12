@@ -96,9 +96,35 @@ describe('index.html script contract', () => {
     const js = readFileSync(join(publicDir, 'index.js'), 'utf8');
     const fn = js.match(/function showRemoteClipboard\(text, \{ replay = false \} = \{\}\) \{[\s\S]*?\n\}/);
     assert.ok(fn, 'showRemoteClipboard must accept a { replay } option');
-    assert.match(fn[0], /if \(!replay\) appendRemoteClipboardToEditor\(text\)/);
+    const freshPush = fn[0].match(/if \(!replay\) \{[\s\S]*?\n {2}\}/);
+    assert.ok(freshPush, 'fresh pushes must be guarded from snapshot replays');
+    assert.match(freshPush[0], /appendRemoteClipboardToEditor\(text\)/,
+      'a fresh push must land in the transcript editor');
+    assert.match(freshPush[0], /saveClip\(text, 'receive'\)/,
+      'a fresh push must be captured as a durable clip');
     const snapshot = js.match(/applySnapshot\(snapshot\) \{[\s\S]*?\n {2}\}/);
     assert.ok(snapshot && /showRemoteClipboard\(snapshot\.clipboard\.text, \{ replay: true \}\)/.test(snapshot[0]),
       'snapshot catch-up must mark the clipboard delivery as a replay');
+  });
+
+  it('exposes the hash-routed library with durable save flows wired', () => {
+    const js = readFileSync(join(publicDir, 'index.js'), 'utf8');
+    // Router: three library routes plus a hashchange-driven renderer, so
+    // navigation never unloads the recorder's audio graph.
+    assert.match(js, /LIBRARY_ROUTES = \{[\s\S]*?\/notes[\s\S]*?\/clips[\s\S]*?\/transcripts/);
+    assert.match(js, /window\.addEventListener\('hashchange', renderRoute\)/);
+    // One transcript entry per dictation session, saved on stop after the
+    // final turn commits.
+    const stop = js.match(/function stopRecording\(\) \{[\s\S]*?\n\}/);
+    assert.ok(stop && /saveTranscriptSession\(\)/.test(stop[0]),
+      'stopRecording must auto-save the session transcript');
+    // Library rows are built from createElement/textContent only — entry
+    // text is user content and must never reach innerHTML.
+    const item = js.match(/function buildLibraryItem[\s\S]*?\n\}/);
+    assert.ok(item && !/innerHTML/.test(item[0]), 'library rows must not use innerHTML');
+    // Nav offers the three library routes.
+    for (const route of ['notes', 'clips', 'transcripts']) {
+      assert.match(html, new RegExp(`href="#/${route}" data-route="/${route}"`));
+    }
   });
 });
