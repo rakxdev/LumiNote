@@ -2,6 +2,7 @@
 
 import { appendPcmChunk } from './audio-processor.js';
 import { generateRoomCode, sanitizeRoomCode, isValidRoomCode } from './link-protocol.js';
+import { meterAdvance, dbToNorm, rms16 } from './viz.js';
 
 /**
  * LumiNote v04 Client Engine
@@ -126,23 +127,77 @@ const TokenManager = {
 
 // Web Audio Real-Time Analyser Pipeline
 let liveAnalyser = null;
-let liveDataArray = null;
-let animFrameId = null;
+let liveFreqData = null; // Float32Array of dBFS bins while recording
+
+// Voice pill state: smoothed per-bar heights and the remote-voice scalar.
+const VIZ_BAR_COUNT = 12;
+const barDisp = new Float32Array(VIZ_BAR_COUNT);
+let remoteLevelTarget = 0;
+let remoteLevelDisp = 0;
+let lastRemoteLevelAt = 0;
+const REMOTE_LEVEL_STALE_MS = 2000;
 
 function setupLiveAnalyser(audioCtx) {
   try {
     liveAnalyser = audioCtx.createAnalyser();
-    liveAnalyser.fftSize = 128;
-    liveAnalyser.smoothingTimeConstant = 0.8;
+    liveAnalyser.fftSize = 512;
+    liveAnalyser.smoothingTimeConstant = 0.3;
     liveAnalyser.minDecibels = -90;
     liveAnalyser.maxDecibels = -10;
-    
-    liveDataArray = new Uint8Array(liveAnalyser.frequencyBinCount);
+    liveFreqData = new Float32Array(liveAnalyser.frequencyBinCount);
     return liveAnalyser;
   } catch (err) {
     console.error("Failed to setup Live Web Audio Analyser:", err);
     return null;
   }
+}
+
+function stopLiveAnalyser() {
+  if (liveAnalyser) {
+    try { liveAnalyser.disconnect(); } catch (e) {}
+    liveAnalyser = null;
+  }
+  liveFreqData = null;
+}
+
+/**
+ * Per-bar target heights (0..1) for the pill:
+ * - local voice: real FFT bins in log-spaced groups, dB-mapped over the
+ *   speech range (the old linear byte-averaging read near-zero for voice);
+ * - remote voice: the streamed level scalar shaped as a decaying spectrum;
+ * - idle: a faint breathing floor. Silence never draws a fake wave.
+ */
+function vizBarTargets() {
+  const targets = new Float32Array(VIZ_BAR_COUNT);
+  if (isRecording && liveAnalyser) {
+    liveAnalyser.getFloatFrequencyData(liveFreqData);
+    const usable = Math.max(2, Math.floor(liveFreqData.length / 4));
+    const span = usable - 1;
+    for (let i = 0; i < VIZ_BAR_COUNT; i++) {
+      const lo = 1 + Math.floor(span * Math.pow(i / VIZ_BAR_COUNT, 1.6));
+      const hi = Math.max(lo + 1, 1 + Math.floor(span * Math.pow((i + 1) / VIZ_BAR_COUNT, 1.6)));
+      let peak = -90;
+      for (let b = lo; b < Math.min(hi, liveFreqData.length); b++) {
+        if (liveFreqData[b] > peak) peak = liveFreqData[b];
+      }
+      targets[i] = dbToNorm(peak);
+    }
+    return targets;
+  }
+  if (!isRecording && lastRemoteLevelAt > 0) {
+    // Remote voice: drive the spectrum from the streamed scalar, and drain
+    // smoothly back to the idle floor when it goes quiet (no hard pop).
+    remoteLevelDisp = meterAdvance(remoteLevelDisp, Date.now() - lastRemoteLevelAt < REMOTE_LEVEL_STALE_MS ? remoteLevelTarget : 0);
+    if (remoteLevelDisp > 0.01) {
+      for (let i = 0; i < VIZ_BAR_COUNT; i++) {
+        targets[i] = remoteLevelDisp * (1 - i / (VIZ_BAR_COUNT + 2));
+      }
+      return targets;
+    }
+  }
+  const breathe = 0.025 + (Math.sin(Date.now() * 0.0012) * 0.5 + 0.5) * 0.03;
+  targets.fill(breathe);
+  return targets;
 }
 
 function renderOscilloscopeFrame() {
@@ -157,89 +212,42 @@ function renderOscilloscopeFrame() {
     ctx.fillStyle = isLight ? '#f4efe6' : '#101318';
     ctx.fillRect(0, 0, headerCanvas.width, headerCanvas.height);
 
-    if (!isRecording) {
-      // Idle straight resting line
-      ctx.beginPath();
-      ctx.moveTo(0, headerCanvas.height / 2);
-      ctx.lineTo(headerCanvas.width, headerCanvas.height / 2);
-      ctx.strokeStyle = isLight ? 'rgba(43,38,33,0.2)' : 'rgba(217,182,74,0.3)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    } else {
-      let isSynthetic = false;
-      
-      if (liveAnalyser) {
-        liveAnalyser.getByteFrequencyData(liveDataArray);
-        // Check if there is actual audio energy coming through
-        let totalEnergy = 0;
-        for (let i = 0; i < liveDataArray.length; i++) {
-          totalEnergy += liveDataArray[i];
-        }
-        if (totalEnergy < 10) {
-          isSynthetic = true; // Fallback to synthetic if hardware muted/silenced
-        }
+    const W = headerCanvas.width;
+    const H = headerCanvas.height;
+    const targets = vizBarTargets();
+    const gap = 4;
+    const barWidth = Math.max(4, (W - gap * (VIZ_BAR_COUNT + 1)) / VIZ_BAR_COUNT);
+
+    for (let i = 0; i < VIZ_BAR_COUNT; i++) {
+      barDisp[i] = meterAdvance(barDisp[i], targets[i]);
+      const barHeight = Math.max(3, barDisp[i] * (H - 4));
+      const x = gap + i * (barWidth + gap);
+      const y = H - 2 - barHeight;
+
+      const grad = ctx.createLinearGradient(0, H, 0, 0);
+      if (isLight) {
+        grad.addColorStop(0, '#b91c1c');
+        grad.addColorStop(1, '#d97706');
       } else {
-        isSynthetic = true;
+        grad.addColorStop(0, '#d9b64a');
+        grad.addColorStop(1, '#e8452c');
       }
 
-      const numBars = 16;
-      const barWidth = Math.max(2, (headerCanvas.width / numBars) - 2);
-      const time = Date.now() * 0.005;
-
-      for (let i = 0; i < numBars; i++) {
-        let norm = 0.05; // Base height
-        
-        if (isSynthetic) {
-          // Synthetic organic audio wave simulation
-          const noise = Math.random() * 0.15;
-          const wave1 = Math.sin(time * 1.5 + i * 0.3) * 0.5 + 0.5;
-          const wave2 = Math.sin(time * 0.8 - i * 0.5) * 0.5 + 0.5;
-          const pulse = Math.sin(time * 0.2) * 0.3 + 0.7; 
-          const syntheticNorm = ((wave1 * 0.6 + wave2 * 0.4) * pulse) + noise;
-          norm = Math.min(1, Math.max(0.05, syntheticNorm));
-        } else {
-          // Hardware Analyser rendering
-          const step = Math.floor(liveDataArray.length / numBars);
-          let sum = 0;
-          for (let j = 0; j < step; j++) {
-            sum += liveDataArray[i * step + j] || 0;
-          }
-          const val = sum / step;
-          const targetNorm = val / 255;
-          // Boost sensitivity for better visualizer response
-          norm = Math.min(1, targetNorm * 1.8 + 0.05);
-        }
-        
-        // Responsive bar height
-        const barHeight = Math.max(2, norm * (headerCanvas.height - 2));
-        const x = i * (barWidth + 2);
-        const y = headerCanvas.height - barHeight;
-
-        const grad = ctx.createLinearGradient(0, headerCanvas.height, 0, 0);
-        if (isLight) {
-          grad.addColorStop(0, '#b91c1c');
-          grad.addColorStop(1, '#d97706');
-        } else {
-          grad.addColorStop(0, '#d9b64a');
-          grad.addColorStop(1, '#e8452c');
-        }
-
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        if (ctx.roundRect) {
-          ctx.roundRect(x, y, barWidth, barHeight, [2, 2, 0, 0]);
-        } else {
-          ctx.rect(x, y, barWidth, barHeight);
-        }
-        ctx.fill();
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(x, y, barWidth, barHeight, [2, 2, 0, 0]);
+      } else {
+        ctx.rect(x, y, barWidth, barHeight);
       }
+      ctx.fill();
     }
   }
 
   // 2. Render Full-Canvas Time-Domain Voice Waveform in Background
   if (bgCanvas) {
     const bgCtx = bgCanvas.getContext("2d", { alpha: true });
-    
+
     // Only resize if actually needed (prevents layout thrashing)
     if (bgCanvas.width !== bgCanvas.offsetWidth || bgCanvas.height !== bgCanvas.offsetHeight) {
       bgCanvas.width = bgCanvas.offsetWidth;
@@ -248,80 +256,46 @@ function renderOscilloscopeFrame() {
 
     bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
 
-    if (isRecording) {
-      bgCtx.beginPath();
-      bgCtx.lineWidth = 1.5;
-      bgCtx.strokeStyle = isLight ? 'rgba(185, 28, 28, 0.4)' : 'rgba(217, 182, 74, 0.35)';
-
-      let isSyntheticBg = false;
-      let timeDomainData = null;
-
-      if (liveAnalyser) {
-        timeDomainData = new Uint8Array(liveAnalyser.fftSize);
-        liveAnalyser.getByteTimeDomainData(timeDomainData);
-        // Check if flatlined (128 is center)
-        let hasEnergy = false;
-        for (let i = 0; i < timeDomainData.length; i++) {
-          if (Math.abs(timeDomainData[i] - 128) > 2) {
-            hasEnergy = true; break;
-          }
+    if (isRecording && liveAnalyser) {
+      const timeDomainData = new Uint8Array(liveAnalyser.fftSize);
+      liveAnalyser.getByteTimeDomainData(timeDomainData);
+      // Check if flatlined (128 is center): silence draws nothing —
+      // the old code painted a fake wave exactly when the mic was quiet.
+      let hasEnergy = false;
+      for (let i = 0; i < timeDomainData.length; i++) {
+        if (Math.abs(timeDomainData[i] - 128) > 2) {
+          hasEnergy = true; break;
         }
-        if (!hasEnergy) isSyntheticBg = true;
-      } else {
-        isSyntheticBg = true;
       }
-
-      if (isSyntheticBg) {
-        // Synthetic wave
-        const time = Date.now() * 0.003;
-        const amplitude = (Math.sin(time * 0.5) * 0.5 + 0.5) * 60 + 20;
-        const sliceWidth = bgCanvas.width / 128;
-        let x = 0;
-        for (let i = 0; i < 128; i++) {
-          const wave = Math.sin(i * 0.1 + time * 2) * Math.cos(i * 0.05 - time);
-          const y = (bgCanvas.height / 2) + (wave * amplitude);
-          if (i === 0) bgCtx.moveTo(x, y);
-          else bgCtx.lineTo(x, y);
-          x += sliceWidth;
-        }
-      } else {
-        // Hardware waveform
+      if (hasEnergy) {
+        bgCtx.beginPath();
+        bgCtx.lineWidth = 1.5;
+        bgCtx.strokeStyle = isLight ? 'rgba(185, 28, 28, 0.4)' : 'rgba(217, 182, 74, 0.35)';
         const sliceWidth = bgCanvas.width / timeDomainData.length;
         let x = 0;
         for (let i = 0; i < timeDomainData.length; i++) {
           // Amplify the waveform slightly for visibility
-          const v = ((timeDomainData[i] - 128) * 1.5 + 128) / 128.0; 
+          const v = ((timeDomainData[i] - 128) * 1.5 + 128) / 128.0;
           const y = (v * bgCanvas.height) / 2;
           if (i === 0) bgCtx.moveTo(x, y);
           else bgCtx.lineTo(x, y);
           x += sliceWidth;
         }
+        bgCtx.stroke();
       }
-
-      bgCtx.stroke();
     }
   }
-
-  if (isRecording) {
-    animFrameId = requestAnimationFrame(renderOscilloscopeFrame);
-  }
 }
 
-function startOscilloscope() {
-  if (animFrameId) cancelAnimationFrame(animFrameId);
-  renderOscilloscopeFrame();
-}
-
-function stopOscilloscope() {
-  if (animFrameId) {
-    cancelAnimationFrame(animFrameId);
-    animFrameId = null;
-  }
-  if (liveAnalyser) {
-    try { liveAnalyser.disconnect(); } catch (e) {}
-    liveAnalyser = null;
-  }
-  liveDataArray = null;
+// The meter loop runs for the life of the page (the pill is always on
+// screen): full frame rate while a voice is being tracked, 15fps when idle
+// so an unlinked, non-recording page stays cheap on battery.
+let lastVizDrawAt = 0;
+function vizLoop(ts) {
+  requestAnimationFrame(vizLoop);
+  const busy = isRecording || !!LinkManager.room;
+  if (!busy && ts - lastVizDrawAt < 1000 / 15) return;
+  lastVizDrawAt = ts;
   renderOscilloscopeFrame();
 }
 
@@ -368,7 +342,8 @@ function createMicrophone() {
       
       audioWorkletNode.connect(audioContext.destination);
 
-      startOscilloscope();
+      // The meter loop runs for the life of the page (vizLoop); it picks
+      // up the new analyser automatically on the next frame.
 
       const batchSamples = Math.floor(audioContext.sampleRate * 0.1);
       audioWorkletNode.port.onmessage = (event) => {
@@ -397,7 +372,7 @@ function createMicrophone() {
     },
 
     stopRecording() {
-      stopOscilloscope();
+      stopLiveAnalyser();
 
       if (audioWorkletNode) {
         audioWorkletNode.port.onmessage = null;
@@ -1021,6 +996,12 @@ const LinkManager = {
       case "interim":
         showRemoteInterim(msg.text);
         break;
+      case "level":
+        // Remote voice loudness (0..1) drives our meter when we are not
+        // the one recording, so the second screen follows the first voice.
+        remoteLevelTarget = typeof msg.v === "number" ? msg.v : 0;
+        lastRemoteLevelAt = Date.now();
+        break;
       case "clipboard":
         showRemoteClipboard(msg.text);
         break;
@@ -1141,6 +1122,20 @@ async function toggleRecording() {
   }
 }
 
+// One 100 ms PCM batch: forward it to the STT engine, and if a link room is
+// live, share the batch's loudness as a `level` frame so the peer screen's
+// meter follows this device's voice (~10 Hz, ~28 bytes per frame).
+function sendAudioChunk(audioChunk) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(audioChunk);
+  }
+  if (LinkManager.room) {
+    const samples = new Int16Array(audioChunk.buffer, audioChunk.byteOffset, audioChunk.length / 2);
+    const v = Math.min(1, Math.round(rms16(samples) * 100) / 100);
+    LinkManager.send({ type: "level", v });
+  }
+}
+
 async function startRecording() {
   try {
     microphone = createMicrophone();
@@ -1164,11 +1159,7 @@ async function startRecording() {
 
       ws.onopen = async () => {
         try {
-          await microphone.startRecording((audioChunk) => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-              ws.send(audioChunk);
-            }
-          });
+          await microphone.startRecording(sendAudioChunk);
           updateRecordingState(true, true);
           showToast("Acoustic Stream Engaged (150ms)");
         } catch (micErr) {
@@ -1226,11 +1217,7 @@ async function startRecording() {
 
       ws.onopen = async () => {
         try {
-          await microphone.startRecording((audioChunk) => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-              ws.send(audioChunk);
-            }
-          });
+          await microphone.startRecording(sendAudioChunk);
           updateRecordingState(true, true);
           showToast("Acoustic Stream Engaged (AssemblyAI)");
         } catch (micErr) {
@@ -1627,18 +1614,9 @@ document.addEventListener('DOMContentLoaded', () => {
   restoreDraftFromStorage();
   updateStats();
 
-  // Initialize Oscilloscope in idle state
-  const canvas = document.getElementById("fftOscilloscope");
-  if (canvas) {
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.beginPath();
-    ctx.moveTo(0, canvas.height / 2);
-    ctx.lineTo(canvas.width, canvas.height / 2);
-    ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(43,38,33,0.15)' : 'rgba(217,182,74,0.15)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
+  // The voice meter runs for the life of the page: breathing floor when
+  // idle, live FFT while recording, streamed scalar when a peer is talking.
+  requestAnimationFrame(vizLoop);
 });
 
 window.addEventListener('beforeunload', (e) => {
