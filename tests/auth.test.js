@@ -151,6 +151,17 @@ describe('wiring contract', () => {
     assert.match(wsFn, /status: 401/);
   });
 
+  it('verified upgrades open a room trust window that admitted joins reuse', () => {
+    // The phone should never need an OTP when the desktop (verified) opened
+    // the room: the window lives in D1 and both the gate and the status
+    // endpoint consult it.
+    assert.match(wsFn, /putSetting\(context\.env, `room_auth:\$\{room\}`/);
+    assert.match(wsFn, /x-ln-authed/);
+    const statusFn = readFileSync(join(ROOT, 'functions/api/auth/status.js'), 'utf8');
+    assert.match(statusFn, /room_auth:\$\{room\}/);
+    assert.match(statusFn, /room_authed/);
+  });
+
   it('the client checks room-scoped status before connecting and challenges with the typed code', () => {
     assert.match(indexJs, /async function ensureLinkAuth\(code\)/);
     assert.match(indexJs, /\/api\/auth\/status\$\{query\}/, 'status fetch must carry the room for the trust window');

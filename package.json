@@ -1,6 +1,6 @@
 {
   "name": "luminote",
-  "version": "4.4.0",
+  "version": "4.4.1",
   "description": "LumiNote v04 - Production-hardened real-time speech intelligence app with Link Mode cross-device sync",
   "type": "module",
   "scripts": {

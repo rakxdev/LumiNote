@@ -4,6 +4,26 @@
   "updated": "2026-09-13",
   "entries": [
     {
+      "version": "4.4.1",
+      "date": "2026-09-13",
+      "status": "released",
+      "sections": {
+        "added": [
+          "Room trust window: after a verified device opens Link Mode, the owner's other devices join that room with just the room code — QR scan or typed — for 12 hours, no second authenticator code needed."
+        ],
+        "changed": [
+          "The header Link button is now a labeled, presence-driven control: Link (idle), pulsing amber Waiting (room open, no peer yet), emerald Linked (a device is actually connected) — instead of an icon-only button that read as connected while you were alone.",
+          "The view tabs (Studio / Notes / Clips / Transcripts) align with the editor panel's border, and the changelog page now uses the studio's full-width layout instead of a narrow centered column."
+        ],
+        "fixed": [
+          "Phones could fail to join a room after reloads: mobile browsers leave ghost sockets behind, the room slowly filled with them and refused the reconnecting device. A rejoining device now always reclaims its slot."
+        ],
+        "security": [
+          "The worker's direct /join route (which bypassed the app's login gate) is disabled unless explicitly opted in for local development."
+        ]
+      }
+    },
+    {
       "version": "4.4.0",
       "date": "2026-09-13",
       "status": "released",

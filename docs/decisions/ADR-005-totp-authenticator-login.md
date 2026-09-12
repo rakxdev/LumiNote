@@ -50,6 +50,21 @@ devices. Constraints:
    The prompt accepts exactly 6 digits and also accepts a recovery code
    (burned server-side).
 
+## Amendment (2026-09-13, v4.4.1): room trust window
+
+Per-user feedback, the per-browser gate was too strict: the phone scanning
+the desktop's QR seconds after the desktop logged in was still asked for an
+OTP. A verified upgrade now opens a **12h trust window for its room** — D1
+key `room_auth:<code>`, refreshed on every verified reconnect — and joins
+inside that window are admitted with just the room code (QR or typed). The
+OTP gate remains only for devices connecting while no verified device has
+opened the room. Rationale: the room code displayed/QR'd by a verified
+device IS the invitation; requiring a second factor to accept it added
+friction without adding meaningful protection. The worker additionally
+enforces the Function's `x-ln-authed` / `x-ln-auth-required` headers as
+defense in depth, and its direct `/join` route (a pre-existing gate bypass)
+is now disabled outside development via `LINK_DIRECT_JOIN=1`.
+
 ## Alternatives Considered
 
 ### Passkeys / WebAuthn

@@ -17,13 +17,17 @@ const SECTION_KEYS = new Set(['added', 'changed', 'deprecated', 'removed', 'fixe
 describe('changelog.json structure', () => {
   it('has entries sorted newest-first', () => {
     assert.ok(Array.isArray(changelog.entries) && changelog.entries.length >= 2);
+    const ver = (s) => s.split('.').map(Number);
     for (let i = 1; i < changelog.entries.length; i++) {
       const prev = changelog.entries[i - 1];
       const cur = changelog.entries[i];
-      const [pMaj, pMin] = prev.version.split('.').map(Number);
-      const [cMaj, cMin] = cur.version.split('.').map(Number);
+      const p = ver(prev.version);
+      const c = ver(cur.version);
+      const newer = p[0] > c[0]
+        || (p[0] === c[0] && p[1] > c[1])
+        || (p[0] === c[0] && p[1] === c[1] && p[2] > c[2]);
       assert.ok(
-        prev.date > cur.date || (prev.date === cur.date && (pMaj > cMaj || (pMaj === cMaj && pMin > cMin))),
+        prev.date > cur.date || (prev.date === cur.date && newer),
         `entry ${i} (${cur.version}) is not older than ${prev.version}`
       );
     }

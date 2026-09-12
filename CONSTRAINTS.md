@@ -24,8 +24,8 @@ Last reviewed: 2026-09-13 (initial bar, set with measured baselines)
 
 | Metric | Today | Direction |
 |--------|-------|-----------|
-| Project coverage (lines, node --test) | 91.9 | floor 91.4 (0.5 drift tolerance) — raise the floor whenever the number improves |
-| Frontend app assets (public/, excl. vendor) | 120529 B | ceiling 120529 B — raise only with the reason named in the commit |
+| Project coverage (lines, node --test) | 92.1 | floor 91.6 (0.5 drift tolerance) — raise the floor whenever the number improves |
+| Frontend app assets (public/, excl. vendor) | 122832 B | ceiling 122832 B — raise only with the reason named in the commit |
 
 Both ratchets are checked by `node scripts/check-ratchets.mjs` at task end; the numbers above are the single source of truth the script parses.
 
