@@ -38,6 +38,7 @@ const linkJoinBtn = document.getElementById("linkJoinBtn");
 const linkStatusDot = document.getElementById("linkStatusDot");
 const linkStatusText = document.getElementById("linkStatusText");
 const linkDevicesEl = document.getElementById("linkDevices");
+const linkLeaveBtn = document.getElementById("linkLeaveBtn");
 const clipboardTray = document.getElementById("clipboardTray");
 const trayText = document.getElementById("trayText");
 const trayCopyBtn = document.getElementById("trayCopyBtn");
@@ -773,7 +774,9 @@ const LinkManager = {
     this.closeSocket(true);
     const scheme = location.protocol === "https:" ? "wss" : "ws";
     const url = `${scheme}://${location.host}/api/link/ws?room=${encodeURIComponent(code)}&role=${this.role}`;
-    this.updateStatus("linking", "Linking…");
+    this.updateStatus("linking", `Linking to ${code}…`);
+    this.setSessionBadge(true);
+    if (linkLeaveBtn) linkLeaveBtn.hidden = false;
     try {
       this.ws = new WebSocket(url);
     } catch (e) {
@@ -791,7 +794,7 @@ const LinkManager = {
         this.intentionalClose = false;
         return;
       }
-      this.updateStatus("error", "Reconnecting…");
+      this.updateStatus("error", `Reconnecting to ${this.room}…`);
       this.scheduleReconnect();
     };
     this.ws.onerror = () => {};
@@ -822,6 +825,14 @@ const LinkManager = {
     this.devices = [];
     this.renderDeviceList();
     this.updateStatus("off", "Offline");
+    this.setSessionBadge(false);
+    if (linkLeaveBtn) linkLeaveBtn.hidden = true;
+    // Reset the pairing panel so a stale code/QR never lingers after leaving.
+    if (linkRoomCodeEl) linkRoomCodeEl.textContent = "······";
+    if (linkQrWrap) {
+      linkQrWrap.innerHTML = "";
+      linkQrWrap.classList.remove("link-qr-fallback");
+    }
   },
 
   send(obj) {
@@ -843,7 +854,7 @@ const LinkManager = {
       case "init":
         this.devices = Array.isArray(msg.devices) ? msg.devices : [];
         this.renderDeviceList();
-        this.updateStatus("linked", "Linked");
+        this.updateStatus("linked", `Linked to ${this.room}`);
         showToast("Link established");
         this.applySnapshot(msg.snapshot);
         break;
@@ -895,6 +906,12 @@ const LinkManager = {
   updateStatus(state, text) {
     if (linkStatusDot) linkStatusDot.className = `link-status-dot ${state}`;
     if (linkStatusText) linkStatusText.textContent = text;
+  },
+
+  // Ambient indicator: a live link session stays visible in the header even
+  // when the pairing modal is closed.
+  setSessionBadge(active) {
+    if (linkToggleBtn) linkToggleBtn.classList.toggle("link-active", !!active);
   },
 
   openModal() {
@@ -1327,6 +1344,13 @@ document.addEventListener('DOMContentLoaded', () => {
         LinkManager.joinRoom(linkJoinInput.value);
         linkJoinInput.value = '';
       }
+    });
+  }
+
+  if (linkLeaveBtn) {
+    linkLeaveBtn.addEventListener('click', () => {
+      LinkManager.disconnect();
+      LinkManager.closeModal();
     });
   }
 

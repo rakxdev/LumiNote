@@ -390,6 +390,7 @@ html, body {
 
 /* Dual Mode Switch Button */
 .mode-switch-btn {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -405,6 +406,26 @@ html, body {
   box-shadow: var(--btn-shadow);
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+/* Live link session: emerald icon + dot keep the pairing visible with the
+   modal closed, so the session never feels "invisible" (see UX research). */
+.mode-switch-btn.link-active {
+  border-color: var(--emerald);
+}
+.mode-switch-btn.link-active .theme-icon-slot {
+  color: var(--emerald);
+}
+.mode-switch-btn.link-active::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--emerald);
+  box-shadow: 0 0 6px var(--emerald);
 }
 
 .theme-icon-slot {
@@ -1128,6 +1149,10 @@ html[data-theme="light"] .link-join-input:focus-visible {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.link-leave-btn {
+  margin-left: auto;
 }
 
 .link-status-dot {
