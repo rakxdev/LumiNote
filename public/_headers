@@ -1,9 +1,4 @@
 /*
-  Cloudflare Pages Custom Headers Configuration
-  Strict security policies: CSP, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
-*/
-
-/*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
