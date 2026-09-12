@@ -722,11 +722,17 @@ async function selectCustomModel(value, label, element) {
 
 // Link Mode: Cross-Device Pairing & Relay
 /* global qrcode */
+
+// Durable messages are held briefly while a (re)connecting socket is in
+// CONNECTING state; ephemeral interim previews are never queued.
+const LINK_OUTBOX_MAX = 50;
+
 const LinkManager = {
   room: null,
   role: "desktop",
   ws: null,
   devices: [],
+  outbox: [],
   intentionalClose: false,
   reconnectAttempts: 0,
   reconnectTimer: null,
@@ -741,6 +747,7 @@ const LinkManager = {
     const code = generateRoomCode();
     this.role = this.detectRole();
     this.room = code;
+    this.outbox = [];
     if (linkRoomCodeEl) linkRoomCodeEl.textContent = code.split("").join(" ");
     this.renderQr(`${location.origin}/?join=${code}`);
     this.connect(code);
@@ -756,6 +763,7 @@ const LinkManager = {
     this.reconnectAttempts = 0;
     this.role = this.detectRole();
     this.room = code;
+    this.outbox = [];
     if (linkRoomCodeEl) linkRoomCodeEl.textContent = code.split("").join(" ");
     this.renderQr(`${location.origin}/?join=${code}`);
     this.connect(code);
@@ -801,6 +809,7 @@ const LinkManager = {
       this.reconnectAttempts = 0;
       // Trigger the server handshake: hello -> init + join broadcast
       this.send({ type: "hello" });
+      this.flushOutbox();
     };
     this.ws.onmessage = (event) => this.handleMessage(event);
     this.ws.onclose = () => {
@@ -835,6 +844,7 @@ const LinkManager = {
   disconnect() {
     clearTimeout(this.reconnectTimer);
     this.closeSocket(true);
+    this.outbox = [];
     this.room = null;
     this.devices = [];
     this.renderDeviceList();
@@ -854,7 +864,30 @@ const LinkManager = {
       this.ws.send(JSON.stringify(obj));
       return true;
     }
+    // While a socket is (re)connecting, durable messages are held briefly
+    // instead of being dropped; ephemeral interim previews are not worth
+    // buffering (the receiver only shows them for a moment anyway).
+    if (
+      this.ws &&
+      this.ws.readyState === WebSocket.CONNECTING &&
+      (obj.type === "turn" || obj.type === "clipboard") &&
+      this.outbox.length < LINK_OUTBOX_MAX
+    ) {
+      this.outbox.push(JSON.stringify(obj));
+      return true;
+    }
     return false;
+  },
+
+  flushOutbox() {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    for (const data of this.outbox.splice(0)) {
+      try {
+        this.ws.send(data);
+      } catch (e) {
+        // socket died between the readyState check and the send
+      }
+    }
   },
 
   handleMessage(event) {
