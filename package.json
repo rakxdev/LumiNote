@@ -9,7 +9,10 @@
     "deploy": "wrangler pages deploy public",
     "deploy:sync": "wrangler deploy --config worker/wrangler.toml",
     "test": "node --test tests/**/*.test.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check:fast": "npm run lint && node scripts/floor-guard.mjs",
+    "check:task": "npm test && node scripts/check-ratchets.mjs",
+    "check:full": "npm run check:fast && npm run check:task && node scripts/floor-guard.mjs --base origin/master"
   },
   "keywords": [
     "speech-to-text",

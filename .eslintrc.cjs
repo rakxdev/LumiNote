@@ -36,6 +36,16 @@ module.exports = {
       },
     },
     {
+      env: {
+        node: true,
+      },
+      files: ["scripts/**/*.mjs"],
+      parserOptions: {
+        sourceType: "module",
+        ecmaVersion: "latest",
+      },
+    },
+    {
       files: ["worker/**/*.js"],
       globals: {
         WebSocketPair: "readonly",
