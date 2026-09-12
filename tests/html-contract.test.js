@@ -73,4 +73,18 @@ describe('index.html script contract', () => {
       );
     }
   });
+
+  it('routes fresh remote pushes into the editor AND the tray, replays only into the tray', () => {
+    // Pushed clipboard payloads are meant to land in both places on the
+    // receiving device (user-specified behavior), while reconnect snapshots
+    // re-deliver the same clipboard and must not duplicate it into the
+    // editor. showRemoteClipboard therefore takes a { replay } flag.
+    const js = readFileSync(join(publicDir, 'index.js'), 'utf8');
+    const fn = js.match(/function showRemoteClipboard\(text, \{ replay = false \} = \{\}\) \{[\s\S]*?\n\}/);
+    assert.ok(fn, 'showRemoteClipboard must accept a { replay } option');
+    assert.match(fn[0], /if \(!replay\) appendRemoteClipboardToEditor\(text\)/);
+    const snapshot = js.match(/applySnapshot\(snapshot\) \{[\s\S]*?\n {2}\}/);
+    assert.ok(snapshot && /showRemoteClipboard\(snapshot\.clipboard\.text, \{ replay: true \}\)/.test(snapshot[0]),
+      'snapshot catch-up must mark the clipboard delivery as a replay');
+  });
 });

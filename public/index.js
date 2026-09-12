@@ -529,11 +529,36 @@ function hideRemoteInterim() {
 
 let lastRemoteClipboard = "";
 
-function showRemoteClipboard(text) {
+// A pushed clipboard payload lands in BOTH places on this device: the
+// transcript editor and the clipboard tray. Newlines survive via <br>
+// because the editor collapses them inside plain text nodes.
+function appendRemoteClipboardToEditor(text) {
+  if (!messageEl || !text || !text.trim()) return;
+  const liveSpan = document.getElementById('liveTurnSpan');
+  const frag = document.createDocumentFragment();
+  if (messageEl.textContent.trim()) frag.appendChild(document.createElement('br'));
+  text.replace(/\r/g, '').split('\n').forEach((line, i) => {
+    if (i > 0) frag.appendChild(document.createElement('br'));
+    frag.appendChild(document.createTextNode(line));
+  });
+  if (liveSpan) {
+    messageEl.insertBefore(frag, liveSpan);
+  } else {
+    messageEl.appendChild(frag);
+  }
+  updateStats();
+  saveDraftToStorage();
+  scrollToBottomSmart();
+}
+
+function showRemoteClipboard(text, { replay = false } = {}) {
   if (!text || !text.trim()) return;
   lastRemoteClipboard = text;
   if (trayText) trayText.textContent = text;
   if (clipboardTray) clipboardTray.hidden = false;
+  // Fresh pushes flow into the editor too; snapshot replays (reconnect
+  // catch-up) must not duplicate the same payload there.
+  if (!replay) appendRemoteClipboardToEditor(text);
   // Auto-copy is best-effort: browsers require a user gesture (Safari) or a
   // focused document; the tray's Copy button is the guaranteed fallback.
   if (document.hasFocus() && navigator.clipboard) {
@@ -1020,7 +1045,7 @@ const LinkManager = {
       appendRemoteTurn(snapshot.text);
     }
     if (snapshot.clipboard?.text) {
-      showRemoteClipboard(snapshot.clipboard.text);
+      showRemoteClipboard(snapshot.clipboard.text, { replay: true });
     }
   },
 
