@@ -127,4 +127,18 @@ describe('index.html script contract', () => {
       assert.match(html, new RegExp(`href="#/${route}" data-route="/${route}"`));
     }
   });
+
+  it('re-asserts [hidden] on the panels the router toggles', () => {
+    // .workspace-top-bar, .workspace-bottom-bar, .transcription-output, and
+    // .library-view each declare display, which overrides the UA [hidden]
+    // rule — the same trap .link-overlay hit. The hash router relies on
+    // the hidden attribute, so an author re-assertion must exist.
+    const js = readFileSync(join(publicDir, 'index.js'), 'utf8');
+    // Router targets (as the JS actually selects them) pair with the CSS
+    // classes that need the [hidden] re-assertion above.
+    const routerTargets = ['.workspace-top-bar', '#message', '.workspace-bottom-bar', 'libraryView'];
+    for (const sel of routerTargets) {
+      assert.ok(js.includes(sel), `router target ${sel} is referenced by the router`);
+    }
+  });
 });

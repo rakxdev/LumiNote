@@ -1496,3 +1496,14 @@ html[data-theme="light"] .remote-interim {
     gap: 0.25rem;
   }
 }
+
+/* [hidden] re-assertions: .workspace-top-bar, .workspace-bottom-bar,
+   .transcription-output, and .library-view all set display, which overrides
+   the UA [hidden] rule (same trap as .link-overlay). Without these, the
+   hash router cannot hide the studio panels (or the library). */
+.workspace-top-bar[hidden],
+.workspace-bottom-bar[hidden],
+.transcription-output[hidden],
+.library-view[hidden] {
+  display: none;
+}
