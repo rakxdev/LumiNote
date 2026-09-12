@@ -586,6 +586,9 @@ async function pushToLinkedDevices() {
 const DRAFT_STORAGE_KEY = "luminote_v04_saved_draft";
 const LEGACY_DRAFT_STORAGE_KEY = "luminote_v03_saved_draft";
 
+// Last linked room, persisted so a page refresh can rejoin automatically.
+const LINK_ROOM_STORAGE_KEY = "luminote_v04_link_room";
+
 function saveDraftToStorage() {
   if (!messageEl) return;
   const content = messageEl.innerText;
@@ -763,10 +766,43 @@ const LinkManager = {
     this.connect(code);
   },
 
+  // Rejoin the previous room after a page reload. The /?join= deep link is
+  // consumed on first use, so a refresh has no code in the URL — this
+  // stored record is the restore path.
+  restoreRoom() {
+    let stored = null;
+    try {
+      const raw = localStorage.getItem(LINK_ROOM_STORAGE_KEY);
+      if (raw) stored = JSON.parse(raw);
+    } catch (e) {
+      return;
+    }
+    if (!stored || !isValidRoomCode(stored.code || "")) {
+      try {
+        localStorage.removeItem(LINK_ROOM_STORAGE_KEY);
+      } catch (e) {}
+      return;
+    }
+    // Rooms expire 12h after last activity; an older record is useless.
+    if (Date.now() - (stored.at || 0) > 12 * 60 * 60 * 1000) {
+      try {
+        localStorage.removeItem(LINK_ROOM_STORAGE_KEY);
+      } catch (e) {}
+      showToast("Previous link expired");
+      return;
+    }
+    this.role = this.detectRole();
+    this.room = stored.code;
+    this.outbox = [];
+    if (linkRoomCodeEl) linkRoomCodeEl.textContent = stored.code.split("").join(" ");
+    this.updateStatus("linking", `Restoring link ${stored.code}…`);
+    this.connect(stored.code);
+  },
+
   joinRoom(input) {
     const code = sanitizeRoomCode(input);
     if (!isValidRoomCode(code)) {
-      showToast("Enter the 6-character room code");
+      showToast("Enter a 6-character room code");
       return;
     }
     clearTimeout(this.reconnectTimer);
@@ -895,6 +931,10 @@ const LinkManager = {
     clearTimeout(this.reconnectTimer);
     this.closeSocket(true);
     this.outbox = [];
+    // Leaving the room is deliberate: do not auto-rejoin on next load.
+    try {
+      localStorage.removeItem(LINK_ROOM_STORAGE_KEY);
+    } catch (e) {}
     this.room = null;
     this.devices = [];
     this.renderDeviceList();
@@ -954,6 +994,13 @@ const LinkManager = {
         this.updateStatus("linked", `Linked to ${this.room}`);
         showToast("Link established");
         this.applySnapshot(msg.snapshot);
+        // Persist the room so a page refresh can rejoin it automatically.
+        try {
+          localStorage.setItem(
+            LINK_ROOM_STORAGE_KEY,
+            JSON.stringify({ code: this.room, at: Date.now() })
+          );
+        } catch (e) {}
         break;
       case "device_joined":
         if (msg.device?.role) {
@@ -1547,6 +1594,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (joinParam) {
     history.replaceState(null, '', location.pathname);
     LinkManager.joinRoom(joinParam);
+  } else {
+    // No deep link (e.g. a page refresh): rejoin the previous room.
+    LinkManager.restoreRoom();
   }
 
   // Mobile browsers kill background WebSockets without a close frame, and

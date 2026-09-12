@@ -118,6 +118,19 @@ describe('Link Mode end-to-end (SyncRoom DO)', () => {
     late.close();
   });
 
+  it('answers application-level pings so client heartbeats keep the link alive', async () => {
+    // The browser client sends {type:"ping"} every 25s to survive the
+    // Cloudflare edge idle timeout; the DO must answer with pong (the
+    // constructor additionally maps the literal "ping" via
+    // setWebSocketAutoResponse without waking).
+    const room = generateRoomCode();
+    const desktop = await connectDevice(`?room=${room}&role=desktop`);
+    desktop.send(JSON.stringify({ type: 'ping' }));
+    const pong = await waitFor(desktop, 'pong');
+    assert.deepEqual(pong, { type: 'pong' });
+    desktop.close();
+  });
+
   it('rejects invalid room codes before any DO is created', async () => {
     const worker = await mf.getWorker();
     const res = await worker.fetch('https://luminote.test/join?room=BAD!!', {
