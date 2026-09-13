@@ -98,10 +98,14 @@ for (const { file, text } of removed) {
 }
 
 // 1b/2c. Loosened bar: any line REMOVED from CONSTRAINTS.md that carried a
-// number or a floor bullet. Tightening (additions/renumbering upward) is silent.
+// number or a floor bullet. Tightening (additions/renumbering upward) is
+// silent. The "Last reviewed" header is metadata, not a constraint — its
+// date change must not read as a weakening.
 for (const { file, text } of removed) {
-  if (/CONSTRAINTS\.md$/.test(file) && (/\d/.test(text) || /^- [A-Z]/.test(text.trim()))) {
-    flag('constraint-weakened', file, text);
+  if (/CONSTRAINTS\.md$/.test(file) && !/^Last reviewed:/.test(text.trim())) {
+    if (/\d/.test(text) || /^- [A-Z]/.test(text.trim())) {
+      flag('constraint-weakened', file, text);
+    }
   }
 }
 
