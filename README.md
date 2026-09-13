@@ -1,10 +1,6 @@
 <div align="center">
 
-<img src="public/logo.svg" alt="LumiNote" width="88" />
-
-# LumiNote
-
-**A real-time AI dictation studio in your browser — with your phone as the microphone for your desktop.**
+<img src="docs/assets/banner.svg" alt="LumiNote — real-time AI dictation studio; your phone is the microphone for your desktop" width="100%" />
 
 [![CI](https://github.com/rakxdev/LumiNote/actions/workflows/ci.yml/badge.svg?branch=cloudflare-v04)](https://github.com/rakxdev/LumiNote/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/license-MIT-gold)
@@ -25,16 +21,16 @@ Dictation tools are either clunky batch uploaders, subscription-walled, or locke
 
 | | |
 |---|---|
-| 🎙️ **Streaming STT** | AssemblyAI Universal-3.5 Pro (default) and Deepgram Nova-3, switched live; English-pinned sessions tuned for quiet voices |
-| 📱 **Link Mode** | Pair any two devices with a QR or 6-character code; live transcript + clipboard relay, room trust windows, self-healing connections |
-| 🖋️ **Voice commands** | "new paragraph", "new line", "scratch that" — executed, not transcribed |
-| 📖 **Vocabulary & corrections** | Exact-spelling keyterms plus a personal "heard = written" dictionary applied to every sentence |
-| ✒️ **Output modes** | Polish AI into Clean, Bullets, or Email scaffolds |
-| 💾 **Durable library** | Notes, clips, and transcripts in Cloudflare D1 — searchable, pinnable, exportable as Markdown/JSON |
-| 🔐 **Authenticator login** | Optional TOTP gate for device linking, with recovery codes and self-service reset |
-| 📲 **Installable PWA** | Home-screen app with an offline shell that never caches API or socket traffic |
-| 🌊 **Truthful visuals** | dB-mapped voice meters on *both* devices, presence-driven link states, zero fake animations |
-| 🛡️ **Zero-trust auth** | Ephemeral STT tokens, no master keys client-side, zero third-party requests |
+| <img src="docs/assets/icons/mic.svg" width="20" alt=""> **Streaming STT** | AssemblyAI Universal-3.5 Pro (default) and Deepgram Nova-3, switched live; English-pinned sessions tuned for quiet voices |
+| <img src="docs/assets/icons/link.svg" width="20" alt=""> **Link Mode** | Pair any two devices with a QR or 6-character code; live transcript + clipboard relay, room trust windows, self-healing connections |
+| <img src="docs/assets/icons/commands.svg" width="20" alt=""> **Voice commands** | "new paragraph", "new line", "scratch that" — executed, not transcribed |
+| <img src="docs/assets/icons/vocab.svg" width="20" alt=""> **Vocabulary & corrections** | Exact-spelling keyterms plus a personal "heard = written" dictionary applied to every sentence |
+| <img src="docs/assets/icons/modes.svg" width="20" alt=""> **Output modes** | Polish AI into Clean, Bullets, or Email scaffolds |
+| <img src="docs/assets/icons/library.svg" width="20" alt=""> **Durable library** | Notes, clips, and transcripts in Cloudflare D1 — searchable, pinnable, exportable as Markdown/JSON |
+| <img src="docs/assets/icons/auth.svg" width="20" alt=""> **Authenticator login** | Optional TOTP gate for device linking, with recovery codes and self-service reset |
+| <img src="docs/assets/icons/pwa.svg" width="20" alt=""> **Installable PWA** | Home-screen app with an offline shell that never caches API or socket traffic |
+| <img src="docs/assets/icons/meters.svg" width="20" alt=""> **Truthful visuals** | dB-mapped voice meters on *both* devices, presence-driven link states, zero fake animations |
+| <img src="docs/assets/icons/shield.svg" width="20" alt=""> **Zero-trust auth** | Ephemeral STT tokens, no master keys client-side, zero third-party requests |
 
 <details>
 <summary><strong>All capabilities in detail</strong></summary>
@@ -76,16 +72,7 @@ Full setup (D1, secrets, deployment) in the [Contributing guide](CONTRIBUTING.md
 
 ## Architecture
 
-```
-Browser (vanilla JS, Web Audio, AudioWorklet)
-   │  16 kHz PCM over WebSocket (ephemeral token; audio goes device → model directly)
-   ▼
-Cloudflare Pages Functions ──► AssemblyAI / Deepgram streaming STT
-   │
-   ├─► /api/notes ──► Cloudflare D1 (notes · clips · transcripts · app settings)
-   ├─► /api/auth ──► TOTP login, room trust windows (HMAC-signed cookie)
-   └─► /api/link/ws ──► SyncRoom Durable Object (relay rooms, rosters, snapshots)
-```
+<img src="docs/assets/architecture.svg" alt="LumiNote architecture — phone and desktop stream audio directly to the speech model, relay turns through a SyncRoom Durable Object, and persist notes in D1 behind Pages Functions" width="100%" />
 
 Decisions and their reasoning live in [`docs/decisions/`](docs/decisions/) (ADR-001 → ADR-006).
 

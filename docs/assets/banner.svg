@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-label="LumiNote — real-time AI dictation studio; your phone is the microphone for your desktop">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5d77f"/>
+      <stop offset="50%" stop-color="#d9b64a"/>
+      <stop offset="100%" stop-color="#997920"/>
+    </linearGradient>
+    <linearGradient id="yantraGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8452c"/>
+      <stop offset="100%" stop-color="#d9a441"/>
+    </linearGradient>
+    <radialGradient id="glowGold" cx="75%" cy="-10%" r="60%">
+      <stop offset="0%" stop-color="#d9b64a" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#d9b64a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowRed" cx="12%" cy="105%" r="55%">
+      <stop offset="0%" stop-color="#e8452c" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#e8452c" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#ffffff" stroke-opacity="0.016" stroke-width="1"/>
+    </pattern>
+    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Obsidian chassis -->
+  <rect x="6" y="6" width="1188" height="288" rx="14" fill="#0f1217" stroke="#1f242d" stroke-width="1.5"/>
+  <rect x="6" y="6" width="1188" height="288" rx="14" fill="url(#glowGold)"/>
+  <rect x="6" y="6" width="1188" height="288" rx="14" fill="url(#glowRed)"/>
+  <rect x="6" y="6" width="1188" height="288" rx="14" fill="url(#grid)"/>
+
+  <!-- Precision calipers (logo echo) -->
+  <path d="M 26 58 L 26 26 L 58 26" fill="none" stroke="#d9b64a" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+  <path d="M 1174 242 L 1174 274 L 1142 274" fill="none" stroke="#d9b64a" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- Yantra mark (logo echo, scaled) -->
+  <g transform="translate(78 62) scale(1.76)">
+    <rect x="6" y="6" width="88" height="88" rx="14" fill="#0d0f14" stroke="url(#goldGradient)" stroke-width="2.5"/>
+    <rect x="14" y="14" width="72" height="72" rx="8" fill="none" stroke="rgba(217,182,74,0.25)" stroke-width="1.2" stroke-dasharray="4 4"/>
+    <polygon points="50,20 80,50 50,80 20,50" fill="none" stroke="url(#goldGradient)" stroke-width="1.8" filter="url(#softGlow)"/>
+    <circle cx="50" cy="50" r="15" fill="none" stroke="rgba(217,182,74,0.4)" stroke-width="1"/>
+    <circle cx="50" cy="50" r="9" fill="none" stroke="rgba(232,69,44,0.5)" stroke-width="1.2"/>
+    <path d="M 40 33 L 40 65 L 64 65" fill="none" stroke="url(#goldGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="64" cy="36" r="3.5" fill="#f5d77f" filter="url(#softGlow)">
+      <animate attributeName="opacity" values="1;0.35;1" dur="2.8s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="3.5;4.6;3.5" dur="2.8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="330" y="140" font-family="'Chakra Petch','Segoe UI',system-ui,sans-serif" font-size="64" font-weight="700" letter-spacing="0.5">
+    <tspan fill="#f5f2e9">Lumi</tspan><tspan fill="#d9b64a">Note</tspan>
+  </text>
+  <text x="334" y="176" font-family="'JetBrains Mono','SFMono-Regular',Consolas,monospace" font-size="13" letter-spacing="4.5" fill="#d9a441">VĀK • NĀDA // REAL-TIME SPEECH INTELLIGENCE</text>
+
+  <!-- Divider -->
+  <line x1="334" y1="200" x2="1130" y2="200" stroke="rgba(217,182,74,0.25)" stroke-width="1" stroke-dasharray="5 5"/>
+
+  <!-- Value line -->
+  <text x="334" y="234" font-family="'Martel',Georgia,serif" font-size="17" fill="#f5f2e9">Dictate on your phone — watch it appear live on your desktop.</text>
+  <text x="334" y="260" font-family="'JetBrains Mono','SFMono-Regular',Consolas,monospace" font-size="12" fill="#8e9588">vanilla js · web audio · cloudflare edge · no accounts · no subscription</text>
+</svg>
