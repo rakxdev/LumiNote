@@ -203,6 +203,11 @@
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
             <span>Clear</span>
           </button>
+          <select id="outputMode" class="tool-select" aria-label="Polish output mode" title="Output style for Polish AI">
+            <option value="clean" selected>Clean</option>
+            <option value="bullets">Bullets</option>
+            <option value="email">Email</option>
+          </select>
           <button id="grammarButton" class="tool-btn grammar-btn" type="button" title="Polish grammar and clarity">
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
             <span>Polish AI</span>
@@ -318,6 +323,8 @@
           <div class="link-section">
             <p class="link-hint">One term per line — exact spelling and capitalization (names, brands, jargon). Max 100 terms, under 50 characters each. Applied when a dictation session starts.</p>
             <textarea id="vocabInput" class="vocab-input" rows="9" spellcheck="false" aria-label="Vocabulary terms, one per line" placeholder="Dr. Sharma&#10;Acme Corp&#10;ECG"></textarea>
+            <p class="link-hint">Auto-corrections — one per line as "heard = written". Applied to every committed sentence.</p>
+            <textarea id="correctionsInput" class="vocab-input" rows="5" spellcheck="false" aria-label="Auto-corrections, one per line as heard = written" placeholder="audiopen = AudioPen&#10;jonh smith = John Smith"></textarea>
           </div>
           <div class="link-section link-status-row">
             <span class="link-status-text" id="vocabStatus">Terms apply to the next session</span>

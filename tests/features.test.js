@@ -83,6 +83,25 @@ describe('custom vocabulary (keyterms)', () => {
   });
 });
 
+describe('voice pipeline wiring', () => {
+  it('the client runs the pipeline on committed turns and relays scratch', () => {
+    const workerProtocol = read('worker/src/protocol.js');
+    assert.match(indexJs, /processSpokenTurn\(text, getCorrections\(\)\)/);
+    assert.match(indexJs, /CORRECTIONS_STORAGE_KEY/);
+    assert.match(indexJs, /type: "scratch"/);
+    assert.match(indexJs, /case "scratch":/);
+    assert.match(workerProtocol, /'scratch'/, 'scratch is a relayed client message type');
+  });
+
+  it('Polish AI sends the selected output mode', () => {
+    assert.match(html, /id="outputMode"/);
+    for (const option of ['clean', 'bullets', 'email']) {
+      assert.match(html, new RegExp(`value="${option}"`));
+    }
+    assert.match(indexJs, /mode: outputMode\?\.value \|\| 'clean'/);
+  });
+});
+
 describe('wake lock', () => {
   it('is acquired on record, re-armed on visibility, released on stop', () => {
     assert.match(indexJs, /navigator\.wakeLock\.request\("screen"\)/);

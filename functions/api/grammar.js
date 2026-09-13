@@ -10,6 +10,7 @@ export async function onRequest(context) {
   try {
     const body = await context.request.json();
     const rawText = body.text || '';
+    const mode = body.mode || 'clean';
 
     if (!rawText.trim()) {
       return new Response(JSON.stringify({ correctedText: '' }), {
@@ -35,6 +36,12 @@ export async function onRequest(context) {
     // Apply safe rule-based spoken English cleanup
     corrected = cleanSpokenEnglish(corrected);
 
+    // Output modes restructure the cleaned text deterministically (no LLM,
+    // so results are predictable and the raw text stays in the editor's
+    // undo history). 'clean' is the default passthrough.
+    if (mode === 'bullets') corrected = toBullets(corrected);
+    else if (mode === 'email') corrected = toEmail(corrected);
+
     return new Response(JSON.stringify({ correctedText: corrected }), {
       status: 200,
       headers: {
@@ -50,6 +57,31 @@ export async function onRequest(context) {
       headers: { 'Content-Type': 'application/json' }
     });
   }
+}
+
+// Sentence-split on . ! ? boundaries, keeping abbreviations like "U.S.A."
+// together by requiring a capital/number to start the next fragment.
+export function splitSentences(text) {
+  return text
+    .split(/(?<=[.!?])\s+(?=[A-Z0-9])/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+// Bullets mode: each sentence becomes a list item; the trailing period is
+// dropped on short items and kept on long ones where it reads naturally.
+export function toBullets(text) {
+  const sentences = splitSentences(text);
+  if (sentences.length <= 1) return text;
+  return sentences
+    .map((s) => `- ${s.endsWith('.') && s.length > 60 ? s : s.replace(/\.$/, '')}`)
+    .join('\n');
+}
+
+// Email mode: greeting + cleaned body + sign-off scaffold for the names.
+export function toEmail(text) {
+  const body = splitSentences(text).join(' ');
+  return `Hi,\n\n${body}\n\nBest regards,`;
 }
 
 // Call LanguageTool free grammar checking API with timeout and bounds

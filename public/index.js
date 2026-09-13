@@ -3,6 +3,7 @@
 import { appendPcmChunk } from './audio-processor.js';
 import { generateRoomCode, sanitizeRoomCode, isValidRoomCode } from './link-protocol.js';
 import { meterAdvance, dbToNorm, rms16 } from './viz.js';
+import { processSpokenTurn } from './text-pipeline.js';
 
 // PWA app shell. Registered after load so it never competes with first
 // paint; the worker itself never touches /api or cross-origin traffic.
@@ -27,6 +28,7 @@ const copyFeedback = document.getElementById("copyFeedback");
 const wordCountEl = document.getElementById("wordCount");
 const charCountEl = document.getElementById("charCount");
 const grammarButton = document.getElementById("grammarButton");
+const outputMode = document.getElementById("outputMode");
 const copyButton = document.getElementById("copyButton");
 const downloadButton = document.getElementById("downloadButton");
 const clearButton = document.getElementById("clearButton");
@@ -67,6 +69,7 @@ const vocabBtn = document.getElementById("vocabBtn");
 const vocabOverlay = document.getElementById("vocabOverlay");
 const vocabCloseBtn = document.getElementById("vocabCloseBtn");
 const vocabInput = document.getElementById("vocabInput");
+const correctionsInput = document.getElementById("correctionsInput");
 const vocabSaveBtn = document.getElementById("vocabSaveBtn");
 const vocabStatus = document.getElementById("vocabStatus");
 const linkAuthResetBtn = document.getElementById("linkAuthResetBtn");
@@ -503,16 +506,84 @@ function renderTranscript() {
   updateStats();
 }
 
+// Correction dictionary ("heard X, write Y") — localStorage, edited in the
+// Vocab dialog alongside the keyterms. Applied to every committed turn.
+const CORRECTIONS_STORAGE_KEY = "luminote_v04_corrections";
+
+function getCorrections() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CORRECTIONS_STORAGE_KEY) || "{}");
+    return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+// Nodes inserted by the most recent spoken turn, so "scratch that" removes
+// exactly what it said.
+let lastInsertedNodes = [];
+
+function removeLastInsertedChunk() {
+  for (const node of lastInsertedNodes) {
+    try { node.remove(); } catch (e) {}
+  }
+  lastInsertedNodes = [];
+}
+
+// Shared spoken-text entry point: runs the voice-command grammar and the
+// correction dictionary, then inserts the result before the live turn span
+// (or appends). Both the local commit path and relayed remote turns flow
+// through here — the pipeline is idempotent, so re-running it on receipt is
+// harmless, and commands execute on whichever device spoke them. Returns
+// the corrected text (for relaying) or '' when nothing textual remains.
+function insertSpokenText(text) {
+  if (!messageEl || !text || !text.trim()) return '';
+  const { text: cleaned, commands } = processSpokenTurn(text, getCorrections());
+  let breaks = 0;
+  let scratch = false;
+  for (const command of commands) {
+    if (command === "new_paragraph") breaks = 2;
+    else if (command === "new_line") breaks = Math.max(breaks, 1);
+    else if (command === "scratch") scratch = true;
+  }
+  if (scratch) {
+    removeLastInsertedChunk();
+    LinkManager.send({ type: "scratch" });
+  }
+  if (!cleaned.trim() && !breaks) return '';
+
+  const liveSpan = document.getElementById('liveTurnSpan');
+  const frag = document.createDocumentFragment();
+  const chunkNodes = [];
+  if (breaks) {
+    for (let i = 0; i < breaks; i++) {
+      const br = document.createElement('br');
+      frag.appendChild(br);
+      chunkNodes.push(br);
+    }
+  } else if (messageEl.textContent.trim()) {
+    frag.appendChild(document.createTextNode(" "));
+  }
+  const textNode = document.createTextNode(cleaned.trim());
+  frag.appendChild(textNode);
+  chunkNodes.push(textNode);
+  if (liveSpan) messageEl.insertBefore(frag, liveSpan);
+  else messageEl.appendChild(frag);
+  lastInsertedNodes = chunkNodes;
+  return cleaned.trim();
+}
+
 function commitActiveTurn() {
   if (!messageEl) return;
   const liveSpan = document.getElementById('liveTurnSpan');
   if (liveSpan) {
     const turnText = liveSpan.textContent.trim();
     if (turnText) {
-      const textNode = document.createTextNode((messageEl.textContent.trim() ? " " : "") + turnText);
-      liveSpan.replaceWith(textNode);
-      // Relay the committed turn to linked devices
-      LinkManager.send({ type: "turn", text: turnText });
+      liveSpan.remove();
+      // Pipeline first (commands + corrections), then relay the corrected
+      // text so linked devices receive clean speech.
+      const relayed = insertSpokenText(turnText);
+      if (relayed) LinkManager.send({ type: "turn", text: relayed });
     } else {
       liveSpan.remove();
     }
@@ -531,14 +602,9 @@ let lastRemoteActivityAt = 0;
 
 function appendRemoteTurn(text) {
   if (!messageEl || !text || !text.trim()) return;
-  const liveSpan = document.getElementById('liveTurnSpan');
-  const prefix = messageEl.textContent.trim() ? " " : "";
-  const node = document.createTextNode(prefix + text.trim());
-  if (liveSpan) {
-    messageEl.insertBefore(node, liveSpan);
-  } else {
-    messageEl.appendChild(node);
-  }
+  // The pipeline is idempotent: the source device already applied its own
+  // corrections/commands, and this side re-checks with its local ones.
+  insertSpokenText(text);
   hideRemoteInterim();
   updateStats();
   saveDraftToStorage();
@@ -1048,10 +1114,28 @@ function getVocabTerms() {
 function openVocab() {
   if (!vocabOverlay) return;
   if (vocabInput) vocabInput.value = getVocabTerms().join("\n");
-  if (vocabStatus) vocabStatus.textContent = "Terms apply to the next session";
+  if (correctionsInput) {
+    correctionsInput.value = Object.entries(getCorrections())
+      .map(([wrong, right]) => `${wrong} = ${right}`).join("\n");
+  }
+  if (vocabStatus) vocabStatus.textContent = "Terms apply to the next session; corrections immediately";
   vocabOverlay.hidden = false;
   if (vocabBtn) vocabBtn.setAttribute("aria-expanded", "true");
   if (vocabInput) vocabInput.focus();
+}
+
+// "heard = written" lines → dictionary. Blank and malformed lines are
+// skipped so a half-typed entry never poisons the pipeline.
+function parseCorrectionLines(text) {
+  const map = {};
+  for (const line of String(text || "").split("\n")) {
+    const eq = line.indexOf("=");
+    if (eq === -1) continue;
+    const wrong = line.slice(0, eq).trim();
+    const right = line.slice(eq + 1).trim();
+    if (wrong && right) map[wrong] = right;
+  }
+  return map;
 }
 
 function closeVocab() {
@@ -1072,13 +1156,15 @@ function saveVocab() {
     showToast(`Maximum ${KEYTERMS_MAX} terms`);
     return;
   }
+  const corrections = parseCorrectionLines(correctionsInput?.value || "");
   try {
     localStorage.setItem(KEYTERMS_STORAGE_KEY, JSON.stringify(terms));
+    localStorage.setItem(CORRECTIONS_STORAGE_KEY, JSON.stringify(corrections));
   } catch (e) {}
   if (vocabStatus) {
-    vocabStatus.textContent = terms.length ? `Saved ${terms.length} term${terms.length === 1 ? "" : "s"}` : "Cleared";
+    vocabStatus.textContent = `Saved ${terms.length} term${terms.length === 1 ? "" : "s"}, ${Object.keys(corrections).length} correction${Object.keys(corrections).length === 1 ? "" : "s"}`;
   }
-  showToast(terms.length ? `Vocabulary saved (${terms.length})` : "Vocabulary cleared");
+  showToast(`Vocabulary saved (${terms.length} terms, ${Object.keys(corrections).length} corrections)`);
 }
 
 // ==========================================================================
@@ -1588,6 +1674,10 @@ const LinkManager = {
         this.devices = Array.isArray(msg.devices) ? msg.devices : [];
         this.renderDeviceList();
         break;
+      case "scratch":
+        // The peer said "scratch that": mirror the removal here.
+        removeLastInsertedChunk();
+        break;
       case "pong":
         this.pongPendingAt = 0;
         break;
@@ -1962,7 +2052,7 @@ async function fixGrammar() {
     const res = await fetch('/api/grammar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, mode: outputMode?.value || 'clean' }),
       signal: AbortSignal.timeout(10000)
     });
 

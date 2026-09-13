@@ -4,6 +4,18 @@
   "updated": "2026-09-13",
   "entries": [
     {
+      "version": "4.7.0",
+      "date": "2026-09-13",
+      "status": "released",
+      "sections": {
+        "added": [
+          "Voice commands while dictating: \"new paragraph\", \"new line\", and \"scratch that\" (or \"delete that\") are executed instead of transcribed, on whichever device speaks them — and scratch mirrors to the linked screen.",
+          "Auto-corrections dictionary: teach the pipeline \"heard = written\" pairs (names, recurring misrecognitions) in the Vocab dialog; every committed sentence is fixed automatically, with capitalization preserved.",
+          "Output modes for Polish AI: Clean (grammar pass), Bullets (one item per sentence), and Email (greeting + body + sign-off scaffold) — deterministic transforms, no LLM, raw text always recoverable via undo."
+        ]
+      }
+    },
+    {
       "version": "4.6.0",
       "date": "2026-09-13",
       "status": "released",

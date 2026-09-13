@@ -691,8 +691,7 @@ html, body {
   border: 1px solid var(--btn-border);
   color: var(--ink-primary);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.7rem;  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 0.55rem 1rem;
@@ -786,6 +785,21 @@ html, body {
 @keyframes peer-live {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
+}
+
+/* Output-mode select for Polish AI — visually part of the tool family. */
+.tool-select {
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.tool-select:focus-visible {
+  outline: 1px solid var(--gold, #d9b64a);
 }
 
 /* Custom Scrollbar Inside Editor */

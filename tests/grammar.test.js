@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanSpokenEnglish } from '../functions/api/grammar.js';
+import { cleanSpokenEnglish, toBullets, toEmail, splitSentences } from '../functions/api/grammar.js';
 
 describe('cleanSpokenEnglish rules matrix', () => {
   it('should remove pure spoken hesitations without corrupting legitimate words', () => {
@@ -59,5 +59,30 @@ describe('cleanSpokenEnglish rules matrix', () => {
     assert.equal(cleanSpokenEnglish('Question?'), 'Question?');
     assert.equal(cleanSpokenEnglish('It ends...'), 'It ends...');
     assert.equal(cleanSpokenEnglish(''), '');
+  });
+});
+
+describe('output mode transforms', () => {
+  const text = 'Budget is tight. We cut spending. Leadership agreed.';
+
+  it('bullets mode: one item per sentence, short items drop the period', () => {
+    assert.equal(toBullets(text), '- Budget is tight\n- We cut spending\n- Leadership agreed');
+  });
+
+  it('bullets mode: keeps long sentences intact with their period', () => {
+    const long = 'This is a genuinely long sentence that keeps going well past sixty characters so the period stays.';
+    assert.match(toBullets(long), /\.$/);
+  });
+
+  it('bullets mode: single-sentence input passes through unchanged', () => {
+    assert.equal(toBullets('One line only.'), 'One line only.');
+  });
+
+  it('email mode: greeting, single-spaced body, sign-off scaffold', () => {
+    assert.equal(toEmail(text), 'Hi,\n\nBudget is tight. We cut spending. Leadership agreed.\n\nBest regards,');
+  });
+
+  it('splitSentences keeps abbreviations like U.S.A. together', () => {
+    assert.equal(splitSentences('Report from the U.S.A. arrived. It is late.').length, 2);
   });
 });

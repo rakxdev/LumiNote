@@ -11,7 +11,7 @@ export const ROOM_CODE_PATTERN = new RegExp(`^[${ROOM_ALPHABET}]{${ROOM_CODE_LEN
 export const MAX_TEXT_LENGTH = 100000;
 export const MAX_CLIENT_MESSAGE_BYTES = 128 * 1024;
 
-export const CLIENT_MESSAGE_TYPES = ['hello', 'turn', 'interim', 'clipboard', 'clear', 'ping', 'level'];
+export const CLIENT_MESSAGE_TYPES = ['hello', 'turn', 'interim', 'clipboard', 'clear', 'ping', 'level', 'scratch'];
 export const ROLES = ['desktop', 'phone'];
 
 /**
