@@ -50,11 +50,10 @@
     </circle>
   </g>
 
-  <!-- Wordmark -->
-  <text x="330" y="140" font-family="'Chakra Petch','Segoe UI',system-ui,sans-serif" font-size="64" font-weight="700" letter-spacing="0.5">
-    <tspan fill="#f5f2e9">Lumi</tspan><tspan fill="#d9b64a">Note</tspan>
-  </text>
-  <text x="334" y="176" font-family="'JetBrains Mono','SFMono-Regular',Consolas,monospace" font-size="13" letter-spacing="4.5" fill="#d9a441">VĀK • NĀDA // REAL-TIME SPEECH INTELLIGENCE</text>
+  <!-- Wordmark (two positioned elements: deterministic across renderers) -->
+  <text x="330" y="140" font-family="'Chakra Petch','Segoe UI',system-ui,sans-serif" font-size="64" font-weight="700" letter-spacing="0.5" fill="#f5f2e9">Lumi</text>
+  <text x="492" y="140" font-family="'Chakra Petch','Segoe UI',system-ui,sans-serif" font-size="64" font-weight="700" letter-spacing="0.5" fill="#d9b64a">Note</text>
+  <text x="334" y="176" font-family="'JetBrains Mono','SFMono-Regular',Consolas,monospace" font-size="13" letter-spacing="3" fill="#d9a441">VĀK • NĀDA // REAL-TIME SPEECH INTELLIGENCE</text>
 
   <!-- Divider -->
   <line x1="334" y1="200" x2="1130" y2="200" stroke="rgba(217,182,74,0.25)" stroke-width="1" stroke-dasharray="5 5"/>
