@@ -118,6 +118,11 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   display: flex;
   flex-direction: column;
   padding: 1.5rem 0 2.5rem;
+  /* body is a flex container with height:100% — without this the shell
+     stretches to exactly one viewport, and the sticky header stops
+     sticking as soon as the first entry scrolls past (flex-stretch
+     sticky failure). Height must be the content's, not the body's. */
+  align-self: flex-start;
 }
 
 /* Chassis header — same panel, border, radius, and shadow as the app. */
