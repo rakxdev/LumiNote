@@ -50,11 +50,16 @@ describe('list params', () => {
   const params = (qs) => listParams(new URLSearchParams(qs));
 
   it('defaults to all kinds at the default limit', () => {
-    assert.deepEqual(params('').value, { kind: null, limit: 100 });
+    assert.deepEqual(params('').value, { kind: null, limit: 100, q: null });
   });
 
   it('accepts a valid kind and limit', () => {
-    assert.deepEqual(params('kind=clip&limit=25').value, { kind: 'clip', limit: 25 });
+    assert.deepEqual(params('kind=clip&limit=25').value, { kind: 'clip', limit: 25, q: null });
+  });
+
+  it('carries a trimmed search term and drops whitespace-only ones', () => {
+    assert.equal(params('q=%20ECG%20').value.q, 'ECG');
+    assert.equal(params('q=%20%20').value.q, null);
   });
 
   it('rejects bad kinds and bad limits', () => {

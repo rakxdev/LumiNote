@@ -32,7 +32,8 @@ export function validateId(id) {
   return { ok: true, value: id.toLowerCase() };
 }
 
-// List params from a URLSearchParams: optional kind, optional integer limit.
+// List params from a URLSearchParams: optional kind, optional integer limit,
+// optional search text (D1 LIKE, % and _ escaped by the caller's SQL).
 export function listParams(searchParams) {
   const kindResult = searchParams.get('kind')
     ? validateKind(searchParams.get('kind'))
@@ -47,7 +48,19 @@ export function listParams(searchParams) {
       return { ok: false, error: `limit must be an integer between 1 and ${MAX_LIST_LIMIT}` };
     }
   }
-  return { ok: true, value: { kind: kindResult.value, limit } };
+
+  let q = null;
+  const rawQ = searchParams.get('q');
+  if (rawQ !== null) {
+    q = String(rawQ).trim().slice(0, 200);
+    if (!q) q = null;
+  }
+  return { ok: true, value: { kind: kindResult.value, limit, q } };
+}
+
+// LIKE pattern with % and _ escaped so user input cannot wildcard freely.
+export function likePattern(q) {
+  return `%${q.replace(/[\\%_]/g, '\\$&')}%`;
 }
 
 // PATCH accepts either a new text or a pinned flip; at least one is required.
@@ -88,9 +101,15 @@ export const SQL = {
   list: `SELECT id, kind, text, source_device, created_at, updated_at, pinned
          FROM notes WHERE user_id = ?1 AND kind = ?2
          ORDER BY pinned DESC, created_at DESC LIMIT ?3`,
+  listQ: `SELECT id, kind, text, source_device, created_at, updated_at, pinned
+          FROM notes WHERE user_id = ?1 AND kind = ?2 AND text LIKE ?4 ESCAPE '\\'
+          ORDER BY pinned DESC, created_at DESC LIMIT ?3`,
   listAll: `SELECT id, kind, text, source_device, created_at, updated_at, pinned
             FROM notes WHERE user_id = ?1
             ORDER BY pinned DESC, created_at DESC LIMIT ?2`,
+  listAllQ: `SELECT id, kind, text, source_device, created_at, updated_at, pinned
+             FROM notes WHERE user_id = ?1 AND text LIKE ?3 ESCAPE '\\'
+             ORDER BY pinned DESC, created_at DESC LIMIT ?2`,
   get: `SELECT id, kind, text, source_device, created_at, updated_at, pinned
         FROM notes WHERE id = ?1 AND user_id = ?2`,
   updateText: `UPDATE notes SET text = ?1, updated_at = ?2 WHERE id = ?3 AND user_id = ?4`,

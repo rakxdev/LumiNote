@@ -4,6 +4,14 @@ import { appendPcmChunk } from './audio-processor.js';
 import { generateRoomCode, sanitizeRoomCode, isValidRoomCode } from './link-protocol.js';
 import { meterAdvance, dbToNorm, rms16 } from './viz.js';
 
+// PWA app shell. Registered after load so it never competes with first
+// paint; the worker itself never touches /api or cross-origin traffic.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
 /**
  * LumiNote v04 Client Engine
  * Real-time voice intelligence streaming with AssemblyAI v3 & Deepgram Nova-3
@@ -55,6 +63,16 @@ const linkAuthInput = document.getElementById("linkAuthInput");
 const linkAuthBtn = document.getElementById("linkAuthBtn");
 const linkAuthError = document.getElementById("linkAuthError");
 const linkAuthActive = document.getElementById("linkAuthActive");
+const vocabBtn = document.getElementById("vocabBtn");
+const vocabOverlay = document.getElementById("vocabOverlay");
+const vocabCloseBtn = document.getElementById("vocabCloseBtn");
+const vocabInput = document.getElementById("vocabInput");
+const vocabSaveBtn = document.getElementById("vocabSaveBtn");
+const vocabStatus = document.getElementById("vocabStatus");
+const linkAuthResetBtn = document.getElementById("linkAuthResetBtn");
+const linkAuthResetRow = document.getElementById("linkAuthResetRow");
+const linkAuthResetInput = document.getElementById("linkAuthResetInput");
+const linkAuthResetConfirmBtn = document.getElementById("linkAuthResetConfirmBtn");
 const clipboardTray = document.getElementById("clipboardTray");
 const trayText = document.getElementById("trayText");
 const trayCopyBtn = document.getElementById("trayCopyBtn");
@@ -717,7 +735,10 @@ function buildLibraryItem(note) {
 
   const actions = document.createElement('span');
   actions.className = 'item-actions';
-  for (const [act, label] of [['pin', note.pinned ? 'Unpin' : 'Pin'], ['copy', 'Copy'], ['delete', 'Delete']]) {
+  const acts = [['pin', note.pinned ? 'Unpin' : 'Pin'], ['copy', 'Copy']];
+  if (navigator.share) acts.push(['share', 'Share']);
+  acts.push(['delete', 'Delete']);
+  for (const [act, label] of acts) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `item-act-btn act-${act}`;
@@ -742,7 +763,7 @@ function buildLibraryItem(note) {
   return item;
 }
 
-async function loadLibrary(route) {
+async function loadLibrary(route, query = '') {
   const lib = LIBRARY_ROUTES[route];
   const title = document.getElementById('libraryTitle');
   const list = document.getElementById('libraryList');
@@ -750,11 +771,13 @@ async function loadLibrary(route) {
   if (!lib || !list) return;
   if (title) title.textContent = lib.title;
   list.textContent = '';
-  if (empty) { empty.hidden = true; empty.textContent = 'Nothing saved yet.'; }
+  if (empty) { empty.hidden = true; empty.textContent = query ? 'No matches.' : 'Nothing saved yet.'; }
   currentLibraryRoute = route;
 
   try {
-    const res = await fetch(`/api/notes?kind=${lib.kind}&limit=100`, { signal: AbortSignal.timeout(8000) });
+    const search = new URLSearchParams({ kind: lib.kind, limit: '100' });
+    if (query) search.set('q', query);
+    const res = await fetch(`/api/notes?${search}`, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error(`status ${res.status}`);
     const data = await res.json();
     if (currentLibraryRoute !== route) return; // user navigated away mid-fetch
@@ -790,6 +813,15 @@ async function handleLibraryAction(item, action) {
     if (body && navigator.clipboard) {
       await navigator.clipboard.writeText(body.textContent || '');
       showToast('Copied');
+    }
+    return;
+  }
+  if (action === 'share') {
+    const body = item.querySelector('.item-body');
+    try {
+      await navigator.share({ title: 'LumiNote', text: body?.textContent || '' });
+    } catch (err) {
+      if (err?.name !== 'AbortError') showToast('Share unavailable');
     }
     return;
   }
@@ -995,6 +1027,61 @@ const LINK_PING_INTERVAL_MS = 25000;
 const MAX_RECONNECT_ATTEMPTS = 10;
 
 // ==========================================================================
+// Custom vocabulary (AssemblyAI keyterms_prompt): exact-spelling terms kept
+// in localStorage and injected into every AssemblyAI session at start.
+// Official limits: max 100 terms, each under 50 characters.
+// ==========================================================================
+const KEYTERMS_STORAGE_KEY = "luminote_v04_keyterms";
+const KEYTERMS_MAX = 100;
+const KEYTERMS_MAX_LEN = 50;
+
+function getVocabTerms() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEYTERMS_STORAGE_KEY) || "[]");
+    if (!Array.isArray(raw)) return [];
+    return [...new Set(raw.map((t) => String(t).trim()).filter(Boolean))];
+  } catch (e) {
+    return [];
+  }
+}
+
+function openVocab() {
+  if (!vocabOverlay) return;
+  if (vocabInput) vocabInput.value = getVocabTerms().join("\n");
+  if (vocabStatus) vocabStatus.textContent = "Terms apply to the next session";
+  vocabOverlay.hidden = false;
+  if (vocabBtn) vocabBtn.setAttribute("aria-expanded", "true");
+  if (vocabInput) vocabInput.focus();
+}
+
+function closeVocab() {
+  if (vocabOverlay) vocabOverlay.hidden = true;
+  if (vocabBtn) vocabBtn.setAttribute("aria-expanded", "false");
+  if (vocabBtn) vocabBtn.focus();
+}
+
+function saveVocab() {
+  const terms = [...new Set((vocabInput?.value || "")
+    .split("\n").map((t) => t.trim()).filter(Boolean))];
+  const tooLong = terms.find((t) => t.length > KEYTERMS_MAX_LEN);
+  if (tooLong) {
+    showToast(`"${tooLong.slice(0, 24)}…" is over ${KEYTERMS_MAX_LEN} characters`);
+    return;
+  }
+  if (terms.length > KEYTERMS_MAX) {
+    showToast(`Maximum ${KEYTERMS_MAX} terms`);
+    return;
+  }
+  try {
+    localStorage.setItem(KEYTERMS_STORAGE_KEY, JSON.stringify(terms));
+  } catch (e) {}
+  if (vocabStatus) {
+    vocabStatus.textContent = terms.length ? `Saved ${terms.length} term${terms.length === 1 ? "" : "s"}` : "Cleared";
+  }
+  showToast(terms.length ? `Vocabulary saved (${terms.length})` : "Vocabulary cleared");
+}
+
+// ==========================================================================
 // Authenticator login (TOTP). The server keeps the secret and issues a
 // signed 12h cookie after a valid code; this side only fetches status,
 // drives the setup UI, and asks for a fresh code when the cookie is gone.
@@ -1122,8 +1209,32 @@ async function startTotpEnrollment() {
   }
 }
 
-async function confirmTotpEnrollment() {
-  if (!linkTotpConfirmInput) return;
+// Erase the authenticator login (new phone / switched app). Requires a
+// current token or recovery code — the server refuses otherwise.
+async function resetAuthLogin() {
+  if (!linkAuthResetInput) return;
+  const code = linkAuthResetInput.value.trim();
+  if (!/^\d{6}$/.test(code)) {
+    showToast('Enter the current 6-digit code to confirm the reset');
+    return;
+  }
+  if (linkAuthResetConfirmBtn) linkAuthResetConfirmBtn.disabled = true;
+  try {
+    const { ok, data } = await postAuthJson('/api/auth/reset', { code });
+    if (!ok) {
+      showToast(data.error || 'Reset failed');
+      return;
+    }
+    if (linkAuthResetRow) linkAuthResetRow.hidden = true;
+    linkAuthResetInput.value = '';
+    showToast('Login reset — enroll again anytime');
+    initTotpSection();
+  } finally {
+    if (linkAuthResetConfirmBtn) linkAuthResetConfirmBtn.disabled = false;
+  }
+}
+
+async function confirmTotpEnrollment() {  if (!linkTotpConfirmInput) return;
   const code = linkTotpConfirmInput.value.trim();
   if (!/^\d{6}$/.test(code)) {
     showToast('Enter the current 6-digit code');
@@ -1586,9 +1697,28 @@ function stopAudioAndWebSocket() {
 }
 
 // Recording Controls & State Updates
+// Keep the screen awake while dictating — a phone locking mid-session is
+// the most common way a live link dies. MDN pattern: acquire while active,
+// the OS releases it when the page hides, re-request on visibilitychange.
+let wakeLock = null;
+async function acquireWakeLock() {
+  try {
+    if (!navigator.wakeLock || wakeLock) return;
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => { wakeLock = null; });
+  } catch (e) {
+    // Unsupported or permission-denied: dictation works without it.
+  }
+}
+function releaseWakeLock() {
+  try { wakeLock?.release(); } catch (e) {}
+  wakeLock = null;
+}
+
 function updateRecordingState(recording, connected = false, customStatus = null) {
   isRecording = recording;
   document.body.classList.toggle('is-recording', recording);
+  if (recording) acquireWakeLock(); else releaseWakeLock();
 
   if (recordButton) {
     recordButton.disabled = false;
@@ -1724,7 +1854,12 @@ async function startRecording() {
       // vad_threshold below the default lets quiet speech register (the
       // reported low-voice complaint), and voice_focus suppresses background
       // audio before the model, keeping the lower VAD safe from noise.
-      const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&language_codes=${encodeURIComponent(JSON.stringify(["en"]))}&language_detection=true&vad_threshold=0.1&voice_focus=near-field&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
+      // keyterms_prompt carries the user's exact-spelling vocabulary.
+      const vocab = getVocabTerms();
+      const keytermsParam = vocab.length
+        ? `&keyterms_prompt=${encodeURIComponent(JSON.stringify(vocab))}`
+        : "";
+      const endpoint = `wss://streaming.assemblyai.com/v3/ws?speech_model=${selectedModel}&language_codes=${encodeURIComponent(JSON.stringify(["en"]))}&language_detection=true&vad_threshold=0.1&voice_focus=near-field${keytermsParam}&sample_rate=16000&encoding=pcm_s16le&token=${token}`;
       ws = new WebSocket(endpoint);
 
       ws.onopen = async () => {
@@ -2025,6 +2160,37 @@ document.addEventListener('DOMContentLoaded', () => {
   if (linkAuthBtn) {
     linkAuthBtn.addEventListener('click', () => submitLinkAuth());
   }
+  if (vocabBtn) {
+    vocabBtn.addEventListener('click', () => openVocab());
+  }
+  if (vocabCloseBtn) {
+    vocabCloseBtn.addEventListener('click', () => closeVocab());
+  }
+  if (vocabSaveBtn) {
+    vocabSaveBtn.addEventListener('click', () => saveVocab());
+  }
+  if (vocabOverlay) {
+    vocabOverlay.addEventListener('click', (e) => {
+      if (e.target === vocabOverlay) closeVocab();
+    });
+  }
+  if (linkAuthResetBtn) {
+    linkAuthResetBtn.addEventListener('click', () => {
+      if (linkAuthResetRow) linkAuthResetRow.hidden = false;
+      if (linkAuthResetInput) linkAuthResetInput.focus();
+    });
+  }
+  if (linkAuthResetConfirmBtn) {
+    linkAuthResetConfirmBtn.addEventListener('click', () => resetAuthLogin());
+  }
+  if (linkAuthResetInput) {
+    linkAuthResetInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        resetAuthLogin();
+      }
+    });
+  }
   if (linkAuthInput) {
     linkAuthInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -2099,8 +2265,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global Keyboard Shortcuts (Space to dictate, Escape to close dropdown/dialog)
   document.addEventListener('keydown', (e) => {
-    // Escape key closes the link dialog and the model dropdown
+    // Escape key closes the link dialog, the vocabulary dialog, and the model dropdown
     if (e.key === 'Escape') {
+      if (vocabOverlay && !vocabOverlay.hidden) {
+        closeVocab();
+      }
       if (linkOverlay && !linkOverlay.hidden) {
         LinkManager.closeModal();
       }
@@ -2170,7 +2339,12 @@ document.addEventListener('DOMContentLoaded', () => {
     LinkManager.connect(LinkManager.room);
   };
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) resumeLink();
+    if (!document.hidden) {
+      resumeLink();
+      // The OS drops the wake lock whenever the page hides; re-arm it so a
+      // dictation in progress survives the user glancing away.
+      if (isRecording) acquireWakeLock();
+    }
   });
   window.addEventListener('focus', resumeLink);
   window.addEventListener('online', resumeLink);
@@ -2215,7 +2389,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (libraryRefresh) {
     libraryRefresh.addEventListener('click', () => {
       const route = currentRoute();
-      if (LIBRARY_ROUTES[route]) loadLibrary(route);
+      if (LIBRARY_ROUTES[route]) {
+        const searchBox = document.getElementById('librarySearch');
+        if (searchBox) searchBox.value = '';
+        loadLibrary(route);
+      }
+    });
+  }
+
+  // Debounced server-side search (D1 LIKE) scoped to the visible kind.
+  const librarySearch = document.getElementById('librarySearch');
+  if (librarySearch) {
+    let searchDebounce = null;
+    librarySearch.addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        const route = currentRoute();
+        if (LIBRARY_ROUTES[route]) loadLibrary(route, librarySearch.value.trim());
+      }, 300);
     });
   }
 

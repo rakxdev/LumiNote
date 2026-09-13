@@ -6,6 +6,7 @@ import {
   validateKind,
   validateText,
   listParams,
+  likePattern,
   rowToJson,
 } from './store.js';
 
@@ -21,9 +22,18 @@ export async function onRequestGet({ env, request }) {
   const params = listParams(new URL(request.url).searchParams);
   if (!params.ok) return json({ error: params.error }, 400);
 
-  const statement = params.value.kind
-    ? env.DB.prepare(SQL.list).bind(DEFAULT_USER, params.value.kind, params.value.limit)
-    : env.DB.prepare(SQL.listAll).bind(DEFAULT_USER, params.value.limit);
+  const { kind, limit, q } = params.value;
+  let statement;
+  if (q) {
+    const pattern = likePattern(q);
+    statement = kind
+      ? env.DB.prepare(SQL.listQ).bind(DEFAULT_USER, kind, limit, pattern)
+      : env.DB.prepare(SQL.listAllQ).bind(DEFAULT_USER, limit, pattern);
+  } else {
+    statement = kind
+      ? env.DB.prepare(SQL.list).bind(DEFAULT_USER, kind, limit)
+      : env.DB.prepare(SQL.listAll).bind(DEFAULT_USER, limit);
+  }
   const { results } = await statement.all();
   return json({ notes: results.map(rowToJson) });
 }

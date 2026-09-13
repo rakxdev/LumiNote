@@ -968,6 +968,19 @@ html, body {
     flex-wrap: wrap;
     gap: 0.35rem 0.75rem;
   }
+  /* Touch-target pass (Apple HIG 44px minimum) + no iOS focus zoom. */
+  .view-nav a {
+    padding: 0.85rem 0.5rem;
+  }
+  .tool-btn,
+  .item-act-btn,
+  .library-refresh {
+    min-height: 44px;
+  }
+  .link-join-input,
+  .library-search-input {
+    font-size: 16px;
+  }
   .fft-oscilloscope {
     width: 100px;
     height: 18px;
@@ -1414,6 +1427,25 @@ html[data-theme="light"] .remote-interim {
   letter-spacing: 0.05em;
   color: var(--red, #e8452c);
   min-height: 1em;
+}
+
+/* Vocabulary editor (keyterms), one term per line. 16px keeps iOS from
+   zoom-jumping the field on focus. */
+.vocab-input {
+  width: 100%;
+  min-height: 190px;
+  resize: vertical;
+  background: var(--panel-inner, #080a0e);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  color: var(--ink-primary, #f5f2e9);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 1.7;
+  padding: 0.55rem 0.65rem;
+}
+.vocab-input:focus-visible {
+  outline: 1px solid var(--gold, #d9b64a);
 }
 
 

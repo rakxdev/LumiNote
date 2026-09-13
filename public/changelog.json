@@ -4,6 +4,21 @@
   "updated": "2026-09-13",
   "entries": [
     {
+      "version": "4.6.0",
+      "date": "2026-09-13",
+      "status": "released",
+      "sections": {
+        "added": [
+          "Installable app (PWA): Add to Home Screen gives a real icon and standalone window; an app-shell cache makes loads instant while API and live sockets are never cached.",
+          "Custom vocabulary: teach the model exact-spelling names and jargon (Vocab button, up to 100 terms) applied to every dictation session.",
+          "Library search and Export all: find anything across Notes / Clips / Transcripts and download everything as Markdown or JSON.",
+          "Reset login: replace your phone or authenticator app yourself — needs a current code, erases the secret and recovery codes.",
+          "Screen stays awake while dictating (wake lock), and library rows get a native Share button on mobile.",
+          "Mobile polish: 44px touch targets, inputs no longer zoom-jump on iOS focus."
+        ]
+      }
+    },
+    {
       "version": "4.5.0",
       "date": "2026-09-13",
       "status": "released",

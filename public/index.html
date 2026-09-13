@@ -6,8 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>LumiNote | VĀK & NĀDA Speech Intelligence Studio</title>
     <meta name="description" content="LumiNote - Production-grade real-time AI speech intelligence fusing ancient Sanskrit acoustics with RodeX technical precision." />
-    <meta name="theme-color" content="#0a0c0f" />
     <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <!-- PWA: installable app shell (never caches /api or the live sockets) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0a0c0f" />
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LumiNote">
     <link rel="stylesheet" href="fonts.css" />
     <link rel="stylesheet" href="reset.css" />
     <link rel="stylesheet" href="styles.css" />
@@ -85,6 +91,12 @@
               </div>
             </div>
           </div>
+
+          <!-- Custom vocabulary for the speech model (AssemblyAI keyterms):
+               exact-spelling terms injected at session start. -->
+          <button type="button" class="mode-switch-btn" id="vocabBtn" aria-haspopup="dialog" aria-expanded="false" title="Custom vocabulary for dictation">
+            <span class="link-btn-label">Vocab</span>
+          </button>
 
           <!-- Link Mode: Cross-Device Pairing. The label is state-driven:
                Link (idle) / Waiting (room open, peer absent) / Linked (peer
@@ -175,6 +187,10 @@
             <h2 class="library-title" id="libraryTitle">Notes</h2>
             <button id="libraryRefresh" class="library-ghost-btn" type="button">Refresh</button>
           </div>
+          <div class="library-tools">
+            <input class="library-search-input" id="librarySearch" type="search" placeholder="Search this list…" aria-label="Search entries">
+            <a class="library-ghost-btn" id="libraryExport" href="/api/notes/export?format=md" download title="Download everything as Markdown">Export all</a>
+          </div>
           <div class="library-list" id="libraryList" role="list"></div>
           <p class="library-empty" id="libraryEmpty" hidden>Nothing saved yet.</p>
         </section>
@@ -225,7 +241,6 @@
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
-
           <!-- Pairing invite: only meaningful while the room waits for its
                peer. Once linked, this hides (the connected state keeps just
                the join-another-room option) per user-requested flow. -->
@@ -272,7 +287,14 @@
               </div>
               <p class="link-auth-error" id="linkAuthError" aria-live="polite"></p>
             </div>
-            <p class="link-join-hint" id="linkAuthActive" hidden>Authenticator login is active on this account.</p>
+            <div id="linkAuthActive" hidden>
+              <p class="link-join-hint">Authenticator login is active on this account.</p>
+              <div class="link-join-row" id="linkAuthResetRow" hidden>
+                <input class="link-join-input" id="linkAuthResetInput" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-label="Confirm with a current authenticator code">
+                <button type="button" class="tool-btn" id="linkAuthResetConfirmBtn">Confirm reset</button>
+              </div>
+              <p class="link-join-hint"><button type="button" class="library-ghost-btn" id="linkAuthResetBtn">Reset login</button> — erases the secret and recovery codes so you can enroll again (new phone, new app).</p>
+            </div>
           </div>
 
           <div class="link-section link-status-row">
@@ -280,6 +302,26 @@
             <span class="link-status-text" id="linkStatusText">Offline</span>
             <span class="link-devices" id="linkDevices" aria-live="polite"></span>
             <button type="button" class="tool-btn link-leave-btn" id="linkLeaveBtn" hidden>Leave</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Vocabulary Dialog (AssemblyAI keyterms_prompt) -->
+      <div class="link-overlay" id="vocabOverlay" hidden>
+        <div class="link-modal" role="dialog" aria-modal="true" aria-labelledby="vocabTitle">
+          <div class="link-modal-head">
+            <h2 class="link-modal-title" id="vocabTitle">VOCABULARY</h2>
+            <button type="button" class="link-close-btn" id="vocabCloseBtn" aria-label="Close vocabulary dialog">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div class="link-section">
+            <p class="link-hint">One term per line — exact spelling and capitalization (names, brands, jargon). Max 100 terms, under 50 characters each. Applied when a dictation session starts.</p>
+            <textarea id="vocabInput" class="vocab-input" rows="9" spellcheck="false" aria-label="Vocabulary terms, one per line" placeholder="Dr. Sharma&#10;Acme Corp&#10;ECG"></textarea>
+          </div>
+          <div class="link-section link-status-row">
+            <span class="link-status-text" id="vocabStatus">Terms apply to the next session</span>
+            <button type="button" class="tool-btn" id="vocabSaveBtn">Save</button>
           </div>
         </div>
       </div>

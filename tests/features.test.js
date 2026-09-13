@@ -1,0 +1,121 @@
+// Feature contracts for the 4.6 additions: library search/export, the
+// reset-authenticator loop, custom vocabulary, wake lock, and the PWA
+// shell whose service worker must NEVER touch API or cross-origin traffic.
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { describe, it } from 'node:test';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { listParams, likePattern } from '../functions/api/notes/store.js';
+import { markdown as exportMarkdown } from '../functions/api/notes/export.js';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const read = (p) => readFileSync(join(ROOT, p), 'utf8');
+const indexJs = read('public/index.js');
+const swJs = read('public/sw.js');
+const manifest = JSON.parse(read('public/manifest.webmanifest'));
+const html = read('public/index.html');
+
+describe('library search', () => {
+  it('parses the optional q param and trims it', () => {
+    const r = listParams(new URLSearchParams('kind=note&q=  hello '));
+    assert.equal(r.ok, true);
+    assert.equal(r.value.q, 'hello');
+    assert.equal(listParams(new URLSearchParams('kind=note&q=%20%20')).value.q, null, 'whitespace-only q is dropped');
+  });
+
+  it('escapes LIKE wildcards so user input cannot wildcard freely', () => {
+    assert.equal(likePattern('50%_done\\'), '%50\\%\\_done\\\\%');
+  });
+});
+
+describe('bulk export', () => {
+  const rows = [
+    { id: '1', kind: 'note', text: 'first note', source_device: 'phone', created_at: '2026-09-13T10:00:00Z', updated_at: '', pinned: 1 },
+    { id: '2', kind: 'clip', text: 'a clip', source_device: null, created_at: '2026-09-13T11:00:00Z', updated_at: '', pinned: 0 },
+  ];
+  it('renders grouped markdown with pinned markers and devices', () => {
+    const md = exportMarkdown(rows, '2026-09-13T12:00:00Z');
+    assert.match(md, /# LumiNote export/);
+    assert.match(md, /## Notes/);
+    assert.match(md, /## Clips/);
+    assert.match(md, /first note/);
+    assert.match(md, /pinned/);
+    assert.match(md, /\(from phone\)/);
+    assert.doesNotMatch(md, /## Transcripts/, 'empty kinds are omitted');
+  });
+  it('says when there is nothing', () => {
+    assert.match(exportMarkdown([], 'x'), /Nothing saved yet/);
+  });
+});
+
+describe('reset authenticator', () => {
+  it('exists, requires proof of possession, and wipes the login rows', () => {
+    const resetFn = read('functions/api/auth/reset.js');
+    assert.match(resetFn, /verifyTotp\(secretB32, code\)/);
+    assert.match(resetFn, /consumeRecoveryCode/);
+    assert.match(resetFn, /totp_secret', 'totp_confirmed', 'totp_recovery'/);
+    assert.match(resetFn, /status: 401/);
+  });
+  it('the dialog ships the two-step reset controls', () => {
+    for (const id of ['linkAuthResetBtn', 'linkAuthResetRow', 'linkAuthResetInput', 'linkAuthResetConfirmBtn']) {
+      assert.ok(html.includes(`id="${id}"`), `missing #${id}`);
+    }
+    assert.match(indexJs, /\/api\/auth\/reset/);
+  });
+});
+
+describe('custom vocabulary (keyterms)', () => {
+  it('injects the official parameter into AssemblyAI sessions only', () => {
+    assert.match(indexJs, /keyterms_prompt=/);
+    assert.match(indexJs, /KEYTERMS_MAX = 100/);
+    assert.match(indexJs, /KEYTERMS_MAX_LEN = 50/);
+    // Deepgram has no keyterms param — the injection must sit in the
+    // AssemblyAI endpoint construction, not a shared URL.
+    const endpoint = indexJs.match(/const endpoint = `wss:\/\/streaming\.assemblyai\.com[^`]*`;/);
+    assert.ok(endpoint && endpoint[0].includes('${keytermsParam}'));
+  });
+  it('the dialog ships editor, save, and status controls', () => {
+    for (const id of ['vocabBtn', 'vocabOverlay', 'vocabInput', 'vocabSaveBtn']) {
+      assert.ok(html.includes(`id="${id}"`), `missing #${id}`);
+    }
+  });
+});
+
+describe('wake lock', () => {
+  it('is acquired on record, re-armed on visibility, released on stop', () => {
+    assert.match(indexJs, /navigator\.wakeLock\.request\("screen"\)/);
+    assert.match(indexJs, /if \(recording\) acquireWakeLock\(\); else releaseWakeLock\(\);/);
+    assert.match(indexJs, /if \(isRecording\) acquireWakeLock\(\);/);
+  });
+});
+
+describe('PWA shell', () => {
+  it('manifest is installable: standalone, themed, with any + maskable icons', () => {
+    assert.equal(manifest.display, 'standalone');
+    assert.equal(manifest.start_url, '/');
+    assert.ok(manifest.icons.some((i) => i.purpose === 'maskable'));
+    assert.ok(manifest.icons.every((i) => /^\//.test(i.src)));
+  });
+
+  it('the service worker never touches API or cross-origin traffic', () => {
+    assert.match(swJs, /request\.method !== 'GET'/);
+    assert.match(swJs, /url\.origin !== self\.location\.origin/);
+    assert.match(swJs, /url\.pathname\.startsWith\('\/api\/'\)/);
+    assert.match(swJs, /network-first|network first|fetch\(request\)/, 'freshness-first strategy present');
+    // Hard guarantee: the API path string must appear in a guard, not in a
+    // cache list.
+    const precache = swJs.match(/const PRECACHE = \[[\s\S]*?\];/)[0];
+    assert.doesNotMatch(precache, /\/api\//);
+  });
+
+  it('icons exist on disk and the page wires manifest + iOS metas', () => {
+    for (const f of ['public/icon-192.png', 'public/icon-512.png', 'public/icon-180.png']) {
+      assert.ok(readFileSync(join(ROOT, f)).length > 1000, `${f} missing or tiny`);
+    }
+    assert.match(html, /rel="manifest" href="manifest\.webmanifest"/);
+    assert.match(html, /rel="apple-touch-icon" href="icon-180\.png"/);
+    assert.match(indexJs, /serviceWorker\.register\("\/sw\.js"\)/);
+  });
+});
