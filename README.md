@@ -6,22 +6,25 @@ LumiNote is a production-hardened, browser-native real-time speech intelligence 
 
 ---
 
-## ⚡ Architecture & Features (v4.4)
+## ⚡ Architecture & Features (v4.6)
 
 - 🕉️ **Vāk & Nāda Fusion Design:** A highly distinctive UI fusing RodeX technical precision with ancient Sanskrit acoustic philosophy. Seamless **Dark Mode (Obsidian & Brass)** and **Light Mode (Silk & Red Lacquer)** toggle.
 - 🌊 **Voice Meters That Tell the Truth:** A 12-bar header pill driven by dB-mapped, log-spaced FFT bands with fast-attack/slow-release response — and the *second* device's pill follows the recording device's voice via tiny loudness frames relayed over the link. Silence shows a faint breathing floor, never a fake wave (see `docs/decisions/ADR-001`).
-- 🔗 **Link Mode:** Cross-device pairing — dictate on your phone and watch the text appear instantly on your desktop (or vice versa). `SyncRoom` Durable Object with hibernating WebSockets, snapshot catch-up for late joiners, and a sliding 12h room lifetime (see `docs/decisions/ADR-003`). The session survives page refreshes, stays alive through a 25s heartbeat, and recovers with jittered backoff plus tap-to-retry.
+- 🔗 **Link Mode, Self-Healing:** Cross-device pairing — dictate on your phone and watch the text appear instantly on your desktop (or vice versa). `SyncRoom` Durable Object with hibernating WebSockets, snapshot catch-up, a sliding 12h room lifetime, and an **authoritative device roster** the room rebroadcasts so no device can hold a stale view (see `docs/decisions/ADR-003`). Sessions survive refreshes, ride through 25s heartbeats, probe apparently-open sockets with a ping on resume (a dead socket can look open forever), and rejoining devices always reclaim their role's slot — reload ghosts can never fill a room. The header button tells the truth by presence: **Link** → amber pulsing **Waiting** → emerald **Linked**, with a **Peer Talking…** state while the other device dictates.
+- 🛡️ **Room Trust Windows:** after a verified device opens a room, the owner's other devices join it for 12 hours with just the room code — QR scan or typed — no second OTP (see `docs/decisions/ADR-005`).
 - 📋 **Push, Both Places:** The clipboard Push button lands the payload in the receiving device's transcript editor *and* its Remote Clipboard tray, instantly; fresh pushes are captured as clips.
-- 💾 **Durable Saved Library (D1):** Notes, clipboard clips, and transcript sessions stored in Cloudflare D1 and browsable in hash-routed `#/notes`, `#/clips`, `#/transcripts` views — navigation happens inside the page, so an active recording survives it. Pin (pinned sort first), copy, and delete on every entry; finishing a dictation auto-saves its transcript (see `docs/decisions/ADR-004`).
-- 🔐 **Authenticator Login (optional):** Protect device linking with a 6-digit TOTP code from Google/Microsoft Authenticator: scan a QR in the Link dialog, confirm, keep 8 one-time recovery codes. The link socket refuses unauthenticated upgrades; a verified browser is remembered for 12h (see `docs/decisions/ADR-005`).
+- 💾 **Durable Saved Library (D1):** Notes, clipboard clips, and transcript sessions stored in Cloudflare D1 and browsable in hash-routed `#/notes`, `#/clips`, `#/transcripts` views — navigation happens inside the page, so an active recording survives it. Server-side **search**, pin (pinned sort first), copy, native **Share** (mobile), delete, and **Export all** as Markdown or JSON; finishing a dictation auto-saves its transcript (see `docs/decisions/ADR-004`).
+- 📖 **Custom Vocabulary:** exact-spelling names, brands, and jargon (up to 100 terms) injected into every AssemblyAI session via the official `keyterms_prompt` parameter.
+- 🔐 **Authenticator Login (optional), self-service:** protect device linking with a 6-digit TOTP code from Google/Microsoft Authenticator: scan a QR in the Link dialog, confirm, keep 8 one-time recovery codes. Reset it yourself with a current code when you change phones. The link socket refuses unauthenticated upgrades; a verified browser is remembered for 12h (see `docs/decisions/ADR-005`).
+- 📲 **Installable App (PWA):** Add to Home Screen gives a real icon and standalone window; an app-shell service worker makes loads instant and works offline — and by design **never** caches `/api`, tokens, or the live sockets (see `docs/decisions/ADR-006`).
 - 📜 **One Version Source:** `public/changelog.json` drives the `/changelog` page and the header version seal, and must match `package.json` (enforced by tests).
 - 📦 **Self-Contained Frontend:** All fonts (4 families, latin/latin-ext/devanagari subsets) and the animation library are served from the app — zero third-party requests — and every asset sends `Cache-Control: no-cache`, so browsers can never serve stale files.
 - 🔒 **Zero-Trust Ephemeral Auth:** No master API keys are exposed to the client. Cloudflare Functions mint on-demand temporary grant tokens for the STT WebSocket handshakes; a second AssemblyAI key can be routed per speech model server-side.
-- 🎙️ **Leak-Free Audio Lifecycle:** Complete AudioWorklet and `MediaStream` teardown on model switches, remote disconnects, and browser unloads, plus a tail flush so the last word is never clipped.
+- 🎙️ **Leak-Free Audio Lifecycle:** Complete AudioWorklet and `MediaStream` teardown on model switches, remote disconnects, and browser unloads, plus a tail flush so the last word is never clipped — and a **screen wake lock** so phones don't sleep mid-dictation.
 - ✨ **Safe Grammar Engine:** Custom LanguageTool proxy (server-side) with bespoke regex rules that preserve legitimate English (`like`, `had had`, `Node.js`, `ER`) while intelligently collapsing stuttered speech.
 - 🎚️ **Quiet-Voice Accuracy:** Sessions pinned to English (`language_codes`), VAD threshold lowered for soft speech, Voice Focus (near-field) suppressing background audio, and browser mic auto-gain.
 - 💾 **Local Draft Resilience:** Real-time autosaving to `localStorage` ensures transcripts survive accidental tab closures and browser crashes.
-- 📱 **Fluid 100dvh Ergonomics:** Adapts flawlessly from 4K desktop scaling down to mobile, utilizing `viewport-fit=cover` for notch/home-bar safety.
+- 📱 **Fluid 100dvh Ergonomics:** Adapts flawlessly from 4K desktop scaling down to mobile (44px touch targets, no iOS focus zoom), utilizing `viewport-fit=cover` for notch/home-bar safety.
 
 ---
 
@@ -40,7 +43,7 @@ LumiNote is a production-hardened, browser-native real-time speech intelligence 
 Built with pure vanilla JavaScript, native Web Audio APIs, and the Node native test runner. Zero heavy frameworks.
 
 ```bash
-# Run the test suite (11 files, 86 tests)
+# Run the test suite (12 files, 103 tests)
 npm test
 
 # Lint
@@ -111,7 +114,7 @@ Releases: bump `public/changelog.json` (new entry) and `package.json` together �
 ---
 
 ## 📚 Documentation
-See `docs/decisions/` for the Architecture Decision Records: the voice-meter design (ADR-001), ephemeral STT grant tokens (ADR-002), Link Mode's Durable Object architecture (ADR-003), the D1-backed library (ADR-004), and authenticator login (ADR-005).
+See `docs/decisions/` for the Architecture Decision Records: the voice-meter design (ADR-001), ephemeral STT grant tokens (ADR-002), Link Mode's Durable Object architecture (ADR-003), the D1-backed library (ADR-004), authenticator login (ADR-005), and the installable app shell with its cache policy (ADR-006).
 
 ## 📄 License
 MIT License.

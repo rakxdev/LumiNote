@@ -1,4 +1,4 @@
-# LumiNote: Design System & Visual Authority (v4.4)
+# LumiNote: Design System & Visual Authority (v4.6)
 
 ## Mode
 **Operate Mode:** High-precision speech intelligence studio fusing RodeX technical specimen architecture, Neo-Mirai Wabi-Sabi grid balance, and ancient Sanskrit acoustic philosophy (*Vāk & Nāda*).
@@ -23,12 +23,16 @@
 ### 3. Iconic Visual Artifacts
 - **Acoustic Yantra Logo:** Custom SVG monogram combining technical calipers, diamond Yantra geometry, and the soundwave origin Bindu.
 - **Devanagari Telemetry Pillar:** Vertical side rail reading *नादब्रह्म* (Sound is the Divine Vibration).
-- **RodeX Packet Seal:** Top corner version stamp, derived from `changelog.json` (e.g. `SPEC v04.4 • VERIFIED`).
+- **RodeX Packet Seal:** Top corner version stamp, derived from `changelog.json` (e.g. `SPEC v04.6 • VERIFIED`).
 - **Voice Meter Pill:** 12 dB-mapped bars in the top bar — fast attack, slow release, breathing floor in silence; follows the *remote* device's voice while linked.
-- **Link Pairing Chassis (v04):** Modal dialog with QR seal on white quiet-zone (scannable in both worlds), mono room code in brushed brass, sliding TTL status dot (amber linking → emerald linked → vermilion error), and the authenticator setup/gate panels.
-- **Remote Clipboard Tray (v04):** Fixed chassis card with emerald `REMOTE CLIPBOARD` stamp; incoming pushes surface here *and* flow into the editor, with one-tactile-copy.
+- **Presence Link Button (v4.6):** labeled state machine in the header — plain **Link** (idle), amber pulsing **Waiting** (room open, no peer), emerald **Linked** (peer present); the dictation button mirrors remote activity with an amber **Peer Talking…** state.
+- **State-Aware Link Dialog:** the pairing invite (QR on white quiet-zone + mono room code) shows only while the room waits; once linked the dialog keeps the join-another-room input and the Leave action. Authenticator setup, the code gate, and the two-step login reset live in the same chassis.
+- **Vocabulary Dialog (v4.6):** mono one-term-per-line editor for exact-spelling keyterms, fed to every dictation session.
+- **Library Tools Row (v4.6):** search field + Export all beside the library title; rows carry Pin / Copy / Share / Delete (Share appears where the Web Share API exists).
 - **Saved Library Views (v4.3):** Hash-routed `#/notes`, `#/clips`, `#/transcripts` panels with pin/copy/delete rows — the studio view and library swap by opacity-safe `hidden` toggling while the audio graph keeps running.
-- **Changelog Page (/changelog):** Standalone obsidian page rendering `changelog.json` in Keep a Changelog style; the same file feeds the packet seal.
+- **Remote Clipboard Tray (v04):** Fixed chassis card with emerald `REMOTE CLIPBOARD` stamp; incoming pushes surface here *and* flow into the editor, with one-tactile-copy.
+- **Changelog Page (/changelog):** Standalone obsidian page rendering `changelog.json` in Keep a Changelog style at full studio width; the same file feeds the packet seal.
+- **App Icon Set (v4.6):** Acoustic Yantra rasterized onto the obsidian chassis (180/192/512, maskable 512) for home-screen installs.
 
 ### 4. Zero-Slop Execution
 - Zero third-party requests on load (fonts and anime.js self-hosted); CSP allows no external origins.

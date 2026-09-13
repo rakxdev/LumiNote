@@ -1,6 +1,6 @@
 # Constraints
 
-Last reviewed: 2026-09-13 (initial bar, set with measured baselines)
+Last reviewed: 2026-09-13 (v4.6.0 docs pass; floor deliberately lowered for the 4.6 feature batch — see the Measured table)
 
 ## Floor (always enforced, no setup required)
 
