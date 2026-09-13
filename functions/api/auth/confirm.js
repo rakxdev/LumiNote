@@ -33,9 +33,12 @@ export async function onRequestPost({ env, request }) {
   }
 
   const recoveryCodes = generateRecoveryCodes();
-  const hashes = [];
-  for (const rc of recoveryCodes) hashes.push(await hashCode(rc));
-  await putSetting(env, 'totp_recovery', JSON.stringify(hashes));
+  const stmts = [];
+  for (const rc of recoveryCodes) {
+    const h = await hashCode(rc);
+    stmts.push({ sql: 'INSERT OR IGNORE INTO app_settings (key, value) VALUES (?1, ?1)', params: [`totp_rc:${h}`, h] });
+  }
+  await env.DB.batch(stmts);
   await putSetting(env, 'totp_confirmed', '1');
 
   return Response.json(

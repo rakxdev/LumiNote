@@ -57,6 +57,7 @@ export async function onRequestPatch({ env, params, request }) {
     await env.DB.prepare(SQL.updatePinned).bind(changes.value.pinned ? 1 : 0, now, id.value, DEFAULT_USER).run();
   }
   const row = await env.DB.prepare(SQL.get).bind(id.value, DEFAULT_USER).first();
+  if (!row) return json({ error: 'Not found' }, 404);
   return json({ note: rowToJson(row) });
 }
 

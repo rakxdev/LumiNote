@@ -60,6 +60,10 @@ export async function onRequest(context) {
       // the single source of truth for "this room joins without an OTP".
       const expiresAt = new Date(Date.now() + AUTH_TTL_SECONDS * 1000).toISOString();
       await putSetting(context.env, `room_auth:${room}`, expiresAt);
+      // Opportunistic cleanup: expired windows are dead rows otherwise.
+      await context.env.DB.prepare(
+        "DELETE FROM app_settings WHERE key LIKE 'room_auth:%' AND value < ?1"
+      ).bind(new Date().toISOString()).run();
     } else {
       const until = await getSetting(context.env, `room_auth:${room}`);
       if (!until || new Date(until).getTime() < Date.now()) {

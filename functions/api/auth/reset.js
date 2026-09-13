@@ -5,7 +5,7 @@
 import {
   getSetting,
   verifyTotp,
-  consumeRecoveryCode,
+  burnRecoveryCode,
 } from './totp.js';
 
 export async function onRequestPost({ env, request }) {
@@ -32,7 +32,7 @@ export async function onRequestPost({ env, request }) {
   if (!proven) {
     // A recovery code also proves possession; no need to burn it in the
     // store — success deletes the whole login row set anyway.
-    proven = (await consumeRecoveryCode(await getSetting(env, 'totp_recovery'), code)) !== null;
+    proven = (await burnRecoveryCode(env, code)) !== false;
   }
   if (!proven) {
     return Response.json({ error: 'Wrong code — check your authenticator' }, {

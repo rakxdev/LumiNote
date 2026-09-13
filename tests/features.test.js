@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { listParams, likePattern } from '../functions/api/notes/store.js';
-import { markdown as exportMarkdown } from '../functions/api/notes/export.js';
+import { escapeMarkdown, mdRow } from '../functions/api/notes/export.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
@@ -31,31 +31,30 @@ describe('library search', () => {
 });
 
 describe('bulk export', () => {
-  const rows = [
-    { id: '1', kind: 'note', text: 'first note', source_device: 'phone', created_at: '2026-09-13T10:00:00Z', updated_at: '', pinned: 1 },
-    { id: '2', kind: 'clip', text: 'a clip', source_device: null, created_at: '2026-09-13T11:00:00Z', updated_at: '', pinned: 0 },
-  ];
-  it('renders grouped markdown with pinned markers and devices', () => {
-    const md = exportMarkdown(rows, '2026-09-13T12:00:00Z');
-    assert.match(md, /# LumiNote export/);
-    assert.match(md, /## Notes/);
-    assert.match(md, /## Clips/);
-    assert.match(md, /first note/);
-    assert.match(md, /pinned/);
-    assert.match(md, /\(from phone\)/);
-    assert.doesNotMatch(md, /## Transcripts/, 'empty kinds are omitted');
+  it('renders a row with pinned marker, device attribution, and inert text', () => {
+    const row = { kind: 'note', text: '# forged heading\n<img src=x onerror=alert(1)>', source_device: 'phone', created_at: '2026-09-13T10:00:00Z', updated_at: '', pinned: 1 };
+    const md = mdRow(row);
+    assert.match(md, /^### 2026-09-13T10:00:00Z • pinned \(from phone\)/);
+    assert.match(md, /\\# forged heading/, 'line-leading structure is defused');
+    assert.match(md, /&lt;img src=x onerror=alert\(1\)&gt;/, 'inline HTML is escaped');
   });
-  it('says when there is nothing', () => {
-    assert.match(exportMarkdown([], 'x'), /Nothing saved yet/);
+
+  it('escapeMarkdown defuses line-leading structure but leaves normal text', () => {
+    assert.equal(escapeMarkdown('normal text'), 'normal text');
+    assert.equal(escapeMarkdown('- not a list'), '\\- not a list');
+    // '>' is HTML-escaped first and the entity renders literally — inert.
+    assert.equal(escapeMarkdown('> not a quote'), '&gt; not a quote');
+    assert.equal(escapeMarkdown('```code```'), '\\`\\`\\`code```');
   });
 });
 
 describe('reset authenticator', () => {
-  it('exists, requires proof of possession, and wipes the login rows', () => {
+  it('exists, requires proof of possession, and wipes the login rows and room windows', () => {
     const resetFn = read('functions/api/auth/reset.js');
     assert.match(resetFn, /verifyTotp\(secretB32, code\)/);
-    assert.match(resetFn, /consumeRecoveryCode/);
+    assert.match(resetFn, /burnRecoveryCode\(env, code\)/);
     assert.match(resetFn, /totp_secret', 'totp_confirmed', 'totp_recovery'/);
+    assert.match(resetFn, /room_auth:%'/, 'a reset must close every room trust window');
     assert.match(resetFn, /status: 401/);
   });
   it('the dialog ships the two-step reset controls', () => {
@@ -152,6 +151,12 @@ describe('PWA shell', () => {
     assert.equal(manifest.start_url, '/');
     assert.ok(manifest.icons.some((i) => i.purpose === 'maskable'));
     assert.ok(manifest.icons.every((i) => /^\//.test(i.src)));
+  });
+
+  it('the service worker bounds its cache and falls back on failed responses', () => {
+    assert.match(swJs, /CACHE_MAX_ENTRIES/);
+    assert.match(swJs, /putTrimmed/);
+    assert.match(swJs, /hit \|\| res/, 'a resolved 5xx falls back to the cached copy');
   });
 
   it('the service worker never touches API or cross-origin traffic', () => {

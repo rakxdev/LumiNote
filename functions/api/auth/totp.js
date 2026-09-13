@@ -81,6 +81,50 @@ export async function consumeRecoveryCode(storedHashesJson, code) {
   return hashes.filter((_, i) => i !== idx);
 }
 
+
+// Atomically burn a recovery code: codes live as one row per hash, so the
+// DELETE either removes exactly that code (meta.changes === 1) or the code
+// was already gone — no read-modify-write race can resurrect a burn.
+// Migrates the legacy JSON-array row lazily on first touch.
+export async function burnRecoveryCode(env, code) {
+  const hash = await hashCode(code);
+  const key = `totp_rc:${hash}`;
+  const del = await env.DB.prepare('DELETE FROM app_settings WHERE key = ?1').bind(key).run();
+  if (del.meta.changes > 0) return true;
+  const legacy = await getSetting(env, 'totp_recovery');
+  if (!legacy) return false;
+  let hashes;
+  try {
+    hashes = JSON.parse(legacy);
+  } catch {
+    return false;
+  }
+  if (!Array.isArray(hashes) || !hashes.includes(hash)) return false;
+  const stmts = hashes
+    .filter((h) => h !== hash)
+    .map((h) => ({ sql: 'INSERT OR IGNORE INTO app_settings (key, value) VALUES (?1, ?1)', params: [`totp_rc:${h}`, h] }));
+  stmts.push({ sql: "DELETE FROM app_settings WHERE key = 'totp_recovery'", params: [] });
+  await env.DB.batch(stmts);
+  return true;
+}
+
+// Remaining recovery codes: per-hash rows plus any not-yet-migrated legacy
+// JSON row.
+export async function countRecoveryCodes(env) {
+  const row = await env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM app_settings WHERE key LIKE 'totp_rc:%'"
+  ).first();
+  let n = row ? Number(row.n) || 0 : 0;
+  const legacy = await getSetting(env, 'totp_recovery');
+  if (legacy) {
+    try {
+      const arr = JSON.parse(legacy);
+      if (Array.isArray(arr)) n += arr.length;
+    } catch {}
+  }
+  return n;
+}
+
 // --- signed login cookie ---
 // The signing key is the TOTP secret itself: forging the cookie requires the
 // same secret the authenticator holds, so no second server-side secret needs

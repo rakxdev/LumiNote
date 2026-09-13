@@ -10,6 +10,7 @@
 // - Old caches are deleted on activate, so shipping a release retires the
 //   previous shell in one reload.
 const CACHE_VERSION = 'luminote-shell-v1';
+const CACHE_MAX_ENTRIES = 120;
 const PRECACHE = [
   '/',
   '/index.html',
@@ -42,6 +43,19 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Bounded cache: store the response, then drop the oldest entries when the
+// cache grows past the cap (query-string variants used to grow it forever).
+async function putTrimmed(request, response) {
+  const cache = await caches.open(CACHE_VERSION);
+  await cache.put(request, response);
+  const keys = await cache.keys();
+  if (keys.length > CACHE_MAX_ENTRIES) {
+    for (const old of keys.slice(0, keys.length - CACHE_MAX_ENTRIES)) {
+      await cache.delete(old);
+    }
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -57,7 +71,7 @@ self.addEventListener('fetch', (event) => {
         const fetchAndStore = fetch(request).then((res) => {
           if (res.ok) {
             const copy = res.clone();
-            caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+            putTrimmed(request, copy);
           }
           return res;
         });
@@ -67,14 +81,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Everything else (HTML/CSS/JS/JSON): network-first, cache fallback.
+  // Everything else (HTML/CSS/JS/JSON): network-first, cache fallback —
+  // including on resolved-but-failing responses (a deploy-time 5xx serves
+  // the cached shell instead of an error page).
   event.respondWith(
     fetch(request)
       .then((res) => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+        if (!res.ok) {
+          return caches.match(request).then((hit) => hit || res);
         }
+        const copy = res.clone();
+        putTrimmed(request, copy);
         return res;
       })
       .catch(() => caches.match(request).then((hit) => hit || (request.mode === 'navigate' ? caches.match('/') : undefined)))

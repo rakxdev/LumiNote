@@ -3,9 +3,9 @@
 // any other protected endpoint then accept the browser for 12 hours.
 import {
   getSetting,
-  putSetting,
+  countRecoveryCodes,
   verifyTotp,
-  consumeRecoveryCode,
+  burnRecoveryCode,
   signAuthCookie,
   authCookieHeader,
 } from './totp.js';
@@ -34,11 +34,10 @@ export async function onRequestPost({ env, request }) {
   if (verifyTotp(secretB32, code)) {
     via = 'totp';
   } else {
-    const updated = await consumeRecoveryCode(await getSetting(env, 'totp_recovery'), code);
-    if (updated !== null) {
-      await putSetting(env, 'totp_recovery', JSON.stringify(updated));
+    const burned = await burnRecoveryCode(env, code);
+    if (burned) {
       via = 'recovery';
-      recoveryRemaining = updated.length;
+      recoveryRemaining = await countRecoveryCodes(env);
     }
   }
   if (!via) {
