@@ -1,128 +1,108 @@
-# 🎙️ LumiNote — Vāk & Nāda Edition
+<div align="center">
 
-LumiNote is a production-hardened, browser-native real-time speech intelligence studio. Deployed on **Cloudflare Pages**, it streams live microphone audio directly to advanced AI transcription models (AssemblyAI & Deepgram) via WebSockets, with zero-latency interactive editing, a durable saved library, cross-device Link Mode, and optional authenticator login. Single-user by design: built for founders, creators, and writers who dictate notes, essays, drafts, or prompts and keep them.
+<img src="public/logo.svg" alt="LumiNote" width="88" />
 
-![LumiNote Studio](public/logo.svg)
+# LumiNote
 
----
+**A real-time AI dictation studio in your browser — with your phone as the microphone for your desktop.**
 
-## ⚡ Architecture & Features (v4.7)
+[![CI](https://github.com/rakxdev/LumiNote/actions/workflows/ci.yml/badge.svg?branch=cloudflare-v04)](https://github.com/rakxdev/LumiNote/actions/workflows/ci.yml)
+![License](https://img.shields.io/badge/license-MIT-gold)
+![Tests](https://img.shields.io/badge/tests-120%20passing-emerald)
+[![Live App](https://img.shields.io/badge/live-studio-gold)](https://cloudflare-v04.luminote-v2.pages.dev/)
 
-- 🕉️ **Vāk & Nāda Fusion Design:** A highly distinctive UI fusing RodeX technical precision with ancient Sanskrit acoustic philosophy. Seamless **Dark Mode (Obsidian & Brass)** and **Light Mode (Silk & Red Lacquer)** toggle.
-- 🌊 **Voice Meters That Tell the Truth:** A 12-bar header pill driven by dB-mapped, log-spaced FFT bands with fast-attack/slow-release response — and the *second* device's pill follows the recording device's voice via tiny loudness frames relayed over the link. Silence shows a faint breathing floor, never a fake wave (see `docs/decisions/ADR-001`).
-- 🔗 **Link Mode, Self-Healing:** Cross-device pairing — dictate on your phone and watch the text appear instantly on your desktop (or vice versa). `SyncRoom` Durable Object with hibernating WebSockets, snapshot catch-up, a sliding 12h room lifetime, and an **authoritative device roster** the room rebroadcasts so no device can hold a stale view (see `docs/decisions/ADR-003`). Sessions survive refreshes, ride through 25s heartbeats, probe apparently-open sockets with a ping on resume (a dead socket can look open forever), and rejoining devices always reclaim their role's slot — reload ghosts can never fill a room. The header button tells the truth by presence: **Link** → amber pulsing **Waiting** → emerald **Linked**, with a **Peer Talking…** state while the other device dictates.
-- 🛡️ **Room Trust Windows:** after a verified device opens a room, the owner's other devices join it for 12 hours with just the room code — QR scan or typed — no second OTP (see `docs/decisions/ADR-005`).
-- 📋 **Push, Both Places:** The clipboard Push button lands the payload in the receiving device's transcript editor *and* its Remote Clipboard tray, instantly; fresh pushes are captured as clips.
-- 💾 **Durable Saved Library (D1):** Notes, clipboard clips, and transcript sessions stored in Cloudflare D1 and browsable in hash-routed `#/notes`, `#/clips`, `#/transcripts` views — navigation happens inside the page, so an active recording survives it. Server-side **search**, pin (pinned sort first), copy, native **Share** (mobile), delete, and **Export all** as Markdown or JSON; finishing a dictation auto-saves its transcript (see `docs/decisions/ADR-004`).
-- 📖 **Custom Vocabulary & Auto-Corrections:** exact-spelling names, brands, and jargon (up to 100 terms) injected into every AssemblyAI session via the official `keyterms_prompt` parameter — plus a personal correction dictionary ("heard = written") that fixes recurring misrecognitions in every committed sentence, capitalization preserved.
-- 🗣️ **Voice Commands:** "new paragraph", "new line", and "scratch that" / "delete that" are executed instead of transcribed — on whichever device speaks them, with scratch mirrored to the linked screen (see `public/text-pipeline.js`).
-- ✒️ **Output Modes for Polish AI:** Clean (grammar pass), Bullets (one item per sentence), or Email (greeting + body + sign-off) — deterministic, no LLM, raw text always recoverable.
-- 🔐 **Authenticator Login (optional), self-service:** protect device linking with a 6-digit TOTP code from Google/Microsoft Authenticator: scan a QR in the Link dialog, confirm, keep 8 one-time recovery codes. Reset it yourself with a current code when you change phones. The link socket refuses unauthenticated upgrades; a verified browser is remembered for 12h (see `docs/decisions/ADR-005`).
-- 📲 **Installable App (PWA):** Add to Home Screen gives a real icon and standalone window; an app-shell service worker makes loads instant and works offline — and by design **never** caches `/api`, tokens, or the live sockets (see `docs/decisions/ADR-006`).
-- 📜 **One Version Source:** `public/changelog.json` drives the `/changelog` page and the header version seal, and must match `package.json` (enforced by tests).
-- 📦 **Self-Contained Frontend:** All fonts (4 families, latin/latin-ext/devanagari subsets) and the animation library are served from the app — zero third-party requests — and every asset sends `Cache-Control: no-cache`, so browsers can never serve stale files.
-- 🔒 **Zero-Trust Ephemeral Auth:** No master API keys are exposed to the client. Cloudflare Functions mint on-demand temporary grant tokens for the STT WebSocket handshakes; a second AssemblyAI key can be routed per speech model server-side.
-- 🎙️ **Leak-Free Audio Lifecycle:** Complete AudioWorklet and `MediaStream` teardown on model switches, remote disconnects, and browser unloads, plus a tail flush so the last word is never clipped — and a **screen wake lock** so phones don't sleep mid-dictation.
-- ✨ **Safe Grammar Engine:** Custom LanguageTool proxy (server-side) with bespoke regex rules that preserve legitimate English (`like`, `had had`, `Node.js`, `ER`) while intelligently collapsing stuttered speech.
-- 🎚️ **Quiet-Voice Accuracy:** Sessions pinned to English (`language_codes`), VAD threshold lowered for soft speech, Voice Focus (near-field) suppressing background audio, and browser mic auto-gain.
-- 💾 **Local Draft Resilience:** Real-time autosaving to `localStorage` ensures transcripts survive accidental tab closures and browser crashes.
-- 📱 **Fluid 100dvh Ergonomics:** Adapts flawlessly from 4K desktop scaling down to mobile (44px touch targets, no iOS focus zoom), utilizing `viewport-fit=cover` for notch/home-bar safety.
+[Open the Studio](https://cloudflare-v04.luminote-v2.pages.dev/) · [Changelog](https://cloudflare-v04.luminote-v2.pages.dev/changelog) · [Credits](https://cloudflare-v04.luminote-v2.pages.dev/credits) · [Contributing](CONTRIBUTING.md)
+
+</div>
 
 ---
 
-## 🚀 Speech Models
+## Why LumiNote?
 
-| Model | Provider | Latency | Target Use Case |
-|---|---|---|---|
-| **AssemblyAI Universal-3.5 Pro** *(Default)* | AssemblyAI Streaming v3 | ~300ms | High-accuracy contextual voice intelligence |
-| **Deepgram Nova-3** | Deepgram Realtime v1 | ~150ms | Ultra-fast conversational interactions |
-| **AssemblyAI Fast Realtime** | AssemblyAI Streaming v3 | ~180ms | Low-latency lightweight stream processing |
+Dictation tools are either clunky batch uploaders, subscription-walled, or locked to one device. LumiNote is a **free, open, browser-native studio** where you dictate on your phone and the text appears **live on your desktop** — with the audio never passing through its servers (it streams device → speech model directly). Built with pure vanilla JavaScript, native Web Audio, and Cloudflare's edge. No accounts, no frameworks, no build step.
 
----
+## Features
 
-## 🛠️ Local Development & Testing
+| | |
+|---|---|
+| 🎙️ **Streaming STT** | AssemblyAI Universal-3.5 Pro (default) and Deepgram Nova-3, switched live; English-pinned sessions tuned for quiet voices |
+| 📱 **Link Mode** | Pair any two devices with a QR or 6-character code; live transcript + clipboard relay, room trust windows, self-healing connections |
+| 🖋️ **Voice commands** | "new paragraph", "new line", "scratch that" — executed, not transcribed |
+| 📖 **Vocabulary & corrections** | Exact-spelling keyterms plus a personal "heard = written" dictionary applied to every sentence |
+| ✒️ **Output modes** | Polish AI into Clean, Bullets, or Email scaffolds |
+| 💾 **Durable library** | Notes, clips, and transcripts in Cloudflare D1 — searchable, pinnable, exportable as Markdown/JSON |
+| 🔐 **Authenticator login** | Optional TOTP gate for device linking, with recovery codes and self-service reset |
+| 📲 **Installable PWA** | Home-screen app with an offline shell that never caches API or socket traffic |
+| 🌊 **Truthful visuals** | dB-mapped voice meters on *both* devices, presence-driven link states, zero fake animations |
+| 🛡️ **Zero-trust auth** | Ephemeral STT tokens, no master keys client-side, zero third-party requests |
 
-Built with pure vanilla JavaScript, native Web Audio APIs, and the Node native test runner. Zero heavy frameworks.
+<details>
+<summary><strong>All capabilities in detail</strong></summary>
 
-```bash
-# Run the test suite (13 files, 124 tests)
-npm test
+- **Vāk & Nāda design** — RodeX precision × Sanskrit acoustics; Dark (Obsidian & Brass) and Light (Silk & Red Lacquer) themes.
+- **Truthful voice meters** — 12 dB-mapped, log-spaced FFT bands with fast attack/slow release; the second device's meter follows the recording device's voice over the link ([ADR-001](docs/decisions/ADR-001-synthetic-oscilloscope.md)).
+- **Link Mode** — hibernating-WebSocket `SyncRoom` Durable Object, snapshot catch-up, sliding 12h rooms, authoritative device rosters, role-slot replacement, heartbeat + resume liveness probes ([ADR-003](docs/decisions/ADR-003-link-mode-cross-device-sync.md)).
+- **Room trust windows** — a verified device unlocks its room for 12h; other devices join with just the code ([ADR-005](docs/decisions/ADR-005-totp-authenticator-login.md)).
+- **Push, both places** — pushes land in the peer's editor *and* clipboard tray; fresh pushes are captured as clips.
+- **Durable library** — hash-routed Notes/Clips/Transcripts views; recording survives navigation; transcript auto-save ([ADR-004](docs/decisions/ADR-004-d1-saved-library.md)).
+- **Self-service authenticator** — enroll by QR, 8 one-time recovery codes, owner reset with a current code.
+- **One version source** — `changelog.json` drives the `/changelog` page and the header seal (enforced by tests).
+- **Self-contained frontend** — self-hosted fonts and libraries, zero third-party requests, always-revalidate cache ([ADR-006](docs/decisions/ADR-006-installable-shell-cache-policy.md)).
+- **Leak-free audio lifecycle** — full AudioWorklet teardown on switches/disconnects/unloads, tail flush so the last word survives, and a screen wake lock so phones don't sleep mid-dictation.
+- **Safe grammar engine** — LanguageTool proxy with rules that preserve legitimate English ("like", "had had", "Node.js").
+- **Local draft resilience** — the transcript autosaves and survives crashes.
+- **Quiet-voice accuracy** — English-pinned sessions, lowered VAD threshold, near-field Voice Focus, browser mic auto-gain.
+- **Mobile ergonomics** — 44px touch targets, no iOS focus zoom, `viewport-fit=cover` for notch/home-bar safety.
 
-# Lint
-npm run lint
+</details>
 
-# Local dev server with Cloudflare Pages Functions
-npm run dev
-```
+## Quick Start
 
-Create a `.dev.vars` file (never commit it — it is gitignored; see `.dev.vars.example`):
-```ini
-ASSEMBLYAI_API_KEY=your_assemblyai_api_key
-ASSEMBLYAI_API_KEY_2=optional_second_key_for_alt_models
-DEEPGRAM_API_KEY=your_deepgram_api_key
-```
+**Use it:** open the [live studio](https://cloudflare-v04.luminote-v2.pages.dev/), click **Link** on both devices, scan the QR — dictate on your phone.
 
-The D1 binding works locally out of the box; apply the schema once:
-```bash
-npx wrangler d1 execute luminote-db --local --file db/schema.sql
-```
-
-### Link Mode local development
-
-The sync backend is a companion Worker (`worker/`) because Pages projects
-cannot define Durable Objects. The Worker's direct `/join` route is
-production-off (the Pages Function owns the auth decision), so standalone dev
-opts in via `worker/.dev.vars`:
-
-```ini
-LINK_DIRECT_JOIN=1
-```
-
-Run both processes locally:
+**Develop it:**
 
 ```bash
-# Terminal 1: SyncRoom Durable Object
-npm run dev:sync
-
-# Terminal 2: Pages app + Functions
-npm run dev
+git clone https://github.com/rakxdev/LumiNote && cd LumiNote
+npm install                      # Node 22
+cp .dev.vars.example .dev.vars   # add your ASSEMBLYAI_API_KEY / DEEPGRAM_API_KEY
+npm run dev                      # app + Functions on localhost
+npm run dev:sync                 # second terminal: relay Worker
 ```
 
----
+**Verify:** `npm run check:fast` (lint + floor, <5s) · `npm run check:task` (tests + ratchets, <90s) · `npm run check:full` (deep scan).
 
-## 🚀 Deployment to Cloudflare Pages
+Full setup (D1, secrets, deployment) in the [Contributing guide](CONTRIBUTING.md).
 
-1. Set environment secrets securely via Wrangler:
-```bash
-npx wrangler pages secret put ASSEMBLYAI_API_KEY
-npx wrangler pages secret put ASSEMBLYAI_API_KEY_2   # optional
-npx wrangler pages secret put DEEPGRAM_API_KEY
+## Architecture
+
+```
+Browser (vanilla JS, Web Audio, AudioWorklet)
+   │  16 kHz PCM over WebSocket (ephemeral token; audio goes device → model directly)
+   ▼
+Cloudflare Pages Functions ──► AssemblyAI / Deepgram streaming STT
+   │
+   ├─► /api/notes ──► Cloudflare D1 (notes · clips · transcripts · app settings)
+   ├─► /api/auth ──► TOTP login, room trust windows (HMAC-signed cookie)
+   └─► /api/link/ws ──► SyncRoom Durable Object (relay rooms, rosters, snapshots)
 ```
 
-2. Create the D1 database once and put its id in `wrangler.toml`, then apply the schema:
-```bash
-npx wrangler d1 create luminote-db
-npx wrangler d1 execute luminote-db --remote --file db/schema.sql
-```
+Decisions and their reasoning live in [`docs/decisions/`](docs/decisions/) (ADR-001 → ADR-006).
 
-3. Deploy — the Worker must exist before the Pages DO binding resolves:
-```bash
-npm run deploy:sync   # SyncRoom Durable Object (luminote-sync)
-npm run deploy        # Pages app
-```
+## Documentation
 
-Releases: bump `public/changelog.json` (new entry) and `package.json` together — the test suite enforces that they agree, and the header seal derives its label from the changelog.
+| | |
+|---|---|
+| [Live app](https://cloudflare-v04.luminote-v2.pages.dev/) · [Changelog](https://cloudflare-v04.luminote-v2.pages.dev/changelog) · [Credits](https://cloudflare-v04.luminote-v2.pages.dev/credits) | The product and its release history |
+| [docs/decisions/](docs/decisions/) | Architecture Decision Records (ADR-001 → 006) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Contributing and conduct |
+| [CONSTRAINTS.md](CONSTRAINTS.md) | The enforced quality bar (floor + ratchets) |
+| [DESIGN.md](DESIGN.md) | The visual design system |
 
----
+## Contributing
 
-## 📚 Documentation
-See `docs/decisions/` for the Architecture Decision Records: the voice-meter design (ADR-001), ephemeral STT grant tokens (ADR-002), Link Mode's Durable Object architecture (ADR-003), the D1-backed library (ADR-004), authenticator login (ADR-005), and the installable app shell with its cache policy (ADR-006).
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). In short: one logical change per commit, verification gates green, `CONSTRAINTS.md` never weakened, English everywhere. By contributing you agree your work is licensed under the [MIT License](LICENSE).
 
-## 🤝 Community
-- **Credits & licenses:** the in-app [credits page](/credits) (`public/credits.html`) — the developer, every dependency with its license, and the contribution invitation.
-- **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) — setup, commit style, and the verification gates.
-- **Conduct:** [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-- **License:** [MIT](LICENSE).
+## License
 
-## 📄 License
-MIT License.
+[MIT](LICENSE) © 2026 rakxdev. Vendored libraries and typefaces keep their own notices — see the [credits page](https://cloudflare-v04.luminote-v2.pages.dev/credits).

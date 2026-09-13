@@ -8,80 +8,66 @@
     <link rel="icon" type="image/svg+xml" href="logo.svg">
     <link rel="stylesheet" href="fonts.css" />
     <link rel="stylesheet" href="reset.css" />
+    <link rel="stylesheet" href="standalone.css" />
     <style>
-      :root {
-        --font-display: "Chakra Petch", sans-serif;
-        --font-body: "Martel", serif;
-        --font-mono: "JetBrains Mono", ui-monospace, monospace;
-        --gold: #d9b64a;
-        --gold-deep: #b8952f;
-        --amber: #d9a441;
-        --emerald: #10b981;
-        --panel-chassis: #0f1217;
-        --panel-inner: #080a0e;
-        --panel-border: #1f242d;
-        --ink-primary: #f5f2e9;
-        --ink-dim: #8e9588;
-        --ink-muted: #565d50;
+      .cl-entry-head {
+        display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;
       }
-      html, body { height: 100%; }
-      body {
-        background: var(--panel-inner);
-        background-image:
-          radial-gradient(1000px 500px at 75% -10%, rgba(217, 182, 74, 0.10) 0%, transparent 60%),
-          radial-gradient(800px 400px at 15% 95%, rgba(232, 69, 44, 0.05) 0%, transparent 55%);
-        color: var(--ink-primary);
-        font-family: var(--font-body);
-        line-height: 1.65;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 2.5rem 1rem 4rem;
-      }
-      /* Full-fluid like the studio: no narrow centered column — the page
-         spans the viewport with the same fluid gutters (user request). */
-      .cl-shell { width: 100%; max-width: none; }
-      body { padding: 2.5rem clamp(0.75rem, 2.5vw, 2.5rem) 4rem; }
-      header.cl-top {
-        display: flex; align-items: baseline; justify-content: space-between;
-        gap: 1rem; border-bottom: 1px dashed rgba(217, 182, 74, 0.25);
-        padding-bottom: 1rem; margin-bottom: 2rem;
-      }
-      .cl-brand { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; letter-spacing: 0.02em; }
-      .cl-brand em { color: var(--gold); font-style: normal; }
-      .cl-back { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); text-decoration: none; border: 1px solid var(--panel-border); padding: 0.35rem 0.7rem; border-radius: 3px; }
-      .cl-back:hover, .cl-back:focus-visible { color: var(--gold); border-color: var(--gold-deep); }
-      .cl-entry { margin-bottom: 2.25rem; }
-      .cl-entry-head { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
       .cl-version { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; color: var(--gold); }
       .cl-date { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-muted); letter-spacing: 0.06em; }
-      .cl-status { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.35); padding: 0.1rem 0.45rem; border-radius: 2px; }
+      .cl-status {
+        font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+        color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.35); padding: 0.1rem 0.45rem; border-radius: 2px;
+      }
       .cl-section { margin-top: 0.85rem; }
-      .cl-section h2 { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 0.4rem; }
+      .cl-section h2 {
+        font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500;
+        letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); margin: 0 0 0.4rem;
+      }
       .cl-section.added h2 { color: var(--emerald); }
       .cl-section.changed h2 { color: var(--amber); }
       .cl-section.fixed h2 { color: var(--gold); }
-      .cl-section ul { list-style: none; }
-      .cl-section li { padding-left: 1.1rem; position: relative; font-size: 0.92rem; color: var(--ink-primary); margin-bottom: 0.35rem; }
+      .cl-section.security h2 { color: var(--red); }
+      .cl-section ul { list-style: none; margin: 0; padding: 0; }
+      .cl-section li { padding-left: 1.1rem; position: relative; font-size: 0.92rem; margin-bottom: 0.35rem; }
       .cl-section li::before { content: "—"; position: absolute; left: 0; color: var(--ink-muted); }
-      .cl-empty, .cl-error { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-dim); border: 1px dashed var(--panel-border); padding: 1.25rem; text-align: center; border-radius: 4px; }
-      footer.cl-foot { margin-top: 3rem; padding-top: 1rem; border-top: 1px dashed rgba(217, 182, 74, 0.25); font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: space-between; }
+      .cl-empty, .cl-error {
+        font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-dim);
+        border: 1px dashed var(--panel-border); padding: 1.25rem; text-align: center; border-radius: 4px;
+      }
     </style>
 </head>
 <body>
-    <div class="cl-shell">
-        <header class="cl-top">
-            <div class="cl-brand">Lumi<em>Note</em> — Changelog</div>
-            <a class="cl-back" href="/">← Back to Studio</a>
+    <aside class="st-pillar" aria-hidden="true">
+        <div class="st-pillar-om">ॐ</div>
+        <div class="st-pillar-text">नादब्रह्म</div>
+        <div class="st-pillar-year">VĀK 2026</div>
+    </aside>
+
+    <div class="st-shell">
+        <header class="st-chassis">
+            <div class="st-brand">
+                <img class="st-logo" src="logo.svg" alt="LumiNote Acoustic Yantra logo">
+                <div class="st-brand-title">
+                    <h1>Lumi<em>Note</em><span class="st-fuse-badge">CHANGELOG</span></h1>
+                </div>
+            </div>
+            <nav class="st-nav" aria-label="Page navigation">
+                <a class="st-btn" href="/">Studio</a>
+                <a class="st-btn" href="/credits">Credits</a>
+                <a class="st-btn" href="https://github.com/rakxdev/LumiNote">Repository</a>
+            </nav>
         </header>
 
-        <main id="changelogRoot" aria-live="polite">
-            <div class="cl-empty">Loading changelog…</div>
+        <main class="st-panel" aria-live="polite">
+            <div id="changelogRoot">
+                <div class="cl-empty">Loading changelog…</div>
+            </div>
         </main>
 
-        <footer class="cl-foot">
+        <footer class="st-footer">
             <span>Keep a Changelog • one source feeds this page and the app's version seal</span>
-            <span><a href="/">Studio</a> • <a href="/credits">Credits</a></span>
+            <span>© 2026 rakxdev • MIT</span>
         </footer>
     </div>
 
@@ -129,6 +115,11 @@
           article.appendChild(section);
         }
         root.appendChild(article);
+        if (entry !== entries[entries.length - 1]) {
+          const divider = document.createElement('hr');
+          divider.className = 'st-divider';
+          root.appendChild(divider);
+        }
       }
     } catch (err) {
       root.innerHTML = '';

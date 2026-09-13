@@ -1,0 +1,211 @@
+/* ==========================================================================
+   LumiNote standalone-page chrome — the app's design language for the
+   /changelog and /credits pages. Self-contained pages link this plus
+   fonts.css + reset.css; page-specific styles stay inline in each page.
+   Dark "RodeX Obsidian & Brushed Brass" world only (the app's default).
+   ========================================================================== */
+
+:root {
+  --font-display: "Chakra Petch", sans-serif;
+  --font-body: "Martel", serif;
+  --font-sanskrit: "Yatra One", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --gold: #d9b64a;
+  --gold-deep: #b8952f;
+  --amber: #d9a441;
+  --red: #e8452c;
+  --emerald: #10b981;
+
+  --bg-base: #07090c;
+  --panel-chassis: #0f1217;
+  --panel-inner: #080a0e;
+  --panel-border: #1f242d;
+  --btn-bg: #15181f;
+  --btn-border: #282e38;
+  --dashed-line: rgba(217, 182, 74, 0.25);
+  --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --ink-primary: #f5f2e9;
+  --ink-dim: #8e9588;
+  --ink-muted: #565d50;
+}
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  background-image:
+    radial-gradient(1000px 500px at 75% -10%, rgba(217, 182, 74, 0.12) 0%, transparent 60%),
+    radial-gradient(800px 400px at 15% 95%, rgba(232, 69, 44, 0.06) 0%, transparent 55%),
+    repeating-linear-gradient(0deg, transparent 0 24px, rgba(255, 255, 255, 0.015) 24px 25px),
+    repeating-linear-gradient(90deg, transparent 0 24px, rgba(255, 255, 255, 0.015) 24px 25px);
+  color: var(--ink-primary);
+  font-family: var(--font-body);
+  line-height: 1.65;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem clamp(0.75rem, 2.5vw, 2.5rem) 2.5rem;
+}
+
+::selection { background: rgba(217, 182, 74, 0.35); color: var(--ink-primary); }
+
+* { scrollbar-width: thin; scrollbar-color: rgba(217, 182, 74, 0.55) rgba(0, 0, 0, 0.25); }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.25); border-radius: 4px; }
+*::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--amber); }
+
+a { color: var(--gold); text-decoration: underline; text-underline-offset: 2px; }
+a:hover { color: var(--gold-deep); }
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Left Sanskrit pillar — hidden where it cannot breathe. */
+.st-pillar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  padding-top: 2rem;
+  border-right: 1px dashed var(--dashed-line);
+  z-index: 1;
+}
+.st-pillar-om {
+  font-family: var(--font-sanskrit);
+  font-size: 1.15rem;
+  color: var(--gold);
+  border: 1px solid var(--dashed-line);
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+}
+.st-pillar-text {
+  font-family: var(--font-sanskrit);
+  font-size: 0.95rem;
+  writing-mode: vertical-rl;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+}
+.st-pillar-year {
+  margin-top: auto;
+  margin-bottom: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.3em;
+  writing-mode: vertical-rl;
+  color: var(--ink-muted);
+}
+@media (max-width: 1180px) {
+  .st-pillar { display: none; }
+}
+
+.st-shell {
+  width: 100%;
+  max-width: none;
+  margin-left: clamp(0px, 4vw, 56px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chassis header — same panel, border, radius, and shadow as the app. */
+.st-chassis {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 1rem;
+  background: var(--panel-chassis);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 1.25rem;
+}
+.st-brand { display: flex; align-items: center; gap: 0.7rem; }
+.st-logo {
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 2px 6px rgba(217, 182, 74, 0.25));
+}
+.st-brand h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+.st-brand h1 em { color: var(--gold); font-style: normal; }
+.st-fuse-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  color: var(--amber);
+  border: 1px solid rgba(217, 164, 65, 0.35);
+  background: rgba(217, 164, 65, 0.08);
+  padding: 0.14rem 0.45rem;
+  border-radius: 3px;
+  margin-left: 0.6rem;
+  vertical-align: 2px;
+}
+.st-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.st-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.8rem;
+  border-radius: 5px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+.st-btn:hover, .st-btn:focus-visible { background: #1e222a; border-color: var(--gold-deep); color: var(--gold); text-decoration: none; }
+
+/* Main chassis panel — one panel, dashed dividers inside. */
+.st-panel {
+  background: var(--panel-chassis);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  padding: clamp(1rem, 3vw, 2rem);
+}
+.st-divider { border: 0; border-top: 1px dashed var(--dashed-line); margin: 2rem 0; }
+
+.st-footer {
+  margin-top: 1.5rem;
+  padding: 0.35rem 1rem;
+  border-top: 1px solid var(--panel-border);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--ink-dim);
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.st-footer a { color: var(--gold); text-decoration: none; }
+.st-footer a:hover { color: var(--gold-deep); }
+
+@media (max-width: 640px) {
+  .st-chassis { padding: 0.6rem 0.75rem; }
+  .st-panel { padding: 1rem 0.85rem; }
+}
