@@ -4,6 +4,16 @@
   "updated": "2026-09-13",
   "entries": [
     {
+      "version": "4.8.1",
+      "date": "2026-09-13",
+      "status": "released",
+      "sections": {
+        "fixed": [
+          "The header on the Changelog and Credits pages stays pinned to the top while you scroll, instead of scrolling away with the content."
+        ]
+      }
+    },
+    {
       "version": "4.8.0",
       "date": "2026-09-13",
       "status": "released",
