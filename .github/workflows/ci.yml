@@ -11,7 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         # Full history so the floor guard can diff against origin/master.
-        fetch-depth: 0
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
