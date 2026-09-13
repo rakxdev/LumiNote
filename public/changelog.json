@@ -4,6 +4,26 @@
   "updated": "2026-09-13",
   "entries": [
     {
+      "version": "4.8.0",
+      "date": "2026-09-13",
+      "status": "released",
+      "sections": {
+        "added": [
+          "Security hardening release from a full adversarial bug hunt. The saved library (notes, clips, transcripts, export) now requires the authenticator login once it is active."
+        ],
+        "changed": [
+          "Enrollment rotates the secret on every attempt and pending setups expire after 15 minutes, closing the takeover window during setup.",
+          "A login reset now also closes every room trust window, and the link socket fails closed when the auth backend is unavailable.",
+          "The export downloads complete data (no silent 1000-row cap), streams instead of buffering, and escapes note content so it cannot forge document structure or inject HTML.",
+          "Recovery codes burn atomically — a code can never verify twice, even under concurrent attempts.",
+          "The content security policy drops unsafe-inline scripts; every script is a first-party file."
+        ],
+        "fixed": [
+          "Trust headers sent by a client are stripped at the proxy, and the relay keeps no independent trust state — the two sources of truth that could disagree are gone."
+        ]
+      }
+    },
+    {
       "version": "4.7.1",
       "date": "2026-09-13",
       "status": "released",

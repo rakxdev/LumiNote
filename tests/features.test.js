@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { listParams, likePattern } from '../functions/api/notes/store.js';
-import { escapeMarkdown, mdRow } from '../functions/api/notes/export.js';
+import { escapeMarkdown, mdRow, onRequestGet as exportGet } from '../functions/api/notes/export.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
@@ -134,6 +134,45 @@ describe('credits & community files', () => {
     assert.match(contributing, /CONSTRAINTS\.md/);
     assert.match(contributing, /logical change per commit/);
     assert.ok(read('CODE_OF_CONDUCT.md').includes('Code of Conduct'));
+  });
+});
+
+
+describe('export handler (streaming + pagination)', () => {
+  it('streams every D1 page with structure escaped, ending cleanly', async () => {
+    const page1 = Array.from({ length: 200 }, (_, i) => ({
+      id: 'a' + i, kind: 'note', text: 'note ' + i + ' <b>x</b>', source_device: 'phone',
+      created_at: 'T' + i, updated_at: 'T' + i, pinned: 0,
+    }));
+    const page2 = [{ id: 'b', kind: 'clip', text: '<b>clip</b>', source_device: null, created_at: 'T2', updated_at: 'T2', pinned: 0 }];
+    let call = 0;
+    const env = { DB: { prepare: () => ({
+      bind: () => ({
+        first: async () => null, // no totp rows: the login guard stays open
+        all: async () => (call++ === 0 ? { results: page1 } : { results: page2 }),
+      }),
+    }) } };
+    const res = await exportGet({ env, request: new Request('https://x/api/notes/export?format=md') });
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get('Content-Disposition'), /attachment/);
+    const text = await res.text();
+    assert.match(text, /# LumiNote export/);
+    assert.match(text, /## Clips/, 'the second D1 page is included — no silent truncation');
+    assert.match(text, /&lt;b&gt;clip&lt;\/b&gt;/, 'user HTML is escaped');
+    assert.ok(!/&lt;b&gt;x&lt;\/b&gt;&lt;b&gt;/.test(text), 'no duplicated tail rows across the page boundary');
+  });
+
+  it('refuses the export when login is confirmed and no cookie is present', async () => {
+    // Discriminate on the bound key: both settings queries share the SQL.
+    const settings = { totp_secret: 'S', totp_confirmed: '1' };
+    const env = { DB: { prepare: () => ({
+      bind: (key) => ({
+        first: async () => (settings[key] !== undefined ? { value: settings[key] } : null),
+        run: async () => ({ meta: { changes: 0 } }),
+      }),
+    }) } };
+    const res = await exportGet({ env, request: new Request('https://x/api/notes/export') });
+    assert.equal(res.status, 401);
   });
 });
 
