@@ -97,16 +97,36 @@ for (const { file, text } of removed) {
   }
 }
 
-// 1b/2c. Loosened bar: any line REMOVED from CONSTRAINTS.md that carried a
-// number or a floor bullet. Tightening (additions/renumbering upward) is
-// silent. The "Last reviewed" header is metadata, not a constraint — its
-// date change must not read as a weakening.
+// 1b/2c. Loosened bar. Measured-table rows are compared semantically: a
+// RAISED floor or a LOWERED ceiling is tightening (silent); a lowered
+// floor, raised ceiling, a deleted numeric row, or a deleted floor bullet
+// is loud. The "Last reviewed" header is metadata, not a constraint.
+const metricOf = (text) => (text.match(/^\|\s*([^|]+?)\s*\|/) || [])[1]?.toLowerCase() ?? null;
+const boundOf = (text, word) => {
+  const m = String(text).match(new RegExp(word + '\\s+([\\d.]+)'));
+  return m ? Number(m[1]) : null;
+};
+const addedConstraintRows = new Map();
+for (const { file, text } of added) {
+  if (!/CONSTRAINTS\.md$/.test(file)) continue;
+  const metric = metricOf(text);
+  if (metric && /\d/.test(text)) addedConstraintRows.set(metric, text);
+}
 for (const { file, text } of removed) {
-  if (/CONSTRAINTS\.md$/.test(file) && !/^Last reviewed:/.test(text.trim())) {
-    if (/\d/.test(text) || /^- [A-Z]/.test(text.trim())) {
-      flag('constraint-weakened', file, text);
-    }
+  if (!/CONSTRAINTS\.md$/.test(file) || /^Last reviewed:/.test(text.trim())) continue;
+  if (/^- [A-Z]/.test(text.trim())) { flag('constraint-weakened', file, text); continue; }
+  const metric = metricOf(text);
+  const replacement = metric ? addedConstraintRows.get(metric) : null;
+  if (!replacement) {
+    if (/\d/.test(text)) flag('constraint-weakened', file, text);
+    continue;
   }
+  const oldFloor = boundOf(text, 'floor'), newFloor = boundOf(replacement, 'floor');
+  const oldCeiling = boundOf(text, 'ceiling'), newCeiling = boundOf(replacement, 'ceiling');
+  const loosened =
+    (oldFloor !== null && newFloor !== null && newFloor < oldFloor) ||
+    (oldCeiling !== null && newCeiling !== null && newCeiling > oldCeiling);
+  if (loosened) flag('constraint-weakened', file, `${text} -> ${replacement.trim()}`);
 }
 
 if (findings.length) {
