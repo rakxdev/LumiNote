@@ -43,6 +43,11 @@ export async function onRequestPost({ env, request }) {
   await env.DB.prepare(
     "DELETE FROM app_settings WHERE key IN ('totp_secret', 'totp_confirmed', 'totp_recovery')"
   ).run();
+  // A reset is a re-securing event: close every room trust window too, so
+  // access that existed before the reset does not outlive it.
+  await env.DB.prepare(
+    "DELETE FROM app_settings WHERE key LIKE 'room_auth:%'"
+  ).run();
   return Response.json(
     { ok: true },
     { headers: { 'Cache-Control': 'no-store' } }

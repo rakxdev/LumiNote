@@ -41,7 +41,15 @@ export async function onRequest(context) {
   // its room — recorded in D1 — so the owner's other devices join with just
   // the room code (QR or typed) instead of a second OTP. Only when no window
   // is open and the request carries no valid cookie is the upgrade refused.
-  const totpSecret = context.env.DB ? await getSetting(context.env, 'totp_secret') : null;
+  if (!context.env.DB) {
+    // Fail closed: without the auth backend we cannot know whether this
+    // room is gated, so the upgrade is refused rather than waved through.
+    return new Response(JSON.stringify({ error: 'Auth backend unavailable' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const totpSecret = await getSetting(context.env, 'totp_secret');
   const confirmed = !!totpSecret
     && (await getSetting(context.env, 'totp_confirmed')) === '1';
   let trustHeaders = null;

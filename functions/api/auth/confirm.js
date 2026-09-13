@@ -15,6 +15,12 @@ export async function onRequestPost({ env, request }) {
   if ((await getSetting(env, 'totp_confirmed')) === '1') {
     return Response.json({ error: 'Authenticator login is already active' }, { status: 409, headers: { 'Cache-Control': 'no-store' } });
   }
+  // Pending setups expire: an unconfirmed QR is only trusted for 15 minutes,
+  // so a secret that leaked mid-setup cannot be confirmed later by anyone.
+  const pendingAt = Number(await getSetting(env, 'totp_pending_at') || 0);
+  if (!pendingAt || Date.now() - pendingAt > 15 * 60 * 1000) {
+    return Response.json({ error: 'Setup expired — start the enrollment again' }, { status: 400, headers: { 'Cache-Control': 'no-store' } });
+  }
 
   let code = null;
   try {

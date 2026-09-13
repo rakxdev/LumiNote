@@ -3,6 +3,12 @@
 // when login is already confirmed; resetting requires deleting the
 // app_settings rows (wrangler d1 execute) so a thief cannot silently
 // replace the secret.
+//
+// Every unconfirmed enroll ROTATES the secret. This closes the takeover
+// window: whoever calls enroll last is the only party holding the pending
+// secret, so a leaked QR can be invalidated by enrolling again, and an
+// attacker polling this endpoint cannot ride a secret the owner was shown.
+// confirm() additionally rejects pending setups older than 15 minutes.
 import { getSetting, putSetting, generateSecretB32, buildTotp } from './totp.js';
 
 export async function onRequestPost({ env }) {
@@ -18,9 +24,12 @@ export async function onRequestPost({ env }) {
     );
   }
 
-  const secretB32 = secret || generateSecretB32();
+  // Rotate: a fresh secret per enroll call. Never reuse a secret that was
+  // already handed out in a previous response body.
+  const secretB32 = generateSecretB32();
   await putSetting(env, 'totp_secret', secretB32);
   await putSetting(env, 'totp_confirmed', '0');
+  await putSetting(env, 'totp_pending_at', String(Date.now()));
 
   const totp = buildTotp(secretB32);
   return Response.json(
