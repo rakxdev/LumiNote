@@ -9,6 +9,7 @@ const ROOT = new URL('..', import.meta.url).pathname;
 const pkg = JSON.parse(readFileSync(`${ROOT}package.json`, 'utf8'));
 const changelog = JSON.parse(readFileSync(`${ROOT}public/changelog.json`, 'utf8'));
 const changelogHtml = readFileSync(`${ROOT}public/changelog.html`, 'utf8');
+const changelogApp = readFileSync(`${ROOT}public/changelog-app.js`, 'utf8');
 const indexHtml = readFileSync(`${ROOT}public/index.html`, 'utf8');
 const indexJs = readFileSync(`${ROOT}public/index.js`, 'utf8');
 
@@ -54,8 +55,9 @@ describe('changelog.json structure', () => {
 
 describe('changelog consumers', () => {
   it('/changelog page fetches the json and renders into #changelogRoot', () => {
-    assert.match(changelogHtml, /fetch\('\.\/changelog\.json'\)/);
     assert.match(changelogHtml, /id="changelogRoot"/);
+    assert.match(changelogApp, /fetch\('\.\/changelog\.json'\)/);
+    assert.match(changelogHtml, /src="changelog-app\.js"/);
   });
 
   it('the app seal derives from changelog.json with a silent fallback', () => {
