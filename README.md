@@ -6,7 +6,7 @@ LumiNote is a production-hardened, browser-native real-time speech intelligence 
 
 ---
 
-## ⚡ Architecture & Features (v4.6)
+## ⚡ Architecture & Features (v4.7)
 
 - 🕉️ **Vāk & Nāda Fusion Design:** A highly distinctive UI fusing RodeX technical precision with ancient Sanskrit acoustic philosophy. Seamless **Dark Mode (Obsidian & Brass)** and **Light Mode (Silk & Red Lacquer)** toggle.
 - 🌊 **Voice Meters That Tell the Truth:** A 12-bar header pill driven by dB-mapped, log-spaced FFT bands with fast-attack/slow-release response — and the *second* device's pill follows the recording device's voice via tiny loudness frames relayed over the link. Silence shows a faint breathing floor, never a fake wave (see `docs/decisions/ADR-001`).
@@ -14,7 +14,9 @@ LumiNote is a production-hardened, browser-native real-time speech intelligence 
 - 🛡️ **Room Trust Windows:** after a verified device opens a room, the owner's other devices join it for 12 hours with just the room code — QR scan or typed — no second OTP (see `docs/decisions/ADR-005`).
 - 📋 **Push, Both Places:** The clipboard Push button lands the payload in the receiving device's transcript editor *and* its Remote Clipboard tray, instantly; fresh pushes are captured as clips.
 - 💾 **Durable Saved Library (D1):** Notes, clipboard clips, and transcript sessions stored in Cloudflare D1 and browsable in hash-routed `#/notes`, `#/clips`, `#/transcripts` views — navigation happens inside the page, so an active recording survives it. Server-side **search**, pin (pinned sort first), copy, native **Share** (mobile), delete, and **Export all** as Markdown or JSON; finishing a dictation auto-saves its transcript (see `docs/decisions/ADR-004`).
-- 📖 **Custom Vocabulary:** exact-spelling names, brands, and jargon (up to 100 terms) injected into every AssemblyAI session via the official `keyterms_prompt` parameter.
+- 📖 **Custom Vocabulary & Auto-Corrections:** exact-spelling names, brands, and jargon (up to 100 terms) injected into every AssemblyAI session via the official `keyterms_prompt` parameter — plus a personal correction dictionary ("heard = written") that fixes recurring misrecognitions in every committed sentence, capitalization preserved.
+- 🗣️ **Voice Commands:** "new paragraph", "new line", and "scratch that" / "delete that" are executed instead of transcribed — on whichever device speaks them, with scratch mirrored to the linked screen (see `public/text-pipeline.js`).
+- ✒️ **Output Modes for Polish AI:** Clean (grammar pass), Bullets (one item per sentence), or Email (greeting + body + sign-off) — deterministic, no LLM, raw text always recoverable.
 - 🔐 **Authenticator Login (optional), self-service:** protect device linking with a 6-digit TOTP code from Google/Microsoft Authenticator: scan a QR in the Link dialog, confirm, keep 8 one-time recovery codes. Reset it yourself with a current code when you change phones. The link socket refuses unauthenticated upgrades; a verified browser is remembered for 12h (see `docs/decisions/ADR-005`).
 - 📲 **Installable App (PWA):** Add to Home Screen gives a real icon and standalone window; an app-shell service worker makes loads instant and works offline — and by design **never** caches `/api`, tokens, or the live sockets (see `docs/decisions/ADR-006`).
 - 📜 **One Version Source:** `public/changelog.json` drives the `/changelog` page and the header version seal, and must match `package.json` (enforced by tests).
@@ -43,7 +45,7 @@ LumiNote is a production-hardened, browser-native real-time speech intelligence 
 Built with pure vanilla JavaScript, native Web Audio APIs, and the Node native test runner. Zero heavy frameworks.
 
 ```bash
-# Run the test suite (12 files, 103 tests)
+# Run the test suite (13 files, 120 tests)
 npm test
 
 # Lint
@@ -115,6 +117,12 @@ Releases: bump `public/changelog.json` (new entry) and `package.json` together �
 
 ## 📚 Documentation
 See `docs/decisions/` for the Architecture Decision Records: the voice-meter design (ADR-001), ephemeral STT grant tokens (ADR-002), Link Mode's Durable Object architecture (ADR-003), the D1-backed library (ADR-004), authenticator login (ADR-005), and the installable app shell with its cache policy (ADR-006).
+
+## 🤝 Community
+- **Credits & licenses:** the in-app [credits page](/credits) (`public/credits.html`) — the developer, every dependency with its license, and the contribution invitation.
+- **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) — setup, commit style, and the verification gates.
+- **Conduct:** [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+- **License:** [MIT](LICENSE).
 
 ## 📄 License
 MIT License.

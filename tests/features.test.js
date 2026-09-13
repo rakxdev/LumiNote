@@ -102,6 +102,42 @@ describe('voice pipeline wiring', () => {
   });
 });
 
+describe('credits & community files', () => {
+  const creditsHtml = read('public/credits.html');
+  const license = read('LICENSE');
+  const contributing = read('CONTRIBUTING.md');
+
+  it('LICENSE belongs to this project, not its scaffolding origin', () => {
+    assert.match(license, /Copyright \(c\) 2026 rakxdev/);
+    assert.doesNotMatch(license, /AssemblyAI/, 'the scaffold-era copyright must stay gone');
+    assert.match(license, /MIT License/);
+  });
+
+  it('the credits page credits the maker, dependencies with licenses, and the MIT grant', () => {
+    assert.match(creditsHtml, /Made by <em>rakxdev<\/em>/);
+    for (const name of ['AssemblyAI', 'Deepgram', 'Cloudflare', 'LanguageTool', 'otpauth', 'qrcode-generator', 'anime.js', 'SIL OFL']) {
+      assert.ok(creditsHtml.includes(name), `credits page missing "${name}"`);
+    }
+    assert.match(creditsHtml, /MIT License/);
+    assert.match(creditsHtml, /CONTRIBUTING\.md/);
+    // Every library link points at a real upstream, not a placeholder.
+    assert.match(creditsHtml, /github\.com\/hectorm\/otpauth/);
+    assert.match(creditsHtml, /github\.com\/kazuhikoarase\/qrcode-generator/);
+  });
+
+  it('the app and changelog footers link the credits page', () => {
+    assert.match(html, /href="\/credits"/);
+    assert.match(read('public/changelog.html'), /href="\/credits"/);
+  });
+
+  it('community files meet the GitHub standards checklist', () => {
+    assert.match(contributing, /check:fast/);
+    assert.match(contributing, /CONSTRAINTS\.md/);
+    assert.match(contributing, /logical change per commit/);
+    assert.ok(read('CODE_OF_CONDUCT.md').includes('Code of Conduct'));
+  });
+});
+
 describe('wake lock', () => {
   it('is acquired on record, re-armed on visibility, released on stop', () => {
     assert.match(indexJs, /navigator\.wakeLock\.request\("screen"\)/);

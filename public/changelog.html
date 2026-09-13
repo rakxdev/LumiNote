@@ -65,7 +65,7 @@
       .cl-section li { padding-left: 1.1rem; position: relative; font-size: 0.92rem; color: var(--ink-primary); margin-bottom: 0.35rem; }
       .cl-section li::before { content: "—"; position: absolute; left: 0; color: var(--ink-muted); }
       .cl-empty, .cl-error { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-dim); border: 1px dashed var(--panel-border); padding: 1.25rem; text-align: center; border-radius: 4px; }
-      footer.cl-foot { margin-top: 3rem; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+      footer.cl-foot { margin-top: 3rem; padding-top: 1rem; border-top: 1px dashed rgba(217, 182, 74, 0.25); font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -79,7 +79,10 @@
             <div class="cl-empty">Loading changelog…</div>
         </main>
 
-        <footer class="cl-foot">Keep a Changelog • one source feeds this page and the app's version seal</footer>
+        <footer class="cl-foot">
+            <span>Keep a Changelog • one source feeds this page and the app's version seal</span>
+            <span><a href="/">Studio</a> • <a href="/credits">Credits</a></span>
+        </footer>
     </div>
 
     <script type="module">

@@ -24,7 +24,7 @@ Last reviewed: 2026-09-13 (v4.6.0 docs pass; floor deliberately lowered for the 
 
 | Metric | Today | Direction |
 |--------|-------|-----------|
-| Project coverage (lines, node --test) | 92.0 | floor 91.5 — lowered from 91.8 for the 4.6 feature batch (seven features, mostly client glue and thin handlers); re-raise when /api/auth handlers get unit tests |
+| Project coverage (lines, node --test) | 92.1 | floor 91.6 — lowered from 91.8 for the 4.6 feature batch (seven features, mostly client glue and thin handlers); re-raise when /api/auth handlers get unit tests |
 | Frontend app assets (public/, excl. vendor) | 144553 B | ceiling 144553 B — raise only with the reason named in the commit |
 
 Both ratchets are checked by `node scripts/check-ratchets.mjs` at task end; the numbers above are the single source of truth the script parses.

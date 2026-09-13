@@ -4,6 +4,20 @@
   "updated": "2026-09-13",
   "entries": [
     {
+      "version": "4.7.1",
+      "date": "2026-09-13",
+      "status": "released",
+      "sections": {
+        "added": [
+          "A proper /credits page: the developer, every dependency and typeface with its license, the MIT grant, and the contribution invitation.",
+          "CONTRIBUTING.md and CODE_OF_CONDUCT.md — the repository now meets the GitHub community-standards checklist."
+        ],
+        "fixed": [
+          "The LICENSE file claimed AssemblyAI 2023 — a leftover from the project scaffolding. It now correctly reads Copyright (c) 2026 rakxdev."
+        ]
+      }
+    },
+    {
       "version": "4.7.0",
       "date": "2026-09-13",
       "status": "released",

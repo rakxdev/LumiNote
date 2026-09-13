@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Credits • LumiNote</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="reset.css" />
+    <style>
+      :root {
+        --font-display: "Chakra Petch", sans-serif;
+        --font-body: "Martel", serif;
+        --font-mono: "JetBrains Mono", ui-monospace, monospace;
+        --gold: #d9b64a;
+        --gold-deep: #b8952f;
+        --amber: #d9a441;
+        --emerald: #10b981;
+        --red: #e8452c;
+        --panel-chassis: #0f1217;
+        --panel-inner: #080a0e;
+        --panel-border: #1f242d;
+        --ink-primary: #f5f2e9;
+        --ink-dim: #8e9588;
+        --ink-muted: #565d50;
+      }
+      html, body { height: 100%; }
+      body {
+        background: var(--panel-inner);
+        background-image:
+          radial-gradient(1000px 500px at 75% -10%, rgba(217, 182, 74, 0.10) 0%, transparent 60%),
+          radial-gradient(800px 400px at 15% 95%, rgba(232, 69, 44, 0.05) 0%, transparent 55%);
+        color: var(--ink-primary);
+        font-family: var(--font-body);
+        line-height: 1.65;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2.5rem clamp(0.75rem, 2.5vw, 2.5rem) 4rem;
+      }
+      ::selection { background: rgba(217, 182, 74, 0.35); color: var(--ink-primary); }
+      a { color: var(--gold); text-decoration: underline; text-underline-offset: 2px; }
+      a:hover, a:focus-visible { color: var(--gold-deep); }
+      a:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
+      .cr-shell { width: 100%; max-width: none; }
+      header.cr-top {
+        display: flex; align-items: baseline; justify-content: space-between;
+        gap: 1rem; flex-wrap: wrap;
+        border-bottom: 1px dashed rgba(217, 182, 74, 0.25);
+        padding-bottom: 1rem; margin-bottom: 2rem;
+      }
+      .cr-brand { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; letter-spacing: 0.02em; }
+      .cr-brand em { color: var(--gold); font-style: normal; }
+      .cr-nav { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+      .cr-nav a {
+        font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em;
+        text-transform: uppercase; color: var(--ink-dim); text-decoration: none;
+        border: 1px solid var(--panel-border); padding: 0.45rem 0.7rem; border-radius: 3px;
+      }
+      .cr-nav a:hover, .cr-nav a:focus-visible { color: var(--gold); border-color: var(--gold-deep); }
+
+      /* Made-by: one authored moment — the mark rises with the identity. */
+      .cr-maker {
+        display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap;
+        animation: cr-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+      .cr-maker img.cr-mark { width: 84px; height: 84px; border-radius: 16px; border: 1px solid var(--panel-border); }
+      .cr-maker h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; letter-spacing: -0.02em; margin: 0; }
+      .cr-maker h1 em { color: var(--gold); font-style: normal; }
+      .cr-maker p { margin: 0.15rem 0 0; color: var(--ink-dim); font-size: 0.95rem; }
+      .cr-roles { margin-top: 0.5rem; font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--emerald); }
+      @keyframes cr-rise {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: none; }
+      }
+
+      .cr-section { margin-top: 2.5rem; }
+      .cr-section > h2 {
+        font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
+        letter-spacing: -0.01em; margin: 0 0 0.9rem;
+      }
+      .cr-section > p.lead { margin: 0 0 0.9rem; font-size: 0.95rem; color: var(--ink-primary); }
+      .cr-section code {
+        font-family: var(--font-mono); font-size: 0.8em; color: var(--gold);
+        background: rgba(217, 182, 74, 0.07); border: 1px solid var(--panel-border);
+        border-radius: 3px; padding: 0.05rem 0.3rem;
+      }
+      table.cr-credits { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+      table.cr-credits th {
+        text-align: left; font-family: var(--font-mono); font-weight: 500;
+        font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--ink-muted); padding: 0.45rem 0.75rem 0.45rem 0;
+        border-bottom: 1px dashed rgba(217, 182, 74, 0.25);
+      }
+      table.cr-credits td {
+        padding: 0.55rem 0.75rem 0.55rem 0; vertical-align: top;
+        border-bottom: 1px solid rgba(31, 36, 45, 0.6);
+      }
+      table.cr-credits td.cr-name { white-space: nowrap; font-weight: 700; }
+      table.cr-credits td.cr-license { font-family: var(--font-mono); font-size: 0.72rem; color: var(--amber); white-space: nowrap; }
+      table.cr-credits td.cr-role { color: var(--ink-dim); font-size: 0.85rem; }
+
+      .cr-license-box {
+        font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.7;
+        color: var(--ink-dim); background: var(--panel-chassis);
+        border: 1px solid var(--panel-border); border-radius: 6px;
+        padding: 1rem 1.25rem; overflow-x: auto;
+      }
+      .cr-license-box strong { color: var(--ink-primary); font-weight: 700; }
+      .cr-contribute { border: 1px dashed rgba(217, 182, 74, 0.3); border-radius: 6px; padding: 1.1rem 1.4rem; }
+      .cr-contribute ol { margin: 0.5rem 0 0; padding-left: 1.2rem; }
+      .cr-contribute li { margin-bottom: 0.35rem; font-size: 0.92rem; }
+
+      footer.cr-foot {
+        margin-top: 3rem; padding-top: 1rem;
+        border-top: 1px dashed rgba(217, 182, 74, 0.25);
+        font-family: var(--font-mono); font-size: 0.62rem;
+        letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted);
+        display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: space-between;
+      }
+      footer.cr-foot a { color: var(--ink-dim); text-decoration: none; }
+      footer.cr-foot a:hover, footer.cr-foot a:focus-visible { color: var(--gold); }
+      @media (max-width: 640px) {
+        table.cr-credits td.cr-role, table.cr-credits th:nth-child(3) { display: none; }
+      }
+    </style>
+</head>
+<body>
+    <div class="cr-shell">
+        <header class="cr-top">
+            <div class="cr-brand">Lumi<em>Note</em> — Credits</div>
+            <nav class="cr-nav" aria-label="Page navigation">
+                <a href="/">Studio</a>
+                <a href="/changelog">Changelog</a>
+                <a href="https://github.com/rakxdev/LumiNote">Repository</a>
+            </nav>
+        </header>
+
+        <section class="cr-maker" aria-label="Developer">
+            <img class="cr-mark" src="logo.svg" alt="LumiNote Acoustic Yantra logo">
+            <div>
+                <h1>Made by <em>rakxdev</em></h1>
+                <p>Design, engineering, and the entire Vāk &amp; Nāda world — one developer, no committee.</p>
+                <div class="cr-roles">Design • Frontend • Edge Backend • Audio Pipeline • Research</div>
+                <p style="margin-top:0.6rem;"><a href="https://github.com/rakxdev">github.com/rakxdev</a></p>
+            </div>
+        </section>
+
+        <section class="cr-section" aria-label="Built with">
+            <h2>Built with</h2>
+            <p class="lead">The services, libraries, and typefaces this studio stands on — with their licenses. Full license texts ship in the repository.</p>
+            <table class="cr-credits">
+                <thead>
+                    <tr><th scope="col">Name</th><th scope="col">License</th><th scope="col">Role</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="cr-name"><a href="https://www.assemblyai.com/">AssemblyAI Universal-3.5 Pro</a></td>
+                        <td class="cr-license">Commercial API</td>
+                        <td class="cr-role">Streaming speech recognition (default engine)</td>
+                    </tr>
+                    <tr>
+                        <td class="cr-name"><a href="https://deepgram.com/">Deepgram Nova-3</a></td>
+                        <td class="cr-license">Commercial API</td>
+                        <td class="cr-role">Ultra-low-latency streaming engine</td>
+                    </tr>
+                    <tr>
+                        <td class="cr-name"><a href="https://developers.cloudflare.com/">Cloudflare Pages · Workers · D1 · Durable Objects</a></td>
+                        <td class="cr-license">Platform</td>
+                        <td class="cr-role">Hosting, edge functions, durable library, relay rooms</td>
+                    </tr>
+                    <tr>
+                        <td class="cr-name"><a href="https://languagetool.org/">LanguageTool</a></td>
+                        <td class="cr-license">LGPL 2.1 (server)</td>
+                        <td class="cr-role">Deep grammar checks behind the Polish pipeline</td>
+                    </tr>
+                    <tr>
+                        <td class="cr-name"><a href="https://github.com/hectorm/otpauth">otpauth</a></td>
+                        <td class="cr-license">MIT</td>
+                        <td class="cr-role">TOTP authenticator login (RFC 6238)</td>
+                    </tr>
+                    <tr>
+                        <td class="cr-name"><a href="https://github.com/kazuhikoarase/qrcode-generator">qrcode-generator</a></td>
+                        <td class="cr-license">MIT (vendored)</td>
+                        <td class="cr-role">Room-pairing and authenticator QR codes</td>
+                    </tr>
+                    <tr>
+                        <td class="cr-name"><a href="https://animejs.com/">anime.js</a></td>
+                        <td class="cr-license">MIT (vendored)</td>
+                        <td class="cr-role">Interface animation</td>
+                    </tr>
+                    <tr>
+                        <td class="cr-name"><a href="https://fonts.google.com/specimen/Chakra+Petch">Chakra Petch</a> · <a href="https://fonts.google.com/specimen/JetBrains+Mono">JetBrains Mono</a> · <a href="https://fonts.google.com/specimen/Martel">Martel</a> · <a href="https://fonts.google.com/specimen/Yatra+One">Yatra One</a></td>
+                        <td class="cr-license">SIL OFL 1.1</td>
+                        <td class="cr-role">Display, telemetry, body, and sacred Devanagari typefaces (self-hosted)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="cr-section" aria-label="License">
+            <h2>License</h2>
+            <p class="lead">LumiNote is released under the <a href="https://github.com/rakxdev/LumiNote/blob/cloudflare-v04/LICENSE">MIT License</a>. Vendored libraries keep their own notices, preserved in the repository.</p>
+            <div class="cr-license-box">
+                <strong>MIT License</strong> — Copyright (c) 2026 rakxdev<br><br>
+                Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction — including the rights to use, copy, modify, merge, publish, distribute, sublicense, and sell copies — subject to including this notice in all copies or substantial portions.<br><br>
+                THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+            </div>
+        </section>
+
+        <section class="cr-section cr-contribute" aria-label="Contributions">
+            <h2>Contributions</h2>
+            <p class="lead" style="margin-bottom:0;">Contributions are welcome. Read <a href="https://github.com/rakxdev/LumiNote/blob/cloudflare-v04/CONTRIBUTING.md">CONTRIBUTING.md</a> before opening a pull request — in short:</p>
+            <ol>
+                <li>Run the verification gates (<code>check:fast</code> after edits, <code>check:task</code> before handing back) — tests must pass, ratchets must hold.</li>
+                <li>One logical change per commit, described honestly in English.</li>
+                <li>Respect <code>CONSTRAINTS.md</code> — never weaken the bar to make a change pass.</li>
+            </ol>
+        </section>
+
+        <footer class="cr-foot">
+            <span>Vāk &amp; Nāda Speech Intelligence Studio</span>
+            <span>MIT • © 2026 rakxdev</span>
+        </footer>
+    </div>
+</body>
+</html>
