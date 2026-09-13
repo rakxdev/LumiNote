@@ -6,6 +6,7 @@ import {
   patchChanges,
   rowToJson,
 } from './store.js';
+import { authGuard } from '../auth/totp.js';
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -18,7 +19,9 @@ async function resolveId(params) {
   return validateId(params?.id);
 }
 
-export async function onRequestGet({ env, params }) {
+export async function onRequestGet({ env, params, request }) {
+  const denied = await authGuard({ env, request });
+  if (denied) return denied;
   if (!env.DB) return json({ error: 'Database binding not configured' }, 500);
   const id = await resolveId(params);
   if (!id.ok) return json({ error: id.error }, 400);
@@ -28,6 +31,8 @@ export async function onRequestGet({ env, params }) {
 }
 
 export async function onRequestPatch({ env, params, request }) {
+  const denied = await authGuard({ env, request });
+  if (denied) return denied;
   if (!env.DB) return json({ error: 'Database binding not configured' }, 500);
   const id = await resolveId(params);
   if (!id.ok) return json({ error: id.error }, 400);
@@ -55,7 +60,9 @@ export async function onRequestPatch({ env, params, request }) {
   return json({ note: rowToJson(row) });
 }
 
-export async function onRequestDelete({ env, params }) {
+export async function onRequestDelete({ env, params, request }) {
+  const denied = await authGuard({ env, request });
+  if (denied) return denied;
   if (!env.DB) return json({ error: 'Database binding not configured' }, 500);
   const id = await resolveId(params);
   if (!id.ok) return json({ error: id.error }, 400);

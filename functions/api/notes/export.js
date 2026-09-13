@@ -1,6 +1,7 @@
 // /api/notes/export — the user's data, out of D1 and into their hands.
 // ?format=md (default, human-readable) or json (full fidelity).
 import { SQL, DEFAULT_USER, rowToJson } from './store.js';
+import { authGuard } from '../auth/totp.js';
 
 const KIND_TITLES = { note: 'Notes', clip: 'Clips', transcript: 'Transcripts' };
 
@@ -22,6 +23,8 @@ export function markdown(rows, exportedAt) {
 }
 
 export async function onRequestGet({ env, request }) {
+  const denied = await authGuard({ env, request });
+  if (denied) return denied;
   if (!env.DB) {
     return new Response(JSON.stringify({ error: 'Database binding not configured' }), {
       status: 500,

@@ -9,6 +9,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  authGuard,
   generateSecretB32,
   buildTotp,
   verifyTotp,
@@ -191,5 +192,39 @@ describe('wiring contract', () => {
       assert.match(tag[0], /maxlength="6"/);
       assert.match(tag[0], /inputmode="numeric"/);
     }
+  });
+});
+
+describe('API auth guard', () => {
+  const request = (cookie) => new Request('https://x/api/notes', { headers: cookie ? { Cookie: cookie } : {} });
+  const fakeEnv = (settings) => ({
+    DB: {
+      prepare: () => ({
+        bind: (...vals) => ({
+          first: async () => (settings[vals[0]] !== undefined ? { value: settings[vals[0]] } : null),
+          run: async () => ({ meta: { changes: 1 } }),
+        }),
+      }),
+    },
+  });
+
+  it('stays open while no login is confirmed', async () => {
+    const res = await authGuard({ env: fakeEnv({}), request: request() });
+    assert.equal(res, null);
+  });
+
+  it('admits a valid cookie and refuses an invalid one once login is confirmed', async () => {
+    const secret = generateSecretB32();
+    const env = fakeEnv({ totp_secret: secret, totp_confirmed: '1' });
+    const cookie = AUTH_COOKIE + '=' + (await signAuthCookie(secret));
+    assert.equal(await authGuard({ env, request: request(cookie) }), null, 'valid cookie passes');
+    const denied = await authGuard({ env, request: request(AUTH_COOKIE + '=deadbeef.deadbeef') });
+    assert.equal(denied.status, 401, 'forged cookie refused');
+    const none = await authGuard({ env, request: request() });
+    assert.equal(none.status, 401, 'missing cookie refused');
+  });
+
+  it('fails open only when the database binding is absent (handler 500s next)', async () => {
+    assert.equal(await authGuard({ env: {}, request: request() }), null);
   });
 });

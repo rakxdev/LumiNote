@@ -137,3 +137,21 @@ export function constantTimeEqual(a, b) {
   }
   return diff === 0;
 }
+
+// API guard for routes that must respect the authenticator login: once a
+// login is confirmed, every request needs the signed cookie. Login not set
+// up = open (the app must be usable before enrollment). Returns null when
+// the request may proceed, or a 401 Response when it may not.
+export async function authGuard(context) {
+  const env = context.env;
+  if (!env.DB) return null;
+  const secret = await getSetting(env, 'totp_secret');
+  const confirmed = !!secret && (await getSetting(env, 'totp_confirmed')) === '1';
+  if (!confirmed) return null;
+  const raw = parseCookieHeader(context.request.headers.get('Cookie'), AUTH_COOKIE);
+  if (raw && (await verifyAuthCookie(secret, raw))) return null;
+  return Response.json(
+    { error: 'Login required — verify your authenticator code' },
+    { status: 401, headers: { 'Cache-Control': 'no-store' } }
+  );
+}

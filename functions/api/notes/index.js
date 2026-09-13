@@ -1,5 +1,6 @@
 // /api/notes — list and create durable entries (notes, clips, transcripts).
-// Same-origin only; the D1 binding comes from wrangler.toml (env.DB).
+// Gated by the authenticator login once it is confirmed (see authGuard);
+// the D1 binding comes from wrangler.toml (env.DB).
 import {
   SQL,
   DEFAULT_USER,
@@ -9,6 +10,7 @@ import {
   likePattern,
   rowToJson,
 } from './store.js';
+import { authGuard } from '../auth/totp.js';
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -18,6 +20,8 @@ function json(body, status = 200) {
 }
 
 export async function onRequestGet({ env, request }) {
+  const denied = await authGuard({ env, request });
+  if (denied) return denied;
   if (!env.DB) return json({ error: 'Database binding not configured' }, 500);
   const params = listParams(new URL(request.url).searchParams);
   if (!params.ok) return json({ error: params.error }, 400);
@@ -39,6 +43,8 @@ export async function onRequestGet({ env, request }) {
 }
 
 export async function onRequestPost({ env, request }) {
+  const denied = await authGuard({ env, request });
+  if (denied) return denied;
   if (!env.DB) return json({ error: 'Database binding not configured' }, 500);
 
   let body;

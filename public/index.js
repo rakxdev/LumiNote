@@ -722,6 +722,10 @@ async function saveEntry(kind, text, sourceDevice = null) {
       body: JSON.stringify({ kind, text: trimmed, source_device: sourceDevice }),
       signal: AbortSignal.timeout(8000),
     });
+    if (res.status === 401) {
+      showToast('Login expired — verify your authenticator in the Link dialog');
+      return false;
+    }
     if (!res.ok) throw new Error(`status ${res.status}`);
     return true;
   } catch (err) {
@@ -844,6 +848,11 @@ async function loadLibrary(route, query = '') {
     const search = new URLSearchParams({ kind: lib.kind, limit: '100' });
     if (query) search.set('q', query);
     const res = await fetch(`/api/notes?${search}`, { signal: AbortSignal.timeout(8000) });
+    if (res.status === 401) {
+      if (currentLibraryRoute !== route) return;
+      renderLibraryError('Login expired — open the Link dialog and verify your authenticator code.');
+      return;
+    }
     if (!res.ok) throw new Error(`status ${res.status}`);
     const data = await res.json();
     if (currentLibraryRoute !== route) return; // user navigated away mid-fetch
