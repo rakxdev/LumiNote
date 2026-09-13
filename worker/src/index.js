@@ -42,24 +42,6 @@ export class SyncRoom {
       return jsonResponse({ error: 'expected WebSocket upgrade' }, 426);
     }
 
-    // Room-scoped trust (ADR-005): the Pages Function owns the auth decision
-    // (it has the TOTP state) and tags the upgrade. x-ln-authed marks a
-    // verified browser and opens the room's 12h trust window; if a room is
-    // tagged x-ln-auth-required while that window is closed, the upgrade is
-    // refused here as defense in depth.
-    if (request.headers.get('x-ln-authed') === '1') {
-      await this.state.storage.put('authedAt', Date.now());
-    }
-    if (request.headers.get('x-ln-auth-required') === '1') {
-      const authedAt = (await this.state.storage.get('authedAt')) || 0;
-      if (Date.now() - authedAt > 12 * 60 * 60 * 1000) {
-        return jsonResponse({
-          error: 'Room not unlocked yet — the verified device must open Link Mode first, or verify with your authenticator',
-          code: 'auth_required',
-        }, 401);
-      }
-    }
-
     const url = new URL(request.url);
     const role = parseRole(url.searchParams.get('role'));
     const device = { role, joinedAt: Date.now() };

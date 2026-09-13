@@ -155,9 +155,10 @@ describe('wiring contract', () => {
   it('verified upgrades open a room trust window that admitted joins reuse', () => {
     // The phone should never need an OTP when the desktop (verified) opened
     // the room: the window lives in D1 and both the gate and the status
-    // endpoint consult it.
+    // endpoint consult it. Client-supplied trust headers are stripped at
+    // the proxy — headers are not a trust channel.
     assert.match(wsFn, /putSetting\(context\.env, `room_auth:\$\{room\}`/);
-    assert.match(wsFn, /x-ln-authed/);
+    assert.match(wsFn, /upstream\.headers\.delete\('x-ln-authed'\)/);
     const statusFn = readFileSync(join(ROOT, 'functions/api/auth/status.js'), 'utf8');
     assert.match(statusFn, /room_auth:\$\{room\}/);
     assert.match(statusFn, /room_authed/);

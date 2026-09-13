@@ -52,14 +52,14 @@ export async function onRequest(context) {
   const totpSecret = await getSetting(context.env, 'totp_secret');
   const confirmed = !!totpSecret
     && (await getSetting(context.env, 'totp_confirmed')) === '1';
-  let trustHeaders = null;
   if (confirmed) {
     const raw = parseCookieHeader(request.headers.get('Cookie'), AUTH_COOKIE);
     const verified = raw && (await verifyAuthCookie(totpSecret, raw));
     if (verified) {
+      // A verified upgrade opens/refreshes the room's 12h trust window —
+      // the single source of truth for "this room joins without an OTP".
       const expiresAt = new Date(Date.now() + AUTH_TTL_SECONDS * 1000).toISOString();
       await putSetting(context.env, `room_auth:${room}`, expiresAt);
-      trustHeaders = { 'x-ln-authed': '1', 'x-ln-auth-required': '1' };
     } else {
       const until = await getSetting(context.env, `room_auth:${room}`);
       if (!until || new Date(until).getTime() < Date.now()) {
@@ -68,7 +68,6 @@ export async function onRequest(context) {
           code: 'auth_required',
         }), { status: 401, headers: { 'Content-Type': 'application/json' } });
       }
-      trustHeaders = { 'x-ln-auth-required': '1' };
     }
   }
 
@@ -81,10 +80,10 @@ export async function onRequest(context) {
 
   const id = context.env.SYNC_ROOM.idFromName(room);
   const stub = context.env.SYNC_ROOM.get(id);
-  if (!trustHeaders) return stub.fetch(request);
+  // Forward on a clone with any client-supplied trust headers stripped —
+  // headers are not a trust channel; the D1 window above is.
   const upstream = new Request(request);
-  for (const [name, value] of Object.entries(trustHeaders)) {
-    upstream.headers.set(name, value);
-  }
+  upstream.headers.delete('x-ln-authed');
+  upstream.headers.delete('x-ln-auth-required');
   return stub.fetch(upstream);
 }
