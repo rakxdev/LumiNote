@@ -23,7 +23,7 @@
 ### 3. Iconic Visual Artifacts
 - **Acoustic Yantra Logo:** Custom SVG monogram combining technical calipers, diamond Yantra geometry, and the soundwave origin Bindu.
 - **Devanagari Telemetry Pillar:** Vertical side rail reading *नादब्रह्म* (Sound is the Divine Vibration).
-- **RodeX Packet Seal:** Top corner version stamp, derived from `changelog.json` (e.g. `SPEC v04.7 • VERIFIED`).
+- **RodeX Packet Seal:** Top corner version stamp, derived from `changelog.json` (e.g. `SPEC v04.7.1 • VERIFIED`).
 - **Voice Meter Pill:** 12 dB-mapped bars in the top bar — fast attack, slow release, breathing floor in silence; follows the *remote* device's voice while linked.
 - **Presence Link Button (v4.6):** labeled state machine in the header — plain **Link** (idle), amber pulsing **Waiting** (room open, no peer), emerald **Linked** (peer present); the dictation button mirrors remote activity with an amber **Peer Talking…** state.
 - **State-Aware Link Dialog:** the pairing invite (QR on white quiet-zone + mono room code) shows only while the room waits; once linked the dialog keeps the join-another-room input and the Leave action. Authenticator setup, the code gate, and the two-step login reset live in the same chassis.

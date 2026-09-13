@@ -45,7 +45,7 @@ LumiNote is a production-hardened, browser-native real-time speech intelligence 
 Built with pure vanilla JavaScript, native Web Audio APIs, and the Node native test runner. Zero heavy frameworks.
 
 ```bash
-# Run the test suite (13 files, 120 tests)
+# Run the test suite (13 files, 124 tests)
 npm test
 
 # Lint
